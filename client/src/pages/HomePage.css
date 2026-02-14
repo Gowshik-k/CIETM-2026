@@ -966,7 +966,18 @@ html {
 .speakers-slider-track {
   display: flex;
   gap: 2rem;
-  width: fit-content;
+  width: max-content;
+  animation: scroll-linear var(--scroll-duration, 30s) linear infinite;
+  will-change: transform;
+}
+
+.slider-container:hover .speakers-slider-track {
+  animation-play-state: paused;
+}
+
+@keyframes scroll-linear {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-100% / 3)); } /* Since we have 3 sets */
 }
 
 .speaker-full-card {

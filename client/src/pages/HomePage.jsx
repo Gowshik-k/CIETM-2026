@@ -117,42 +117,8 @@ const HomePage = () => {
     }
   ];
 
-  const [isPaused, setIsPaused] = useState(false);
-  const controls = useAnimation(); // Initialize useAnimation hook
-
-  const trackOffset = window.innerWidth > 968 ? 252 : window.innerWidth > 768 ? 236 : 220;
-  const totalWidth = speakers.length * trackOffset; 
-
-  useEffect(() => {
-    const startAnimation = async () => {
-      await controls.start({
-        x: -totalWidth, // Animate to the left by the total width of one set of speakers
-        transition: {
-          x: {
-            duration: totalWidth / 50, // Adjust speed as needed (e.g., 50px/second)
-            ease: "linear",
-            repeat: Infinity,
-            repeatType: "loop",
-          },
-        },
-      });
-    };
-
-    if (!isPaused) {
-      startAnimation();
-    } else {
-      controls.stop(); // Stop the animation when paused
-    }
-
-    // Recalculate and restart animation if window size changes
-    const handleResize = () => {
-      controls.stop();
-      startAnimation();
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-
-  }, [isPaused, controls, totalWidth]); // Depend on isPaused, controls, and totalWidth
+  // Calculate duration based on total width to maintain constant velocity (80px/s)
+  const duration = (speakers.length * (window.innerWidth > 968 ? 252 : window.innerWidth > 768 ? 236 : 220)) / 80;
 
   return (
     <div className="home-root">
@@ -408,14 +374,10 @@ const HomePage = () => {
             <p className="section-desc">Meet the visionary leaders sharing their insights at CIETM 2026.</p>
           </div>
 
-          <div 
-            className="slider-container mt-5"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-          >
-            <motion.div 
+          <div className="slider-container mt-5">
+            <div 
               className="speakers-slider-track"
-              animate={controls}
+              style={{ '--scroll-duration': `${duration}s` }}
             >
               {/* Triple set of speakers for a truly infinite linear flow */}
               {[...speakers, ...speakers, ...speakers].map((s, i) => (
@@ -440,7 +402,7 @@ const HomePage = () => {
                   </div>
                 </motion.div>
               ))}
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
