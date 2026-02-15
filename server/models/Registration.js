@@ -28,6 +28,7 @@ const registrationSchema = new mongoose.Schema({
         track: String,
         fileUrl: String,
         publicId: String, // For Cloudinary
+        resourceType: String, // 'image' or 'raw' - critical for correct download links
         originalName: String, // To preserve filename on download
         reviewStatus: {
             type: String,

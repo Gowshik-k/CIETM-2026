@@ -1,6 +1,6 @@
 const Registration = require('../models/Registration');
 const sendEmail = require('../utils/sendEmail');
-const cloudinary = require('cloudinary').v2;
+const { cloudinary } = require('../config/cloudinary');
 
 // @desc    Create or Update a draft registration
 // @route   POST /api/registrations/draft
@@ -23,6 +23,7 @@ const saveDraft = async (req, res) => {
                 registration.paperDetails = {
                     ...registration.paperDetails,
                     ...paperDetails,
+                    resourceType: paperDetails.resourceType || registration.paperDetails.resourceType,
                     keywords: paperDetails.keywords || registration.paperDetails.keywords
                 };
             }
@@ -87,7 +88,7 @@ const getMyRegistration = async (req, res) => {
 // @access  Admin
 const getAllRegistrations = async (req, res) => {
     try {
-        const registrations = await Registration.find({}).populate('userId', 'name email');
+        const registrations = await Registration.find({}).populate('userId', 'name email phone');
         res.json(registrations);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -135,6 +136,17 @@ const reviewPaper = async (req, res) => {
     }
 };
 
+const sanitizeFilename = (text) => {
+    return text
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/gi, '')
+        .replace(/_{2,}/g, '_')
+        .toLowerCase();
+};
+
 const downloadPaper = async (req, res) => {
     try {
         const { id } = req.params;
@@ -150,13 +162,19 @@ const downloadPaper = async (req, res) => {
             return res.status(404).json({ message: 'Paper not found or unauthorized' });
         }
 
-        // Generate a download URL with content-disposition attachment
+        // Construct dynamic filename: AuthorName_PaperTitle (no extension)
+        const authorName = sanitizeFilename(registration.personalDetails.name || 'author');
+        const paperTitle = sanitizeFilename(registration.paperDetails.title || '');
+        const basename = paperTitle ? `${authorName}_${paperTitle}` : authorName;
+
+        // Generate a download URL using private_download_url
         const downloadUrl = cloudinary.utils.private_download_url(
             registration.paperDetails.publicId,
             'pdf',
             {
-                resource_type: 'image', // PDFs are treated as images in Cloudinary for auto/image types
-                attachment: true
+                resource_type: registration.paperDetails.resourceType || 'image',
+                type: 'upload',
+                attachment: `${basename}.pdf`
             }
         );
 

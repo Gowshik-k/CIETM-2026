@@ -4,27 +4,40 @@ const User = require('../models/User');
 const protect = async (req, res, next) => {
     let token;
 
-    if (
-        req.headers.authorization &&
-        req.headers.authorization.startsWith('Bearer')
-    ) {
-        try {
-            token = req.headers.authorization.split(' ')[1];
+    // 1. Check Authorization Header
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
+    }
 
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // 2. Check req.query.token (case-insensitive fallback)
+    if (!token && req.query) {
+        token = req.query.token || req.query.Token;
+    }
 
-            req.user = await User.findById(decoded.id).select('-password');
-
-            return next();
-        } catch (error) {
-            console.error(error);
-            return res.status(401).json({ message: 'Not authorized, token failed' });
+    // 3. Fallback: Parse from URL directly
+    if (!token) {
+        const fullUrl = req.originalUrl || req.url;
+        const match = fullUrl.match(/[?&]token=([^&#]+)/i); // Case insensitive match
+        if (match) {
+            token = match[1];
         }
     }
 
-    if (!token) {
-        return res.status(401).json({ message: 'Not authorized, no token' });
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = await User.findById(decoded.id).select('-password');
+            return next();
+        } catch (error) {
+            return res.status(401).json({
+                message: 'Not authorized, token failed'
+            });
+        }
     }
+
+    return res.status(401).json({
+        message: 'Not authorized, no token'
+    });
 };
 
 const admin = (req, res, next) => {

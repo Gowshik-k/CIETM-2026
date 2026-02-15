@@ -20,8 +20,8 @@ const Dashboard = () => {
 
   const handleDownload = () => {
     if (!registration) return;
-    // Open the download route in a new window/tab
-    window.open(`/api/registrations/download/${registration._id}`, '_blank');
+    // Open the download route with token in query for authentication
+    window.open(`/api/registrations/download/${registration._id}?token=${user.token}`, '_blank');
   };
 
   useEffect(() => {

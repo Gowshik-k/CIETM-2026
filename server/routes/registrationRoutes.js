@@ -24,7 +24,8 @@ router.post('/upload', protect, upload.single('paper'), (req, res) => {
         res.json({
             url: req.file.path,
             publicId: req.file.filename,
-            originalName: req.file.originalname
+            originalName: req.file.originalname,
+            resourceType: req.file.resource_type || 'image' // Default to 'image' if not provided (standard for our config)
         });
     } else {
         res.status(400).json({ message: 'File upload failed' });

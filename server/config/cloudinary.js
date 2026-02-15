@@ -24,7 +24,7 @@ const storage = new CloudinaryStorage({
 
         return {
             folder: 'conference_papers',
-            resource_type: 'auto', // auto allows preview in browser
+            resource_type: 'image', // Explicitly treat PDFs as images for Cloudinary features
             public_id: `paper_${originalName}_${timestamp}`,
         };
     },

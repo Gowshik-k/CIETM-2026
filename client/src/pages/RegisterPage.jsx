@@ -28,6 +28,8 @@ const RegisterPage = () => {
     confirmPassword: '',
     fileUrl: '',
     publicId: '',
+    publicId: '',
+    resourceType: '',
     originalName: ''
   });
 
@@ -53,7 +55,8 @@ const RegisterPage = () => {
               keywords: data.paperDetails?.keywords?.join(', ') || '',
               track: data.paperDetails?.track || 'CIDT',
               fileUrl: data.paperDetails?.fileUrl || '',
-              publicId: data.paperDetails?.publicId || ''
+              publicId: data.paperDetails?.publicId || '',
+              resourceType: data.paperDetails?.resourceType || ''
             }));
             // If already registered, skip account step
             setStep(2);
@@ -99,6 +102,7 @@ const RegisterPage = () => {
         paperFile: file, 
         fileUrl: uploadRes.url, 
         publicId: uploadRes.publicId,
+        resourceType: uploadRes.resourceType,
         originalName: uploadRes.originalName
       });
       toast.success("File uploaded and saved to draft");
@@ -142,6 +146,7 @@ const RegisterPage = () => {
           track: formData.track,
           fileUrl: formData.fileUrl,
           publicId: formData.publicId,
+          resourceType: formData.resourceType,
           originalName: formData.originalName
         }
       }, {
