@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { 
   Users, FileCheck, Clock, CheckCircle, 
@@ -8,6 +9,7 @@ import toast from 'react-hot-toast';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
+  const { user } = useAuth();
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
@@ -19,7 +21,11 @@ const AdminDashboard = () => {
 
   const fetchRegistrations = async () => {
     try {
-      const { data } = await axios.get('/api/registrations');
+      const { data } = await axios.get('/api/registrations', {
+        headers: {
+          Authorization: `Bearer ${user?.token}`
+        }
+      });
       setRegistrations(data);
     } catch (error) {
       toast.error("Failed to fetch registrations");
@@ -31,7 +37,11 @@ const AdminDashboard = () => {
   const handleReview = async (id, status) => {
     const remarks = prompt("Enter remarks (optional):");
     try {
-      await axios.put(`/api/registrations/${id}/review`, { status, remarks });
+      await axios.put(`/api/registrations/${id}/review`, { status, remarks }, {
+        headers: {
+          Authorization: `Bearer ${user?.token}`
+        }
+      });
       toast.success(`Paper ${status} successfully`);
       fetchRegistrations();
     } catch (error) {

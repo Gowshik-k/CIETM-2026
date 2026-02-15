@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useAnimation } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Calendar, MapPin, FileText, ArrowRight, 
   Globe, Users, Award, Sparkles,
@@ -264,14 +264,14 @@ const HomePage = () => {
                       <div className="fee-icon-box-mini"><Users size={20} /></div>
                       <div className="fee-info-mini">
                         <span className="fee-label-mini">National</span>
-                        <span className="fee-value-mini">₹ 500</span>
+                        <span className="fee-label-mini">₹ 500</span>
                       </div>
                     </div>
                     <div className="fee-item-mini">
                       <div className="fee-icon-box-mini"><Globe size={20} /></div>
                       <div className="fee-info-mini">
                         <span className="fee-label-mini">International</span>
-                        <span className="fee-value-mini">₹ 1000</span>
+                        <span className="fee-label-mini">₹ 1000</span>
                       </div>
                     </div>
                   </div>
@@ -379,7 +379,6 @@ const HomePage = () => {
               className="speakers-slider-track"
               style={{ '--scroll-duration': `${duration}s` }}
             >
-              {/* Triple set of speakers for a truly infinite linear flow */}
               {[...speakers, ...speakers, ...speakers].map((s, i) => (
                 <motion.div 
                   key={i}
@@ -476,7 +475,7 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      {/* Scroll to Top FAB */}
+      
       {showScrollTop && (
         <button 
           className="scroll-top-btn"

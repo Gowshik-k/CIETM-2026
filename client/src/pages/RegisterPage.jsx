@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -7,9 +7,9 @@ import toast from 'react-hot-toast';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
+  const { user, register } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -25,15 +25,88 @@ const RegisterPage = () => {
     track: 'CIDT',
     paperFile: null,
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    fileUrl: '',
+    publicId: '',
+    originalName: ''
   });
+
+  // Fetch draft on mount or when user logs in
+  useEffect(() => {
+    if (user) {
+      const fetchDraft = async () => {
+        try {
+          const { data } = await axios.get('/api/registrations/my', {
+            headers: { Authorization: `Bearer ${user.token}` }
+          });
+          if (data) {
+            setFormData(prev => ({
+              ...prev,
+              name: data.personalDetails?.name || user.name,
+              email: data.personalDetails?.email || user.email,
+              mobile: data.personalDetails?.mobile || user.phone || '',
+              institution: data.personalDetails?.institution || '',
+              category: data.personalDetails?.category || 'External Student',
+              teamMembers: data.teamMembers || [],
+              paperTitle: data.paperDetails?.title || '',
+              abstract: data.paperDetails?.abstract || '',
+              keywords: data.paperDetails?.keywords?.join(', ') || '',
+              track: data.paperDetails?.track || 'CIDT',
+              fileUrl: data.paperDetails?.fileUrl || '',
+              publicId: data.paperDetails?.publicId || ''
+            }));
+            // If already registered, skip account step
+            setStep(2);
+          } else {
+            // No draft but logged in, start from institutional details
+            setFormData(prev => ({
+              ...prev,
+              name: user.name,
+              email: user.email,
+              mobile: user.phone || ''
+            }));
+            setStep(2);
+          }
+        } catch (error) {
+          console.error("Failed to fetch draft", error);
+        }
+      };
+      fetchDraft();
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleFileChange = (e) => {
-    setFormData({ ...formData, paperFile: e.target.files[0] });
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setLoading(true);
+    const uploadData = new FormData();
+    uploadData.append('paper', file);
+
+    try {
+      const { data: uploadRes } = await axios.post('/api/registrations/upload', uploadData, {
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+      setFormData({ 
+        ...formData, 
+        paperFile: file, 
+        fileUrl: uploadRes.url, 
+        publicId: uploadRes.publicId,
+        originalName: uploadRes.originalName
+      });
+      toast.success("File uploaded and saved to draft");
+    } catch (error) {
+      toast.error("File upload failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addTeamMember = () => {
@@ -49,39 +122,10 @@ const RegisterPage = () => {
     setFormData({ ...formData, teamMembers: updated });
   };
 
-  const nextStep = () => setStep(step + 1);
-  const prevStep = () => setStep(step - 1);
+  const handleSaveDraft = async () => {
+    if (!user) return; // Can't save draft if not logged in
 
-  const handleSubmit = async () => {
-    if (formData.password !== formData.confirmPassword) {
-      return toast.error("Passwords don't match");
-    }
-
-    setLoading(true);
     try {
-      // 1. Create User
-      await register({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.mobile,
-        role: 'author'
-      });
-
-      // 2. Upload Paper if exists
-      let paperUrl = '';
-      let publicId = '';
-      if (formData.paperFile) {
-        const uploadData = new FormData();
-        uploadData.append('paper', formData.paperFile);
-        const { data: uploadRes } = await axios.post('/api/registrations/upload', uploadData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        paperUrl = uploadRes.url;
-        publicId = uploadRes.publicId;
-      }
-
-      // 3. Save Registration Draft/Initial
       await axios.post('/api/registrations/draft', {
         personalDetails: {
           name: formData.name,
@@ -94,17 +138,66 @@ const RegisterPage = () => {
         paperDetails: {
           title: formData.paperTitle,
           abstract: formData.abstract,
-          keywords: formData.keywords.split(',').map(k => k.trim()),
+          keywords: formData.keywords.split(',').map(k => k.trim()).filter(k => k),
           track: formData.track,
-          fileUrl: paperUrl,
-          publicId: publicId
+          fileUrl: formData.fileUrl,
+          publicId: formData.publicId,
+          originalName: formData.originalName
         }
+      }, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+    } catch (error) {
+      console.error("Draft save failed", error);
+    }
+  };
+
+  const nextStep = async () => {
+    if (step === 1 && !user) {
+      // Account Creation
+      if (formData.password !== formData.confirmPassword) {
+        return toast.error("Passwords don't match");
+      }
+      setLoading(true);
+      try {
+        await register({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.mobile,
+          role: 'author'
+        });
+        toast.success("Account created! Let's continue with registration.");
+        setStep(2);
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Account creation failed");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Save draft and move to next step
+      await handleSaveDraft();
+      setStep(step + 1);
+    }
+  };
+
+  const prevStep = () => setStep(step - 1);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      // One last draft save
+      await handleSaveDraft();
+      
+      // Final submission
+      await axios.post('/api/registrations/submit', {}, {
+        headers: { Authorization: `Bearer ${user.token}` }
       });
 
-      toast.success('Registration initiated successfully!');
+      toast.success('Registration submitted successfully!');
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      toast.error(error.response?.data?.message || 'Final submission failed');
     } finally {
       setLoading(false);
     }
@@ -124,7 +217,7 @@ const RegisterPage = () => {
         <div className="step-content">
           {step === 1 && (
             <div className="step-fade">
-              <h2>Step 1: Personal Details</h2>
+              <h2>Step 1: Account Creation</h2>
               <div className="form-group">
                 <label>Full Name</label>
                 <input name="name" value={formData.name} onChange={handleChange} placeholder="Enter your full name" />
@@ -139,6 +232,22 @@ const RegisterPage = () => {
                   <input name="mobile" value={formData.mobile} onChange={handleChange} placeholder="Mobile number" />
                 </div>
               </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Password</label>
+                  <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Create password" />
+                </div>
+                <div className="form-group">
+                  <label>Confirm Password</label>
+                  <input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm password" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="step-fade">
+              <h2>Step 2: Institutional Details</h2>
               <div className="form-group">
                 <label>Institution</label>
                 <input name="institution" value={formData.institution} onChange={handleChange} placeholder="College/Organization" />
@@ -153,9 +262,9 @@ const RegisterPage = () => {
             </div>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <div className="step-fade">
-              <h2>Step 2: Team Details</h2>
+              <h2>Step 3: Team Details</h2>
               <p>Add co-authors if any.</p>
               {formData.teamMembers.map((m, i) => (
                 <div key={i} className="team-member-row card">
@@ -168,9 +277,9 @@ const RegisterPage = () => {
             </div>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <div className="step-fade">
-              <h2>Step 3: Paper Details</h2>
+              <h2>Step 4: Paper Details</h2>
               <div className="form-group">
                 <label>Paper Title</label>
                 <input name="paperTitle" value={formData.paperTitle} onChange={handleChange} />
@@ -197,22 +306,9 @@ const RegisterPage = () => {
                 <div className="file-upload">
                   <Upload size={24} />
                   <input type="file" accept=".pdf" onChange={handleFileChange} />
-                  <span>{formData.paperFile ? formData.paperFile.name : 'Select PDF file'}</span>
+                  <span>{formData.paperFile ? formData.paperFile.name : formData.fileUrl ? 'File already uploaded' : 'Select PDF file'}</span>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className="step-fade">
-              <h2>Step 4: Account Creation</h2>
-              <div className="form-group">
-                <label>Password</label>
-                <input name="password" type="password" value={formData.password} onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label>Confirm Password</label>
-                <input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} />
+                {formData.fileUrl && <p className="text-xs text-emerald-600 mt-1">✓ File saved in draft</p>}
               </div>
             </div>
           )}
@@ -221,8 +317,9 @@ const RegisterPage = () => {
             <div className="step-fade text-center">
               <h2>Step 5: Review & Confirm</h2>
               <div className="review-box card">
+                <p><strong>Paper Title:</strong> {formData.paperTitle || 'Untitled'}</p>
                 <p><strong>Registration Fee:</strong> {formData.category === 'Inter-college Student' ? '₹500' : '₹1000'}</p>
-                <p className="hint">Note: Payment will be enabled once your paper is accepted by the reviewer.</p>
+                <p className="hint">Note: Final submission will lock your details for review.</p>
               </div>
               <div className="terms">
                 <label>
@@ -236,10 +333,12 @@ const RegisterPage = () => {
         <div className="step-actions">
           {step > 1 && <button onClick={prevStep} className="btn btn-secondary"><ChevronLeft size={18} /> Back</button>}
           {step < 5 ? (
-            <button onClick={nextStep} className="btn btn-primary" style={{ marginLeft: 'auto' }}>Next &gt;</button>
+            <button onClick={nextStep} className="btn btn-primary" style={{ marginLeft: 'auto' }} disabled={loading}>
+              {loading ? 'Processing...' : 'Next >'}
+            </button>
           ) : (
             <button onClick={handleSubmit} className="btn btn-primary" style={{ marginLeft: 'auto' }} disabled={loading}>
-              {loading ? 'Processing...' : 'Complete Registration'}
+              {loading ? 'Processing...' : 'Complete & Submit'}
             </button>
           )}
         </div>

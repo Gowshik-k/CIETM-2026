@@ -8,6 +8,13 @@
   flex: 1;
 }
 
+.main-content.dashboard-mode {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .page-root {
   animation: fadeIn 0.6s ease-out;
   min-height: calc(100vh - 80px);

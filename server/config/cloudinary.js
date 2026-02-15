@@ -13,13 +13,33 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: {
-        folder: 'conference_papers',
-        allowed_formats: ['pdf'],
-        resource_type: 'raw', // PDF is often treated as raw or auto
+    params: async (req, file) => {
+        const timestamp = Date.now();
+        const originalName = file.originalname
+            .split('.')
+            .slice(0, -1)
+            .join('.')
+            .replace(/[^a-z0-9]/gi, '_')
+            .toLowerCase();
+
+        return {
+            folder: 'conference_papers',
+            resource_type: 'auto', // auto allows preview in browser
+            public_id: `paper_${originalName}_${timestamp}`,
+        };
     },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/pdf') {
+            cb(null, true);
+        } else {
+            cb(new Error('Only PDF files are allowed!'), false);
+        }
+    }
+});
 
 module.exports = { cloudinary, upload };

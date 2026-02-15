@@ -6,10 +6,12 @@ const {
     getMyRegistration,
     getAllRegistrations,
     reviewPaper,
+    downloadPaper
 } = require('../controllers/registrationController');
 const { protect, admin } = require('../middleware/authMiddleware');
 const { upload } = require('../config/cloudinary');
 
+router.get('/download/:id', protect, downloadPaper);
 router.post('/draft', protect, saveDraft);
 router.post('/submit', protect, submitRegistration);
 router.get('/my', protect, getMyRegistration);
@@ -21,7 +23,8 @@ router.post('/upload', protect, upload.single('paper'), (req, res) => {
     if (req.file) {
         res.json({
             url: req.file.path,
-            publicId: req.file.filename
+            publicId: req.file.filename,
+            originalName: req.file.originalname
         });
     } else {
         res.status(400).json({ message: 'File upload failed' });

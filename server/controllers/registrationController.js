@@ -1,5 +1,6 @@
 const Registration = require('../models/Registration');
 const sendEmail = require('../utils/sendEmail');
+const cloudinary = require('cloudinary').v2;
 
 // @desc    Create or Update a draft registration
 // @route   POST /api/registrations/draft
@@ -16,6 +17,16 @@ const saveDraft = async (req, res) => {
             registration.personalDetails = personalDetails || registration.personalDetails;
             registration.teamMembers = teamMembers || registration.teamMembers;
             registration.paperDetails = { ...registration.paperDetails, ...paperDetails };
+
+            // Explicitly handle merging paperDetails to avoid overwriting nested fields if partial
+            if (paperDetails) {
+                registration.paperDetails = {
+                    ...registration.paperDetails,
+                    ...paperDetails,
+                    keywords: paperDetails.keywords || registration.paperDetails.keywords
+                };
+            }
+
             registration.updatedAt = Date.now();
 
             await registration.save();
@@ -124,10 +135,43 @@ const reviewPaper = async (req, res) => {
     }
 };
 
+const downloadPaper = async (req, res) => {
+    try {
+        const { id } = req.params;
+        let registration;
+
+        if (req.user.role === 'admin') {
+            registration = await Registration.findById(id);
+        } else {
+            registration = await Registration.findOne({ userId: req.user._id });
+        }
+
+        if (!registration || !registration.paperDetails.fileUrl) {
+            return res.status(404).json({ message: 'Paper not found or unauthorized' });
+        }
+
+        // Generate a download URL with content-disposition attachment
+        const downloadUrl = cloudinary.utils.private_download_url(
+            registration.paperDetails.publicId,
+            'pdf',
+            {
+                resource_type: 'image', // PDFs are treated as images in Cloudinary for auto/image types
+                attachment: true
+            }
+        );
+
+        // Redirect to the generated Cloudinary download URL
+        res.redirect(downloadUrl);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports = {
     saveDraft,
     submitRegistration,
     getMyRegistration,
     getAllRegistrations,
-    reviewPaper
+    reviewPaper,
+    downloadPaper
 };

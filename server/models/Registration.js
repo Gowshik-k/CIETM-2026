@@ -25,8 +25,10 @@ const registrationSchema = new mongoose.Schema({
         title: String,
         abstract: String,
         keywords: [String],
+        track: String,
         fileUrl: String,
         publicId: String, // For Cloudinary
+        originalName: String, // To preserve filename on download
         reviewStatus: {
             type: String,
             enum: ['Draft', 'Submitted', 'Under Review', 'Accepted', 'Rejected'],
