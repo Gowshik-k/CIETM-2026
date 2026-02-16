@@ -16,6 +16,9 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 
 const AppContent = () => {
+  const location = useLocation();
+  const hideFooter = location.pathname === '/register';
+
   return (
     <div className="app-container">
       <Navbar />
@@ -51,7 +54,7 @@ const AppContent = () => {
           </Routes>
         </Suspense>
       </main>
-      <Footer />
+      {!hideFooter && <Footer />}
       <Toaster position="bottom-right" />
     </div>
   );

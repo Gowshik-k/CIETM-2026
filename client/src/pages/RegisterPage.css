@@ -1,10 +1,11 @@
 /* Modern Split Screen Layout */
 .register-container {
   display: flex;
-  height: calc(100vh - 80px); /* Adjust for Navbar height */
-  width: 100vw;
+  height: calc(100vh - 80px); /* Fit exactly to screen minus navbar */
+  width: 100%;
   padding: 0;
   background: white;
+  position: relative;
   overflow: hidden; /* Prevent body scroll */
 }
 
@@ -83,8 +84,8 @@
   gap: 1.25rem;
 }
 
-.feature-item {
-  display: flex;
+.register-feature-item {
+  display: inline-flex; /* Use inline-flex to respect width */
   align-items: center;
   gap: 1rem;
   font-size: 1rem;
@@ -94,9 +95,10 @@
   border-radius: 12px;
   backdrop-filter: blur(4px);
   width: fit-content;
+  max-width: 100%;
 }
 
-.feature-icon {
+.register-feature-icon {
   width: 24px;
   height: 24px;
   background: white;
@@ -106,24 +108,34 @@
   align-items: center;
   justify-content: center;
   font-size: 0.8rem;
+  flex-shrink: 0;
 }
 
 /* Right Side - Form */
 .register-form {
   width: 60%;
-  padding: 2rem 3rem;
+  padding: 1.5rem 2.5rem; /* Reduced padding for better fit */
   display: flex;
   flex-direction: column;
-  height: 100%; /* Fix: Match parent container height */
-  overflow: hidden; /* Important: Prevents full page scroll */
+  height: 100%; /* Match parent container height */
+  overflow: hidden; /* Prevent full page scroll */
   position: relative;
 }
 
+.registration-form-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
 .form-header {
-  margin-bottom: 2rem;
-  padding-top: 1rem;
+  margin-bottom: 1.25rem; /* Reduced margin */
+  padding-top: 0.5rem;
   flex-shrink: 0; /* Header stays fixed size */
 }
+
+/* ... step indicators ... */
 
 /* ... step indicators ... */
 
@@ -133,7 +145,7 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem; /* Reduced */
   display: flex;
   justify-content: space-between;
 }
@@ -158,14 +170,14 @@
   flex: 1; /* Takes all remaining height */
   overflow-y: auto; /* Internal scroll only here */
   padding-right: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem; /* Reduced */
   display: flex;
   flex-direction: column;
 }
 
 .step-content h2 {
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
+  font-size: 1.75rem; /* Slightly smaller */
+  margin-bottom: 1rem; /* Reduced */
   color: var(--text-main);
   flex-shrink: 0;
 }
@@ -173,12 +185,12 @@
 /* ... form group styles ... */
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 0.85rem; /* Reduced */
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem; /* Reduced */
   font-weight: 700;
   color: var(--text-main);
   font-size: 0.9rem;
@@ -188,7 +200,7 @@
 .form-group select, 
 .form-group textarea {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.65rem 1rem; /* Slightly reduced */
   border-radius: 12px;
   border: 1.5px solid #e2e8f0;
   background: #f8fafc;
@@ -201,7 +213,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem; /* Reduced */
 }
 
 /* FIXED BOTTOM ACTIONS */
@@ -209,8 +221,8 @@
   display: flex;
   justify-content: space-between;
   margin-top: auto; /* Push to bottom if content is short */
-  padding-top: 1.5rem;
-  padding-bottom: 1rem; /* Add padding at bottom */
+  padding-top: 1rem;
+  padding-bottom: 0.5rem; /* Compact padding */
   border-top: 1px solid #f1f5f9;
   background: white;
   z-index: 20;

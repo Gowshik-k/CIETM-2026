@@ -28,16 +28,16 @@ const RegisterPage = () => {
           <p>Register now to participate in the International Conference on Contemporary Innovations in Engineering, Technology & Management.</p>
           
           <div className="brand-features">
-            <div className="feature-item">
-              <div className="feature-icon"><CheckCircle size={20} /></div>
+            <div className="register-feature-item">
+              <div className="register-feature-icon"><CheckCircle size={20} /></div>
               <span>Global Networking</span>
             </div>
-            <div className="feature-item">
-              <div className="feature-icon"><CheckCircle size={20} /></div>
+            <div className="register-feature-item">
+              <div className="register-feature-icon"><CheckCircle size={20} /></div>
               <span>Expert Keynotes</span>
             </div>
-            <div className="feature-item">
-              <div className="feature-icon"><CheckCircle size={20} /></div>
+            <div className="register-feature-item">
+              <div className="register-feature-icon"><CheckCircle size={20} /></div>
               <span>Research Publication</span>
             </div>
           </div>
