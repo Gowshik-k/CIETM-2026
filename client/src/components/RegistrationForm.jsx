@@ -12,6 +12,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
   const [loading, setLoading] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
+  const [errors, setErrors] = useState({});
   const [resendTimer, setResendTimer] = useState(0);
   const navigate = useNavigate();
 
@@ -32,7 +33,8 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
     fileUrl: '',
     publicId: '',
     resourceType: '',
-    originalName: ''
+    originalName: '',
+    agreedToTerms: false
   });
 
   // Fetch draft on mount
@@ -58,7 +60,8 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
               track: data.paperDetails?.track || 'CIDT',
               fileUrl: data.paperDetails?.fileUrl || '',
               publicId: data.paperDetails?.publicId || '',
-              resourceType: data.paperDetails?.resourceType || ''
+              resourceType: data.paperDetails?.resourceType || '',
+              originalName: data.paperDetails?.originalName || ''
             }));
             
             // If starting from step 1 but user logged in and has draft/data
@@ -91,7 +94,55 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear error when user types
+    if (errors[e.target.name]) {
+      setErrors({ ...errors, [e.target.name]: false });
+    }
   };
+
+  const validateStep = (currentStep) => {
+    const newErrors = {};
+    let isValid = true;
+
+    switch (currentStep) {
+      case 1:
+        if (showAccountCreation) {
+          if (!formData.name) newErrors.name = true;
+          if (!formData.email) newErrors.email = true;
+          if (!formData.mobile) newErrors.mobile = true;
+          if (!formData.password) newErrors.password = true;
+          
+          if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            toast.error("Please fill in all required fields");
+            return false;
+          }
+        }
+        return true;
+      case 2:
+        if (!formData.institution) {
+            setErrors({ institution: true });
+            toast.error("Institution is required");
+            return false;
+        }
+        return true;
+      case 4:
+        if (!formData.paperTitle) newErrors.paperTitle = true;
+        if (!formData.abstract) newErrors.abstract = true;
+        if (!formData.keywords) newErrors.keywords = true;
+        if (!formData.fileUrl && !formData.paperFile) newErrors.paperFile = true;
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            toast.error("Please fill in all required paper details");
+            return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -139,7 +190,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
 
   const handleSaveDraft = async () => {
     if (!user) return; 
-
+    
     try {
       await axios.post('/api/registrations/draft', {
         personalDetails: {
@@ -169,6 +220,9 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
   };
 
   const nextStep = async () => {
+    // Validate current step before proceeding
+    if (!validateStep(step)) return;
+
     if (step === 1 && !user && showAccountCreation) {
       // Account Creation
       if (formData.password !== formData.confirmPassword) {
@@ -241,7 +295,27 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
 
   const prevStep = () => setStep(step - 1);
 
+  const handleSkip = async () => {
+    // Skip does NOT validate, just saves draft and moves next
+    setLoading(true);
+    try {
+      await handleSaveDraft();
+      setStep(step + 1);
+    } catch (error) {
+      console.error("Skip failed", error);
+      // Even if save fails, move next? Maybe better to stay or warn. 
+      // For now, let's just move next to not block user.
+      setStep(step + 1);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
+    if (!formData.agreedToTerms) {
+        return toast.error("You must agree to the terms and conditions");
+    }
+
     setLoading(true);
     try {
       await handleSaveDraft();
@@ -391,8 +465,13 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
             <div className="step-fade">
               <h2>Step 4: Paper Details</h2>
               <div className="form-group">
-                <label>Paper Title</label>
-                <input name="paperTitle" value={formData.paperTitle} onChange={handleChange} />
+                <label>Paper Title <span style={{ color: '#ef4444' }}>*</span></label>
+                <input 
+                    name="paperTitle" 
+                    value={formData.paperTitle} 
+                    onChange={handleChange} 
+                    className={errors.paperTitle ? 'input-error' : ''}
+                />
               </div>
               <div className="form-group">
                 <label>Select Track</label>
@@ -404,16 +483,27 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                 </select>
               </div>
               <div className="form-group">
-                <label>Abstract</label>
-                <textarea name="abstract" value={formData.abstract} onChange={handleChange} rows="4"></textarea>
+                <label>Abstract <span style={{ color: '#ef4444' }}>*</span></label>
+                <textarea 
+                    name="abstract" 
+                    value={formData.abstract} 
+                    onChange={handleChange} 
+                    rows="4"
+                    className={errors.abstract ? 'input-error' : ''}
+                ></textarea>
               </div>
               <div className="form-group">
-                <label>Keywords (comma separated)</label>
-                <input name="keywords" value={formData.keywords} onChange={handleChange} />
+                <label>Keywords (comma separated) <span style={{ color: '#ef4444' }}>*</span></label>
+                <input 
+                    name="keywords" 
+                    value={formData.keywords} 
+                    onChange={handleChange}
+                    className={errors.keywords ? 'input-error' : ''}
+                />
               </div>
               <div className="form-group">
-                <label>Upload Paper (PDF only)</label>
-                <div className="file-upload">
+                <label>Upload Paper (PDF only) <span style={{ color: '#ef4444' }}>*</span></label>
+                <div className={`file-upload ${errors.paperFile ? 'upload-error' : ''}`} style={errors.paperFile ? { borderColor: '#ef4444', backgroundColor: '#fef2f2' } : {}}>
                   <Upload size={24} />
                   <input type="file" accept=".pdf" onChange={handleFileChange} />
                   <span>{formData.paperFile ? formData.paperFile.name : formData.fileUrl ? 'File already uploaded' : 'Select PDF file'}</span>
@@ -432,8 +522,17 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                 <p className="hint">Note: Final submission will lock your details for review.</p>
               </div>
               <div className="terms">
-                <label>
-                  <input type="checkbox" required /> I agree to the conference terms and conditions.
+                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', color: errors.terms ? '#ef4444' : 'inherit', justifyContent: 'center' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={formData.agreedToTerms}
+                    onChange={(e) => {
+                        setFormData({ ...formData, agreedToTerms: e.target.checked });
+                        if (errors.terms) setErrors({ ...errors, terms: false });
+                    }}
+                    style={{ marginRight: '0.5rem', width: 'auto' }}
+                  /> 
+                  I agree to the conference terms and conditions.
                 </label>
               </div>
             </div>
@@ -443,8 +542,24 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
         {!showVerification && (
           <div className="step-actions">
             {step > (showAccountCreation ? 1 : 2) && <button onClick={prevStep} className="btn btn-secondary"><ChevronLeft size={18} /> Back</button>}
+            
+            {step > 1 && step < 5 && (
+                <button 
+                  onClick={handleSkip} 
+                  className="btn btn-ghost" 
+                  style={{ marginLeft: '1rem', marginRight: 'auto', color: '#64748b' }}
+                >
+                    Skip for now
+                </button>
+            )}
+
             {step < 5 ? (
-              <button onClick={nextStep} className="btn btn-primary" style={{ marginLeft: 'auto' }} disabled={loading}>
+              <button 
+                onClick={nextStep} 
+                className="btn btn-primary" 
+                style={{ marginLeft: step <= (showAccountCreation ? 1 : 2) ? 'auto' : '0' }} 
+                disabled={loading}
+              >
                 {loading ? 'Processing...' : 'Next >'}
               </button>
             ) : (
