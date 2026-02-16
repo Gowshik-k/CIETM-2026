@@ -277,10 +277,7 @@ const HomePage = () => {
                   </div>
                 </div>
 
-                <div className="mt-14 action-row-premium justify-center lg:justify-start">
-                  <button className="btn btn-amber-pill btn-pill">
-                    <Download size={20} /> Conference Template (DOCX)
-                  </button>
+                <div className="mt-8 action-row-premium justify-center lg:justify-start">
                   <Link to="/register" className="btn btn-primary btn-pill shadow-lg">
                     Register Now <ArrowRight size={20} />
                   </Link>

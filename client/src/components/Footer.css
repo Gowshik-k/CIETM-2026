@@ -1,6 +1,6 @@
 .footer-root {
   background: white;
-  padding: 8rem 0 0;
+  padding: 5rem 0 3rem;
   border-top: 1px solid #f1f5f9;
   position: relative;
   z-index: 10;
@@ -31,8 +31,9 @@
 
 .social-links {
   display: flex;
-  gap: 1.25rem;
+  gap: 2rem;
   justify-content: center;
+  margin-bottom: 2rem;
 }
 
 .social-links a {

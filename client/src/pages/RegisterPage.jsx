@@ -7,9 +7,13 @@ import toast from 'react-hot-toast';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
-  const { user, register } = useAuth();
+  const { user, register, updateUser } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [tempUserData, setTempUserData] = useState(null);
+  const [resendTimer, setResendTimer] = useState(0);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -27,7 +31,6 @@ const RegisterPage = () => {
     password: '',
     confirmPassword: '',
     fileUrl: '',
-    publicId: '',
     publicId: '',
     resourceType: '',
     originalName: ''
@@ -77,6 +80,14 @@ const RegisterPage = () => {
       fetchDraft();
     }
   }, [user]);
+
+  // Timer for resend code
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -165,15 +176,18 @@ const RegisterPage = () => {
       }
       setLoading(true);
       try {
-        await register({
+        const response = await axios.post('/api/auth/register', {
           name: formData.name,
           email: formData.email,
           password: formData.password,
           phone: formData.mobile,
           role: 'author'
         });
-        toast.success("Account created! Let's continue with registration.");
-        setStep(2);
+        
+        setTempUserData(response.data);
+        setShowVerification(true);
+        setResendTimer(60); // 60 seconds before can resend
+        toast.success(response.data.message || "Verification code sent to your email!");
       } catch (error) {
         toast.error(error.response?.data?.message || "Account creation failed");
       } finally {
@@ -183,6 +197,48 @@ const RegisterPage = () => {
       // Save draft and move to next step
       await handleSaveDraft();
       setStep(step + 1);
+    }
+  };
+
+  const handleVerifyEmail = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      return toast.error("Please enter the 6-digit code");
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post('/api/auth/verify-email', {
+        email: formData.email,
+        code: verificationCode
+      });
+
+      // Store the token and user data in context
+      updateUser(response.data);
+      toast.success("Email verified successfully!");
+      
+      // Move to next step without reload
+      setShowVerification(false);
+      setStep(2);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.error || error.response?.data?.message || "Verification failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setLoading(true);
+    try {
+      await axios.post('/api/auth/resend-verification', {
+        email: formData.email
+      });
+      setResendTimer(60);
+      toast.success("New verification code sent!");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to resend code");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -209,44 +265,126 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="register-container container fade-in">
-      <div className="register-card glass">
-        <div className="progress-bar">
-          {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className={`step-dot ${step >= i ? 'active' : ''}`}>
-              {step > i ? <CheckCircle size={16} /> : i}
+    <div className="register-container">
+      {/* Left Side - Branding */}
+      <div className="register-brand">
+        <div className="brand-content">
+          <div className="brand-logo">
+            <div className="logo-icon">
+              <CheckCircle size={32} />
             </div>
-          ))}
+            <span>CIETM 2026</span>
+          </div>
+          <h1>Join the Future of<br />Engineering & Technology</h1>
+          <p>Register now to participate in the International Conference on Contemporary Innovations in Engineering, Technology & Management.</p>
+          
+          <div className="brand-features">
+            <div className="feature-item">
+              <div className="feature-icon"><CheckCircle size={20} /></div>
+              <span>Global Networking</span>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon"><CheckCircle size={20} /></div>
+              <span>Expert Keynotes</span>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon"><CheckCircle size={20} /></div>
+              <span>Research Publication</span>
+            </div>
+          </div>
+        </div>
+        <div className="brand-decoration"></div>
+      </div>
+
+      {/* Right Side - Form */}
+      <div className="register-form">
+        <div className="form-header">
+          <p className="step-indicator">Step {step} of 5</p>
+          <div className="progress-bar-mini">
+            <div className="progress-fill" style={{ width: `${(step / 5) * 100}%` }}></div>
+          </div>
         </div>
 
         <div className="step-content">
           {step === 1 && (
             <div className="step-fade">
               <h2>Step 1: Account Creation</h2>
-              <div className="form-group">
-                <label>Full Name</label>
-                <input name="name" value={formData.name} onChange={handleChange} placeholder="Enter your full name" />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Email</label>
-                  <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="email@example.com" />
+              
+              {!showVerification ? (
+                <>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Full Name</label>
+                      <input name="name" value={formData.name} onChange={handleChange} placeholder="Enter your name" />
+                    </div>
+                    <div className="form-group">
+                      <label>Mobile</label>
+                      <input name="mobile" value={formData.mobile} onChange={handleChange} placeholder="Mobile number" />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="email@example.com" />
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Password</label>
+                      <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Create password" />
+                    </div>
+                    <div className="form-group">
+                      <label>Confirm Password</label>
+                      <input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm password" />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="verification-section">
+                  <div className="verification-icon">
+                    <CheckCircle size={48} className="text-primary" />
+                  </div>
+                  <h3>Verify Your Email</h3>
+                  <p className="text-muted mb-4">
+                    We've sent a 6-digit verification code to<br />
+                    <strong>{formData.email}</strong>
+                  </p>
+                  <div className="form-group">
+                    <label>Enter Verification Code</label>
+                    <input 
+                      type="text" 
+                      maxLength="6" 
+                      value={verificationCode} 
+                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="000000"
+                      className="verification-input"
+                      style={{ textAlign: 'center', fontSize: '24px', letterSpacing: '8px' }}
+                    />
+                  </div>
+                  <button 
+                    onClick={handleVerifyEmail} 
+                    className="btn btn-primary w-full mb-3"
+                    disabled={loading || verificationCode.length !== 6}
+                  >
+                    {loading ? 'Verifying...' : 'Verify Email'}
+                  </button>
+                  <div className="text-center">
+                    {resendTimer > 0 ? (
+                      <p className="text-muted text-sm">
+                        Resend code in {resendTimer}s
+                      </p>
+                    ) : (
+                      <button 
+                        onClick={handleResendCode} 
+                        className="btn btn-text"
+                        disabled={loading}
+                      >
+                        Resend Code
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label>Mobile</label>
-                  <input name="mobile" value={formData.mobile} onChange={handleChange} placeholder="Mobile number" />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Password</label>
-                  <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Create password" />
-                </div>
-                <div className="form-group">
-                  <label>Confirm Password</label>
-                  <input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm password" />
-                </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -335,18 +473,20 @@ const RegisterPage = () => {
           )}
         </div>
 
-        <div className="step-actions">
-          {step > 1 && <button onClick={prevStep} className="btn btn-secondary"><ChevronLeft size={18} /> Back</button>}
-          {step < 5 ? (
-            <button onClick={nextStep} className="btn btn-primary" style={{ marginLeft: 'auto' }} disabled={loading}>
-              {loading ? 'Processing...' : 'Next >'}
-            </button>
-          ) : (
-            <button onClick={handleSubmit} className="btn btn-primary" style={{ marginLeft: 'auto' }} disabled={loading}>
-              {loading ? 'Processing...' : 'Complete & Submit'}
-            </button>
-          )}
-        </div>
+        {!showVerification && (
+          <div className="step-actions">
+            {step > 1 && <button onClick={prevStep} className="btn btn-secondary"><ChevronLeft size={18} /> Back</button>}
+            {step < 5 ? (
+              <button onClick={nextStep} className="btn btn-primary" style={{ marginLeft: 'auto' }} disabled={loading}>
+                {loading ? 'Processing...' : 'Next >'}
+              </button>
+            ) : (
+              <button onClick={handleSubmit} className="btn btn-primary" style={{ marginLeft: 'auto' }} disabled={loading}>
+                {loading ? 'Submitting...' : 'Complete Registration'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

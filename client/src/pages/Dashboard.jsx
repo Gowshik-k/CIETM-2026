@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import './Dashboard.css';
+import './Dashboard-submission.css';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -211,144 +212,112 @@ const Dashboard = () => {
   );
 
   const renderMyPaper = () => (
-    <div className="paper-ultra-view fade-in">
-      <div className="paper-main-grid compact">
-        <div className="paper-details-panel">
-          <div className="paper-title-compact">
+    <div className="submission-unified-view fade-in">
+      <div className="submission-main-grid">
+        {/* Left Column: Paper Details */}
+        <div className="submission-details-column">
+          <div className="paper-title-section">
             <h2>{registration?.paperDetails?.title || 'Untitled Research Submission'}</h2>
           </div>
-          <div className="panel-section compact">
-            <h3 className="section-title-premium-small">Abstract</h3>
-            <div className="abstract-card-premium compact">
+
+          <div className="detail-card">
+            <h3 className="card-title">Abstract</h3>
+            <div className="abstract-content">
               <p>{registration?.paperDetails?.abstract || 'No abstract content available at this moment.'}</p>
             </div>
           </div>
 
-          <div className="panel-section compact">
-            <h3 className="section-title-premium-small">PDF Preview</h3>
-            <div className="pdf-preview-container-premium mini">
-              {registration?.paperDetails?.fileUrl ? (
-                <iframe 
-                  src={`${registration.paperDetails.fileUrl}#toolbar=0&navpanes=0&scrollbar=0`} 
-                  width="100%" 
-                  height="450px" 
-                  title="Paper Preview"
-                  className="preview-iframe"
-                />
-              ) : (
-                <div className="preview-placeholder-premium compact">
-                   <div className="placeholder-icon-small"><FileText size={32} /></div>
-                   <p>No document attached</p>
-                </div>
-              )}
+          <div className="metadata-row">
+            <div className="meta-item">
+              <span className="meta-label">Conference Track</span>
+              <span className="meta-value">{registration?.paperDetails?.track || 'General Intelligence'}</span>
             </div>
-          </div>
-        </div>
-
-        <div className="paper-sidebar-panel compact">
-          <div className="sidebar-group compact">
-            <h4 className="group-label">Category & Track</h4>
-            <div className="info-pills compact">
-              <div className="p-pill">
-                <span className="p-label">Conference Track</span>
-                <span className="p-value-small">{registration?.paperDetails?.track || 'General Intelligence'}</span>
-              </div>
-              <div className="p-pill">
-                <span className="p-label">Author Category</span>
-                <span className="p-value-small">{registration?.personalDetails?.category || 'Professional'}</span>
-              </div>
+            <div className="meta-item">
+              <span className="meta-label">Author Category</span>
+              <span className="meta-value">{registration?.personalDetails?.category || 'Professional'}</span>
             </div>
           </div>
 
-          <div className="sidebar-group compact">
-            <h4 className="group-label">Research Team</h4>
-            <div className="team-stack-premium compact">
-              <div className="team-member-premium main compact">
-                <div className="tm-avatar-mini">{user.name?.charAt(0)}</div>
-                <div className="tm-info">
-                  <span className="tm-name-small">{user.name}</span>
-                  <span className="tm-role-mini">Principal Author</span>
+          <div className="detail-card">
+            <h3 className="card-title">Research Team</h3>
+            <div className="team-list">
+              <div className="team-member-item principal">
+                <div className="member-avatar">{user.name?.charAt(0)}</div>
+                <div className="member-info">
+                  <span className="member-name">{user.name}</span>
+                  <span className="member-role">Principal Author</span>
                 </div>
               </div>
               {registration?.teamMembers?.map((member, idx) => (
-                <div key={idx} className="team-member-premium compact">
-                  <div className="tm-avatar-mini secondary">{member.name?.charAt(0)}</div>
-                  <div className="tm-info">
-                    <span className="tm-name-mini">{member.name}</span>
-                    <span className="tm-role-mini">Co-Author</span>
+                <div key={idx} className="team-member-item">
+                  <div className="member-avatar secondary">{member.name?.charAt(0)}</div>
+                  <div className="member-info">
+                    <span className="member-name">{member.name}</span>
+                    <span className="member-role">Co-Author</span>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="sidebar-group compact">
-            <h4 className="group-label">Paper Actions</h4>
-            <div className="mt-4">
-              <button 
-                onClick={handleDownload}
-                className="btn-p-full"
-              >
-                <Download size={16} style={{ marginRight: '8px' }} />
-                Download Paper
-              </button>
-            </div>
           </div>
         </div>
-        </div>
-      </div>
-    </div>
-  );
-  const renderStatus = () => (
-    <div className="status-dedicated-view fade-in">
-       <div className="status-grid-detailed compact">
-          <div className="content-card status-panel">
-            <h3 className="section-title-premium-small">Timeline</h3>
-            <div className="submission-progress-vertical compact">
-              <div className="v-step completed">
-                <div className="v-line"></div>
-                <div className="v-node"><CheckCircle size={14} /></div>
-                <div className="v-info">
-                  <span className="v-label">Paper Submitted</span>
-                  <span className="v-time">{new Date(registration?.createdAt || Date.now()).toLocaleDateString()}</span>
+
+        {/* Right Column: Status & Actions */}
+        <div className="submission-status-column">
+          <div className="detail-card">
+            <h3 className="card-title">Submission Timeline</h3>
+            <div className="timeline-vertical">
+              <div className="timeline-step completed">
+                <div className="step-line"></div>
+                <div className="step-node"><CheckCircle size={14} /></div>
+                <div className="step-info">
+                  <span className="step-label">Paper Submitted</span>
+                  <span className="step-time">{new Date(registration?.createdAt || Date.now()).toLocaleDateString()}</span>
                 </div>
               </div>
-              <div className={`v-step ${registration?.paperDetails?.reviewStatus ? 'completed' : 'active'}`}>
-                <div className="v-line"></div>
-                <div className="v-node">{registration?.paperDetails?.reviewStatus ? <CheckCircle size={14} /> : <div className="pulse-dot"></div>}</div>
-                <div className="v-info">
-                  <span className="v-label">Review Process</span>
-                  <span className="v-time">Technical Committee</span>
+              <div className={`timeline-step ${registration?.paperDetails?.reviewStatus ? 'completed' : 'active'}`}>
+                <div className="step-line"></div>
+                <div className="step-node">{registration?.paperDetails?.reviewStatus ? <CheckCircle size={14} /> : <div className="pulse-dot"></div>}</div>
+                <div className="step-info">
+                  <span className="step-label">Review Process</span>
+                  <span className="step-time">Technical Committee</span>
                 </div>
               </div>
-              <div className={`v-step ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'completed' : ''}`}>
-                <div className="v-node">{registration?.paperDetails?.reviewStatus === 'Accepted' ? <CheckCircle size={14} /> : <div className="hollow-dot"></div>}</div>
-                <div className="v-info">
-                  <span className="v-label">Final Decision</span>
-                  <span className="v-time">Final Notification</span>
+              <div className={`timeline-step ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'completed' : ''}`}>
+                <div className="step-node">{registration?.paperDetails?.reviewStatus === 'Accepted' ? <CheckCircle size={14} /> : <div className="hollow-dot"></div>}</div>
+                <div className="step-info">
+                  <span className="step-label">Final Decision</span>
+                  <span className="step-time">Final Notification</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="content-card remarks-panel">
-            <h3 className="section-title-premium-small">Committee Remarks</h3>
+          <div className="detail-card">
+            <h3 className="card-title">Committee Remarks</h3>
             {registration?.paperDetails?.reviewerComments ? (
-              <div className="review-box-premium static compact">
-                <div className="box-header">
+              <div className="remarks-content">
+                <div className="remarks-header">
                   <AlertCircle size={14} />
                   <span>Peer Review Feedback</span>
                 </div>
                 <p>{registration.paperDetails.reviewerComments}</p>
               </div>
             ) : (
-              <div className="no-remarks-placeholder compact">
-                 <div className="placeholder-content">
-                    <Clock size={24} />
-                    <p>Awaiting feedback</p>
-                 </div>
+              <div className="remarks-placeholder">
+                <Clock size={24} />
+                <p>Awaiting feedback</p>
               </div>
             )}
           </div>
-       </div>
+
+          <div className="action-card">
+            <button onClick={handleDownload} className="btn-download-full">
+              <Download size={16} />
+              Download Manuscript
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 
@@ -457,13 +426,7 @@ const Dashboard = () => {
               className={`nav-item ${activeTab === 'paper' ? 'active' : ''}`} 
               onClick={() => { setActiveTab('paper'); setIsSidebarOpen(false); }}
             >
-              <FileText size={18} /> My Paper
-            </div>
-            <div 
-              className={`nav-item ${activeTab === 'status' ? 'active' : ''}`} 
-              onClick={() => { setActiveTab('status'); setIsSidebarOpen(false); }}
-            >
-              <Clock size={18} /> Status
+              <FileText size={18} /> Submission
             </div>
             <div 
               className={`nav-item ${activeTab === 'payment' ? 'active' : ''}`} 
@@ -496,7 +459,7 @@ const Dashboard = () => {
           <header className="dash-header">
             <div className="header-text-flex">
               <div className="header-title-group">
-                <h1>{activeTab === 'paper' ? 'Submission details' : (activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}</h1>
+                <h1>{activeTab === 'paper' ? 'Submission Details' : (activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}</h1>
                 {activeTab === 'paper' && (
                   <div className="header-id-badge">
                     #CMP-26-{(registration?._id || 'XXX').slice(-4).toUpperCase()}
@@ -505,15 +468,10 @@ const Dashboard = () => {
               </div>
               
               <div className="header-actions-slot">
-                {activeTab === 'status' && (
+                {activeTab === 'paper' && (
                   <div className={`header-status-badge ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'accepted' : 'pending'}`}>
                     {registration?.paperDetails?.reviewStatus || 'Awaiting Review'}
                   </div>
-                )}
-                {activeTab === 'paper' && registration?.paperDetails?.fileUrl && (
-                  <a href={registration.paperDetails.fileUrl} target="_blank" rel="noreferrer" className="btn-mini-download">
-                    <Download size={14} /> Manuscript
-                  </a>
                 )}
               </div>
             </div>
@@ -533,7 +491,6 @@ const Dashboard = () => {
               <>
                 {activeTab === 'overview' && renderOverview()}
                 {activeTab === 'paper' && renderMyPaper()}
-                {activeTab === 'status' && renderStatus()}
                 {activeTab === 'payment' && renderPayment()}
                 {activeTab === 'notifications' && (
                   <div className="content-card p-12 text-center bg-white rounded-3xl shadow-sm">

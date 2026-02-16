@@ -4,11 +4,15 @@ const {
     registerUser,
     loginUser,
     getUserProfile,
+    verifyEmail,
+    resendVerification
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/verify-email', verifyEmail);
+router.post('/resend-verification', resendVerification);
 router.get('/profile', protect, getUserProfile);
 
 module.exports = router;
