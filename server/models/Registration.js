@@ -11,15 +11,19 @@ const registrationSchema = new mongoose.Schema({
         email: String,
         mobile: String,
         institution: String,
+        department: String,
+        registerNumber: String,
         category: {
             type: String,
-            enum: ['Inter-college Student', 'External Student']
+            enum: ['Inter-college Student', 'External Student', 'Industrial Delegate', 'Research Scholar']
         }
     },
     teamMembers: [{
         name: String,
         email: String,
-        affiliation: String
+        affiliation: String,
+        department: String,
+        registerNumber: String
     }],
     paperDetails: {
         title: String,

@@ -20,7 +20,9 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
     name: '',
     email: '',
     mobile: '',
-    institution: '',
+    institution: 'Coimbatore Institute of Engineering and Technology',
+    department: '',
+    registerNumber: '',
     category: 'External Student',
     teamMembers: [],
     paperTitle: '',
@@ -52,6 +54,8 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
               email: data.personalDetails?.email || user.email,
               mobile: data.personalDetails?.mobile || user.phone || '',
               institution: data.personalDetails?.institution || '',
+              department: data.personalDetails?.department || '',
+              registerNumber: data.personalDetails?.registerNumber || '',
               category: data.personalDetails?.category || 'External Student',
               teamMembers: data.teamMembers || [],
               paperTitle: data.paperDetails?.title || '',
@@ -123,6 +127,16 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
         if (!formData.institution) {
             setErrors({ institution: true });
             toast.error("Institution is required");
+            return false;
+        }
+        if (!formData.department) {
+            setErrors({ department: true });
+            toast.error("Department is required");
+            return false;
+        }
+        if (!formData.registerNumber) {
+            setErrors({ registerNumber: true });
+            toast.error("Register Number is required");
             return false;
         }
         return true;
@@ -198,6 +212,8 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
           email: formData.email,
           mobile: formData.mobile,
           institution: formData.institution,
+          department: formData.department,
+          registerNumber: formData.registerNumber,
           category: formData.category
         },
         teamMembers: formData.teamMembers,
@@ -337,6 +353,14 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
     }
   };
 
+  const hostColleges = [
+    "Coimbatore Institute of Engineering and Technology",
+    "Coimbatore Institute of Management and Technology",
+    "Kovai Kalaimagal Arts and Science College"
+  ];
+
+  const isHostInstitution = hostColleges.includes(formData.institution);
+
   return (
     <div className="registration-form-content">
         <div className="form-header">
@@ -429,20 +453,99 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
             </div>
           )}
 
+
+
+
+
           {step === 2 && (
             <div className="step-fade">
               <h2>Step 2: Institutional Details</h2>
+              
               <div className="form-group">
-                <label>Institution</label>
-                <input name="institution" value={formData.institution} onChange={handleChange} placeholder="College/Organization" />
+                <label>Institution Details</label>
+                <div className="institution-options">
+                    <div 
+                        className={`option-card ${isHostInstitution ? 'selected' : ''}`}
+                        onClick={() => setFormData({...formData, institution: hostColleges[0]})}
+                    >
+                        <div className="option-radio">
+                            <div className="radio-inner"></div>
+                        </div>
+                        <div className="option-content">
+                            <span className="option-title">Host Institution</span>
+                            <span className="option-desc">Select from CIET Institutions</span>
+                        </div>
+                    </div>
+
+                    <div 
+                        className={`option-card ${!isHostInstitution ? 'selected' : ''}`}
+                        onClick={() => setFormData({...formData, institution: ''})}
+                    >
+                        <div className="option-radio">
+                            <div className="radio-inner"></div>
+                        </div>
+                        <div className="option-content">
+                            <span className="option-title">External Institution</span>
+                            <span className="option-desc">Other College or Organization</span>
+                        </div>
+                    </div>
+                </div>
+
+                {isHostInstitution ? (
+                    <div className="animate-fade-in mt-2">
+                        <label className="text-sm text-muted mb-1 block">Select College</label>
+                        <select 
+                            name="institution" 
+                            value={formData.institution} 
+                            onChange={handleChange}
+                            className="custom-select"
+                        >
+                            {hostColleges.map((college, idx) => (
+                                <option key={idx} value={college}>{college}</option>
+                            ))}
+                        </select>
+                    </div>
+                ) : (
+                    <div className="external-input-wrapper fade-in">
+                        <label>Enter College Name</label>
+                        <input 
+                            name="institution" 
+                            value={formData.institution} 
+                            onChange={handleChange} 
+                            placeholder="e.g. PSG College of Technology" 
+                            autoFocus
+                            className="external-input"
+                        />
+                    </div>
+                )}
               </div>
-              <div className="form-group">
-                <label>Category</label>
-                <select name="category" value={formData.category} onChange={handleChange}>
-                  <option value="Inter-college Student">Inter-college Student</option>
-                  <option value="External Student">External Student</option>
-                </select>
+
+               <div className="form-group animate-fade-in">
+                <label>Department <span className="text-red-500">*</span></label>
+                <input 
+                    name="department" 
+                    value={formData.department} 
+                    onChange={handleChange} 
+                    placeholder="e.g. Computer Science and Engineering" 
+                    className={errors.department ? 'input-error' : ''}
+                />
               </div>
+
+              <div className="form-group animate-fade-in">
+                <label>Register Number <span className="text-red-500">*</span></label>
+                <input 
+                    name="registerNumber" 
+                    value={formData.registerNumber} 
+                    onChange={handleChange} 
+                    placeholder="e.g. 710012345678" 
+                    className={errors.registerNumber ? 'input-error' : ''}
+                />
+              </div>
+
+
+
+
+
             </div>
           )}
 
@@ -452,9 +555,26 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
               <p>Add co-authors if any.</p>
               {formData.teamMembers.map((m, i) => (
                 <div key={i} className="team-member-row card">
-                  <input placeholder="Name" value={m.name} onChange={(e) => updateTeamMember(i, 'name', e.target.value)} />
-                  <input placeholder="Email" value={m.email} onChange={(e) => updateTeamMember(i, 'email', e.target.value)} />
-                  <input placeholder="Affiliation" value={m.affiliation} onChange={(e) => updateTeamMember(i, 'affiliation', e.target.value)} />
+                  <div className="team-member-header">
+                    <h4 className="team-member-title">Co-author {i + 1}</h4>
+                    <button 
+                        onClick={() => {
+                            const newMembers = [...formData.teamMembers];
+                            newMembers.splice(i, 1);
+                            setFormData({...formData, teamMembers: newMembers});
+                        }}
+                        className="remove-member-btn"
+                    >
+                        Remove
+                    </button>
+                  </div>
+                  <div className="team-member-grid">
+                      <input placeholder="Name" value={m.name} onChange={(e) => updateTeamMember(i, 'name', e.target.value)} />
+                      <input placeholder="Email" value={m.email} onChange={(e) => updateTeamMember(i, 'email', e.target.value)} />
+                      <input placeholder="Institution" value={m.affiliation} onChange={(e) => updateTeamMember(i, 'affiliation', e.target.value)} />
+                      <input placeholder="Department" value={m.department} onChange={(e) => updateTeamMember(i, 'department', e.target.value)} />
+                      <input placeholder="Register Number" value={m.registerNumber} onChange={(e) => updateTeamMember(i, 'registerNumber', e.target.value)} />
+                  </div>
                 </div>
               ))}
               <button onClick={addTeamMember} className="btn btn-outline">+ Add Co-author</button>

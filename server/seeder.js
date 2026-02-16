@@ -16,12 +16,15 @@ const importData = async () => {
             email: 'admin@example.com',
             password: 'adminpassword123', // This will be hashed by the User model pre-save hook
             role: 'admin',
-            phone: '1234567890'
+            phone: '1234567890',
+            isEmailVerified: true
         };
 
         await User.create(adminUser);
 
         console.log('Admin User Created Successfully!');
+        console.log('Email: admin@example.com');
+        console.log('Password: adminpassword123');
         process.exit();
     } catch (error) {
         console.error(`Error: ${error.message}`);

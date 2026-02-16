@@ -218,17 +218,18 @@
 }
 
 /* Mobile Responsive */
-@media (max-width: 1024px) {
-  .register-brand { padding: 3rem; }
-  .register-form { padding: 3rem; }
-  .register-brand h1 { font-size: 2.25rem; }
+@media (max-width: 960px) {
+  .register-brand { 
+    display: none; 
+  }
+  
+  .register-form { 
+    width: 100%; 
+    padding: 1.5rem; 
+  }
 }
 
 @media (max-width: 768px) {
-  .register-container { flex-direction: column; height: auto; }
-  .register-brand { width: 100%; padding: 3rem 1.5rem; min-height: 400px; }
-  .register-form { width: 100%; padding: 2rem 1rem; min-height: auto; overflow: visible; }
-  .register-brand h1 { font-size: 2rem; }
   .form-row, .team-member-row { grid-template-columns: 1fr; }
 }
 

@@ -246,10 +246,119 @@ const resendVerification = async (req, res) => {
     }
 };
 
+// @desc    Forgot Password
+// @route   POST /api/auth/forgot-password
+// @access  Public
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Get reset token
+        const resetToken = user.getResetPasswordToken();
+
+        await user.save({ validateBeforeSave: false });
+
+        // Create reset url
+        const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
+        // For local development with frontend on different port/domain
+        const frontendResetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+
+
+        const message = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #6366f1;">Password Reset Request</h2>
+                <p>You are receiving this email because you (or someone else) has requested the reset of a password.</p>
+                <p>Please click the button below to reset your password:</p>
+                <div style="text-align: center; margin: 20px 0;">
+                    <a href="${frontendResetUrl}" style="background-color: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Reset Password</a>
+                </div>
+                <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+                <p>This link will expire in 10 minutes.</p>
+            </div>
+        `;
+
+        try {
+            const nodemailer = require('nodemailer');
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS
+                }
+            });
+
+            await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: user.email,
+                subject: 'CIETM 2026 - Password Reset',
+                html: message
+            });
+
+            res.status(200).json({ message: 'Email sent' });
+        } catch (error) {
+            console.error(error);
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+
+            await user.save({ validateBeforeSave: false });
+
+            return res.status(500).json({ message: 'Email could not be sent' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Reset Password
+// @route   PUT /api/auth/reset-password/:resetToken
+// @access  Public
+const resetPassword = async (req, res) => {
+    // Get hashed token
+    const resetPasswordToken = require('crypto')
+        .createHash('sha256')
+        .update(req.params.resetToken)
+        .digest('hex');
+
+    try {
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid token' });
+        }
+
+        // Set new password
+        user.password = req.body.password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+
+        await user.save();
+
+        res.status(200).json({
+            message: 'Password updated successfully',
+            token: generateToken(user._id)
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
     getUserProfile,
     verifyEmail,
-    resendVerification
+    resendVerification,
+    forgotPassword,
+    resetPassword
 };

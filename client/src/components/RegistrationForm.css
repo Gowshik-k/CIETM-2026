@@ -90,13 +90,75 @@
 }
 
 .team-member-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
     background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.team-member-row:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.team-member-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+/* Make Name and Email take full width on mobile, or maybe just Name? */
+/* Actually, a 2-column grid is good. */
+/* Let's make Institution full width if needed, but 2-col is fine. */
+
+.team-member-grid input {
+    width: 100%;
+    padding: 0.75rem 1rem;
     border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    transition: all 0.2s;
+}
+
+.team-member-grid input:focus {
+    border-color: #4f46e5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.team-member-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.team-member-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.remove-member-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0;
+}
+
+.remove-member-btn:hover {
+    color: #b91c1c;
+    text-decoration: underline;
 }
 
 .team-member-row input {
@@ -245,9 +307,143 @@
     width: auto;
 }
 
+/* Institution Selection Cards */
+.institution-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.option-card {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+}
+
+.option-card:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.option-card.selected {
+  border-color: #4f46e5;
+  background: #eef2ff;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+}
+
+.option-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.option-card.selected .option-radio {
+  border-color: #4f46e5;
+  background: #4f46e5;
+}
+
+.radio-inner {
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.2s;
+}
+
+.option-card.selected .radio-inner {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.option-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.option-title {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+.option-card.selected .option-title {
+  color: #4f46e5;
+}
+
+.option-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* External Input Animation */
+.external-input-wrapper {
+  animation: slideDown 0.3s ease-out;
+}
+
+.external-input {
+  border-color: #4f46e5 !important;
+  background: white !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* Custom Select Dropdown */
+.custom-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  padding-right: 2.5rem; /* Space for arrow */
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background-color: #f8fafc;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: #1e293b;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  transition: all 0.2s ease;
+}
+
+.custom-select:hover {
+  border-color: #cbd5e1;
+  background-color: #fff;
+}
+
+.custom-select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  background-color: #fff;
+}
+
 /* Responsive adjustments for embedded form */
 @media (max-width: 768px) {
-    .form-row, .team-member-row {
+    .form-row, .team-member-row, .institution-options {
         grid-template-columns: 1fr;
     }
 }
