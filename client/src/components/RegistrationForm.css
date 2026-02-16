@@ -1,0 +1,253 @@
+/* Shared styles for RegistrationForm component */
+
+.registration-form-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.form-header {
+  margin-bottom: 2rem;
+  padding-top: 1rem;
+  flex-shrink: 0;
+}
+
+.step-indicator {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #64748b; /* text-muted */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.progress-bar-mini {
+  width: 100%;
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); /* primary-gradient */
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+/* MAIN SCROLLABLE AREA */
+.step-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.step-content h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #1e293b; /* text-main */
+  flex-shrink: 0;
+}
+
+/* Form Groups */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.9rem;
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.team-member-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.team-member-row input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+}
+
+/* Actions */
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 1.5rem;
+  padding-bottom: 1rem;
+  border-top: 1px solid #f1f5f9;
+  background: white;
+  z-index: 20;
+  flex-shrink: 0;
+}
+
+/* Verification UI */
+.verification-section {
+  text-align: center;
+  max-width: 400px;
+  margin: 1rem auto;
+  animation: scaleIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.verification-icon {
+  width: 80px;
+  height: 80px;
+  background: #e0e7ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  color: #4f46e5;
+  flex-shrink: 0;
+}
+
+.verification-input {
+  font-family: monospace;
+  font-weight: 700;
+  color: #4f46e5;
+  border-color: #cbd5e1 !important;
+}
+
+.verification-input:focus {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.btn-text:hover {
+  color: #4338ca;
+}
+
+.btn-text:disabled {
+  color: #64748b;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* File Upload */
+.file-upload {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #64748b;
+}
+
+.file-upload:hover {
+    border-color: #4f46e5;
+    background: #f5f3ff;
+    color: #4f46e5;
+}
+
+.file-upload input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.review-box p {
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.review-box .hint {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
+.terms {
+    margin-top: 2rem;
+    font-size: 0.9rem;
+}
+
+.terms input {
+    margin-right: 0.5rem;
+    width: auto;
+}
+
+/* Responsive adjustments for embedded form */
+@media (max-width: 768px) {
+    .form-row, .team-member-row {
+        grid-template-columns: 1fr;
+    }
+}

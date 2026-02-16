@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -9,6 +9,7 @@ import {
   Calendar, MapPin, ShieldCheck, Award, Layers
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import RegistrationForm from '../components/RegistrationForm';
 import './Dashboard.css';
 import './Dashboard-submission.css';
 
@@ -19,29 +20,31 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Moved fetchRegistration outside useEffect to allow refreshing
+  const fetchRegistration = useCallback(async () => {
+    try {
+      const { data } = await axios.get('/api/registrations/my', {
+        headers: {
+          Authorization: `Bearer ${user?.token}`
+        }
+      });
+      setRegistration(data);
+    } catch (error) {
+      console.error("Failed to fetch registration", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchRegistration();
+  }, [fetchRegistration]);
+
   const handleDownload = () => {
     if (!registration) return;
     // Open the download route with token in query for authentication
     window.open(`/api/registrations/download/${registration._id}?token=${user.token}`, '_blank');
   };
-
-  useEffect(() => {
-    const fetchRegistration = async () => {
-      try {
-        const { data } = await axios.get('/api/registrations/my', {
-          headers: {
-            Authorization: `Bearer ${user?.token}`
-          }
-        });
-        setRegistration(data);
-      } catch (error) {
-        console.error("Failed to fetch registration", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRegistration();
-  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -79,14 +82,14 @@ const Dashboard = () => {
           <div className="stat-icon-glass"><FileText size={24} /></div>
           <div className="stat-info">
             <span className="stat-label-translucent">Submission Status</span>
-            <span className="stat-value-large">{registration?.paperDetails?.reviewStatus || 'Awaiting'}</span>
+            <span className="stat-value-large">{registration?.status || 'Not Started'}</span>
           </div>
         </div>
         <div className="stat-card-premium accent">
           <div className="stat-icon-glass"><Award size={24} /></div>
           <div className="stat-info">
             <span className="stat-label-translucent">Global Track</span>
-            <span className="stat-value-large">{registration?.paperDetails?.track || 'General Intelligence'}</span>
+            <span className="stat-value-large">{registration?.paperDetails?.track || 'N/A'}</span>
           </div>
         </div>
         <div className="stat-card-premium dark">
@@ -210,6 +213,31 @@ const Dashboard = () => {
       </div>
     </div>
   );
+
+  const renderSubmissionTab = () => {
+    // If no registration field or status is Draft, show form
+    if (!registration || registration.status === 'Draft' || !registration.status) {
+        return (
+            <div className="submission-form-container fade-in">
+                 <div className="content-card p-6 bg-white rounded-3xl shadow-sm">
+                    <h2 className="text-2xl font-bold mb-6">
+                        {registration && registration.status === 'Draft' ? 'Continue Submission' : 'Start Submission'}
+                    </h2>
+                    <RegistrationForm 
+                        startStep={2} 
+                        showAccountCreation={false} 
+                        onSuccess={() => {
+                            fetchRegistration();
+                            toast.success("Submission Completed!");
+                        }} 
+                    />
+                 </div>
+            </div>
+        );
+    }
+    // Otherwise show the details view
+    return renderMyPaper();
+  };
 
   const renderMyPaper = () => (
     <div className="submission-unified-view fade-in">
@@ -478,57 +506,44 @@ const Dashboard = () => {
           </header>
 
           <div className="tab-content">
-            {!registration && activeTab === 'overview' ? (
-              <div className="content-card text-center p-12 bg-white rounded-3xl shadow-sm">
-                <div className="stat-icon bg-orange-50 text-orange-500 mx-auto mb-6 w-20 h-20 rounded-full flex items-center justify-center">
-                  <AlertCircle size={40} />
+            {activeTab === 'overview' && renderOverview()}
+            {activeTab === 'paper' && renderSubmissionTab()}
+            {activeTab === 'payment' && renderPayment()}
+            {activeTab === 'notifications' && (
+              <div className="content-card p-12 text-center bg-white rounded-3xl shadow-sm">
+                <div className="stat-icon bg-blue-50 text-blue-500 mx-auto mb-6 w-20 h-20 rounded-full flex items-center justify-center">
+                  <Bell size={40} />
                 </div>
-                <h2 className="text-2xl font-bold mb-4">Registration Pending</h2>
-                <p className="text-slate-500 mb-8 max-w-md mx-auto">You haven't completed your registration yet. Complete it to unlock all author features.</p>
-                <button onClick={() => window.location.href='/register'} className="btn btn-primary px-10 py-3 rounded-full">Complete Registration</button>
+                <h3 className="text-2xl font-bold mb-2">Notifications</h3>
+                <p className="text-slate-500">You have no new notifications.</p>
               </div>
-            ) : (
-              <>
-                {activeTab === 'overview' && renderOverview()}
-                {activeTab === 'paper' && renderMyPaper()}
-                {activeTab === 'payment' && renderPayment()}
-                {activeTab === 'notifications' && (
-                  <div className="content-card p-12 text-center bg-white rounded-3xl shadow-sm">
-                    <div className="stat-icon bg-blue-50 text-blue-500 mx-auto mb-6 w-20 h-20 rounded-full flex items-center justify-center">
-                      <Bell size={40} />
-                    </div>
-                    <h3 className="text-2xl font-bold mb-2">Notifications</h3>
-                    <p className="text-slate-500">You have no new notifications.</p>
-                  </div>
-                )}
-                {activeTab === 'settings' && (
-                  <div className="content-card p-10 bg-white rounded-3xl shadow-sm border border-slate-100">
-                    <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
-                      <Settings size={28} className="text-primary" /> Account Settings
-                    </h3>
-                    <div className="settings-grid grid gap-8">
-                      <div className="settings-section">
-                        <h4 className="text-xs font-bold uppercase text-slate-400 mb-4 tracking-widest">Profile Information</h4>
-                        <div className="grid md:grid-cols-2 gap-6">
-                          <div className="p-4 bg-slate-50 rounded-2xl">
-                            <label className="text-xs text-slate-400 block mb-1">Full Name</label>
-                            <span className="font-bold text-slate-700">{user.name}</span>
-                          </div>
-                          <div className="p-4 bg-slate-50 rounded-2xl">
-                            <label className="text-xs text-slate-400 block mb-1">Email Address</label>
-                            <span className="font-bold text-slate-700">{user.email}</span>
-                          </div>
-                        </div>
+            )}
+            {activeTab === 'settings' && (
+              <div className="content-card p-10 bg-white rounded-3xl shadow-sm border border-slate-100">
+                <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
+                  <Settings size={28} className="text-primary" /> Account Settings
+                </h3>
+                <div className="settings-grid grid gap-8">
+                  <div className="settings-section">
+                    <h4 className="text-xs font-bold uppercase text-slate-400 mb-4 tracking-widest">Profile Information</h4>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="p-4 bg-slate-50 rounded-2xl">
+                        <label className="text-xs text-slate-400 block mb-1">Full Name</label>
+                        <span className="font-bold text-slate-700">{user.name}</span>
                       </div>
-                      <div className="h-px bg-slate-100 w-full"></div>
-                      <div className="settings-section">
-                        <h4 className="text-xs font-bold uppercase text-slate-400 mb-4 tracking-widest">Security</h4>
-                        <button className="btn btn-outline border-slate-200 hover:border-primary px-6 py-2 rounded-xl text-sm transition-all">Change Account Password</button>
+                      <div className="p-4 bg-slate-50 rounded-2xl">
+                        <label className="text-xs text-slate-400 block mb-1">Email Address</label>
+                        <span className="font-bold text-slate-700">{user.email}</span>
                       </div>
                     </div>
                   </div>
-                )}
-              </>
+                  <div className="h-px bg-slate-100 w-full"></div>
+                  <div className="settings-section">
+                    <h4 className="text-xs font-bold uppercase text-slate-400 mb-4 tracking-widest">Security</h4>
+                    <button className="btn btn-outline border-slate-200 hover:border-primary px-6 py-2 rounded-xl text-sm transition-all">Change Account Password</button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </main>
