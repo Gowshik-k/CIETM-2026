@@ -5,7 +5,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { Toaster } from 'react-hot-toast';
-import './App.css';
 
 // Lazy load pages for better performance
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -20,10 +19,10 @@ const AppContent = () => {
   const hideFooter = location.pathname === '/register' || location.pathname === '/login' || location.pathname === '/admin/login';
 
   return (
-    <div className="app-container">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="main-content">
-        <Suspense fallback={<div className="loading-screen">Loading CIETM...</div>}>
+      <main className="flex-1 relative">
+        <Suspense fallback={<div className="flex justify-center items-center h-[60vh] text-2xl font-bold text-primary">Loading CIETM...</div>}>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />

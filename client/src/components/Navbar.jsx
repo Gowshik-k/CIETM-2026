@@ -1,14 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User, Menu, X } from 'lucide-react';
-import './Navbar.css';
+import { LogOut, User, Menu, X, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('#hero');
+
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+
+    // Intersection Observer for active section highlighting
+    const sections = ['#hero', '#about-conference', '#conference', '#tracks', '#speakers', '#about'];
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -70% 0px',
+      threshold: 0
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setActiveSection(`#${entry.target.id}`);
+        }
+      });
+    }, observerOptions);
+
+    sections.forEach(id => {
+      const el = document.querySelector(id);
+      if (el) observer.observe(el);
+    });
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      observer.disconnect();
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -23,51 +65,213 @@ const Navbar = () => {
     }
     const element = document.querySelector(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const offset = 80;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
     }
   };
 
+  const isHome = location.pathname === '/';
+  
+  // Always use the "scrolled" look for consistency and visibility
+  const navBgClass = 'bg-white/70 backdrop-blur-2xl border-b border-indigo-100/50 shadow-[0_2px_20px_-5px_rgba(0,0,0,0.05)]';
+  const textColorClass = "text-slate-700";
+  const logoColorClass = "text-indigo-950";
+  const buttonBorderClass = "border-slate-200 text-slate-700 hover:border-indigo-600 hover:text-indigo-600 hover:bg-indigo-50/50";
+
+  const navLinks = [
+    { name: 'Home', href: '#hero' },
+    { name: 'Conference', href: '#conference' },
+    { name: 'Tracks', href: '#tracks' },
+    { name: 'Speakers', href: '#speakers' },
+    { name: 'About College', href: '#about' }
+  ];
+
   return (
-    <nav className="navbar glass">
-      <div className="container nav-content">
-        <Link to="/" className="logo" onClick={() => scrollToSection('#hero')}>
-          CIETM <span className="logo-accent">2026</span>
+    <motion.nav 
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      className={`sticky top-0 z-50 h-20 flex items-center transition-all duration-500 ${navBgClass}`}
+    >
+      {/* Scroll Progress Bar */}
+      <motion.div
+        className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 origin-left z-50"
+        style={{ scaleX }}
+      />
+
+      <div className="w-full max-w-7xl mx-auto px-6 flex justify-between items-center">
+        {/* Logo */}
+        <Link 
+          to="/" 
+          className={`group relative text-2xl font-extrabold tracking-tighter flex items-center gap-2 ${logoColorClass} transition-colors duration-300 overflow-hidden px-2 py-1 rounded-lg`}
+          onClick={(e) => { e.preventDefault(); scrollToSection('#hero'); }}
+        >
+          <motion.span 
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center gap-1"
+          >
+            CIETM 
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 font-black relative">
+              2026
+            </span>
+          </motion.span>
+          
+          {/* Shine Effect */}
+          <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-35deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out pointer-events-none"></div>
+          
+          {/* Bottom underline */}
+          <span className="absolute bottom-0 left-2 right-2 h-[2px] bg-gradient-to-r from-indigo-600 to-purple-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
         </Link>
 
-        <div className={`nav-links ${isOpen ? 'active' : ''}`}>
-          <a href="#hero" onClick={(e) => { e.preventDefault(); scrollToSection('#hero'); }}>Home</a>
-          <a href="#about-conference" onClick={(e) => { e.preventDefault(); scrollToSection('#about-conference'); }}>Conference</a>
-          <a href="#speakers" onClick={(e) => { e.preventDefault(); scrollToSection('#speakers'); }}>Speakers</a>
-          <a href="#about" onClick={(e) => { e.preventDefault(); scrollToSection('#about'); }}>About College</a>
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-8">
+          <div className="flex items-center gap-1">
+            {navLinks.map((item) => (
+              <a 
+                key={item.name} 
+                href={item.href} 
+                onClick={(e) => { e.preventDefault(); scrollToSection(item.href); }}
+                className={`relative px-4 py-2 text-sm font-bold tracking-wide transition-all duration-300 group ${
+                  activeSection === item.href 
+                    ? 'text-indigo-600' 
+                    : `${textColorClass} hover:text-indigo-500`
+                }`}
+              >
+                {item.name}
+                {activeSection === item.href && (
+                  <motion.span 
+                    layoutId="activeNav"
+                    className="absolute bottom-0 left-4 right-4 h-0.5 bg-indigo-600 rounded-full"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <span className={`absolute bottom-0 left-4 right-4 h-0.5 bg-indigo-600/30 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ${activeSection === item.href ? 'hidden' : ''}`} />
+              </a>
+            ))}
+          </div>
           
-          <div className="mobile-auth-actions">
+          <div className="flex items-center gap-4 pl-6 border-l border-slate-200 transition-colors duration-500">
             {user ? (
-              <>
+              <div className="flex items-center gap-3">
                 <Link 
                   to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'} 
-                  className="btn btn-outline"
-                  onClick={() => setIsOpen(false)}
+                  className={`btn border-2 px-5 py-2 text-[0.7rem] uppercase tracking-widest font-black ${buttonBorderClass} transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg`}
                 >
                   Dashboard
                 </Link>
-                <button onClick={handleLogout} className="btn btn-secondary nav-btn-mobile">
-                  <LogOut size={18} /> Logout
-                </button>
-              </>
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleLogout} 
+                  className="p-2 text-slate-500 hover:text-red-500 transition-colors rounded-full hover:bg-red-50"
+                  title="Logout"
+                >
+                  <LogOut size={18} />
+                </motion.button>
+              </div>
             ) : (
-              <>
-                <Link to="/login" className="btn btn-outline" onClick={() => setIsOpen(false)}>Login</Link>
-                <Link to="/register" className="btn btn-primary" onClick={() => setIsOpen(false)}>Register</Link>
-              </>
+              <div className="flex items-center gap-3">
+                <Link 
+                  to="/login" 
+                  className={`px-5 py-2 text-[0.7rem] uppercase tracking-widest font-black transition-all ${textColorClass} hover:text-indigo-600`}
+                >
+                  Login
+                </Link>
+                <Link 
+                  to="/register" 
+                  className="btn btn-primary bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 text-[0.7rem] uppercase tracking-widest font-black shadow-lg shadow-indigo-200 hover:shadow-indigo-300 hover:translate-y-[-2px] transition-all"
+                >
+                  Register
+                </Link>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="mobile-toggle" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X size={28} /> : <Menu size={28} />}
-        </div>
+        {/* Mobile Toggle */}
+        <motion.div 
+          whileTap={{ scale: 0.9 }}
+          className="md:hidden z-50 cursor-pointer text-slate-800 p-2.5 bg-slate-100/80 backdrop-blur-md rounded-xl border border-white shadow-sm"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {isOpen ? <X size={20} /> : <Menu size={20} />}
+        </motion.div>
       </div>
-    </nav>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 bg-white z-40 flex flex-col p-8 pt-24 gap-6 md:hidden"
+          >
+            <div className="flex flex-col gap-2">
+              <span className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Navigation</span>
+              {navLinks.map((item) => (
+                <a 
+                  key={item.name} 
+                  href={item.href} 
+                  onClick={(e) => { e.preventDefault(); scrollToSection(item.href); }}
+                  className={`flex items-center justify-between p-4 rounded-2xl text-xl font-bold transition-all ${
+                    activeSection === item.href 
+                      ? 'bg-indigo-50 text-indigo-600' 
+                      : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {item.name}
+                  <ChevronRight size={20} className={activeSection === item.href ? 'opacity-100' : 'opacity-0'} />
+                </a>
+              ))}
+            </div>
+
+            <div className="mt-auto flex flex-col gap-4">
+              {user ? (
+                <>
+                  <Link 
+                    to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'} 
+                    className="w-full btn btn-primary py-4 rounded-2xl flex items-center justify-center gap-2 font-bold"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Go to Dashboard <ChevronRight size={18} />
+                  </Link>
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full p-4 rounded-2xl border-2 border-slate-100 text-slate-600 font-bold hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all flex items-center justify-center gap-2"
+                  >
+                    <LogOut size={18} /> Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link 
+                    to="/login" 
+                    className="w-full p-4 rounded-2xl border-2 border-slate-100 text-slate-700 font-bold text-center"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link 
+                    to="/register" 
+                    className="w-full btn btn-primary py-4 rounded-2xl font-bold text-center shadow-xl shadow-indigo-100"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Register for CIETM 2026
+                  </Link>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.nav>
   );
 };
 
