@@ -466,7 +466,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                 <div className="institution-options">
                     <div 
                         className={`option-card ${isHostInstitution ? 'selected' : ''}`}
-                        onClick={() => setFormData({...formData, institution: hostColleges[0]})}
+                        onClick={() => setFormData({...formData, institution: hostColleges[0], category: 'Inter-college Student'})}
                     >
                         <div className="option-radio">
                             <div className="radio-inner"></div>
@@ -479,7 +479,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
 
                     <div 
                         className={`option-card ${!isHostInstitution ? 'selected' : ''}`}
-                        onClick={() => setFormData({...formData, institution: ''})}
+                        onClick={() => setFormData({...formData, institution: '', category: 'External Student'})}
                     >
                         <div className="option-radio">
                             <div className="radio-inner"></div>

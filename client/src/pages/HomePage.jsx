@@ -403,6 +403,70 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Patrons Section */}
+      <section id="patrons" className="patrons-section section-padding">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-tag">Leadership</span>
+            <h2 className="section-title">Our <span className="text-gradient">Patrons</span></h2>
+            <p className="section-desc">Visionary leadership guiding CIETM 2026 towards excellence.</p>
+          </div>
+
+          <div className="patrons-wrapper">
+            <h3 className="patron-category-title">Chief Patron</h3>
+            <div className="patrons-grid chief-patrons-grid">
+              {[
+                { name: "Dr. K. A. Chinnaraju", role: "Director", img: null },
+                { name: "Thiru. M. Thangavelu", role: "Trustee", img: null },
+                { name: "Dr. P. Natarajan", role: "Academic Director", img: null }
+              ].map((p, i) => (
+                <motion.div 
+                  key={i}
+                  whileHover={{ y: -5 }}
+                  className="patron-card glass"
+                >
+                  {p.img ? (
+                    <img src={p.img} alt={p.name} className="patron-img" />
+                  ) : (
+                    <div className="patron-avatar-placeholder">
+                      <User size={32} strokeWidth={1.5} />
+                    </div>
+                  )}
+                  <h3>{p.name}</h3>
+                  <span className="patron-role">{p.role}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="patron-divider"></div>
+
+            <h3 className="patron-category-title">Patron</h3>
+            <div className="patrons-grid patrons-grid-secondary">
+              {[
+                { name: "Dr. K. Manikanda Subramanian", role: "Principal", img: null },
+                { name: "Dr. K. Kalamani", role: "Dean-Academics", img: null }
+              ].map((p, i) => (
+                <motion.div 
+                  key={i}
+                  whileHover={{ y: -5 }}
+                  className="patron-card glass"
+                >
+                  {p.img ? (
+                    <img src={p.img} alt={p.name} className="patron-img" />
+                  ) : (
+                    <div className="patron-avatar-placeholder secondary">
+                      <User size={32} strokeWidth={1.5} />
+                    </div>
+                  )}
+                  <h3>{p.name}</h3>
+                  <span className="patron-role">{p.role}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* About College Section */}
       <section id="about" className="about-college-section section-padding">
         <div className="container">
