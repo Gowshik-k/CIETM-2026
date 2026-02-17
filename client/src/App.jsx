@@ -17,7 +17,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 
 const AppContent = () => {
   const location = useLocation();
-  const hideFooter = location.pathname === '/register';
+  const hideFooter = location.pathname === '/register' || location.pathname === '/login' || location.pathname === '/admin/login';
 
   return (
     <div className="app-container">

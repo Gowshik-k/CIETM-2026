@@ -69,16 +69,16 @@ const LoginPage = () => {
           <p>Sign in to access your dashboard, manage submissions, and stay updated with conference news.</p>
           
           <div className="brand-features">
-            <div className="feature-item">
-              <div className="feature-icon"><CheckCircle size={20} /></div>
+            <div className="register-feature-item">
+              <div className="register-feature-icon"><CheckCircle size={20} /></div>
               <span>Track Your Paper</span>
             </div>
-            <div className="feature-item">
-              <div className="feature-icon"><CheckCircle size={20} /></div>
+            <div className="register-feature-item">
+              <div className="register-feature-icon"><CheckCircle size={20} /></div>
               <span>Manage Registration</span>
             </div>
-            <div className="feature-item">
-              <div className="feature-icon"><CheckCircle size={20} /></div>
+            <div className="register-feature-item">
+              <div className="register-feature-icon"><CheckCircle size={20} /></div>
               <span>Access Resources</span>
             </div>
           </div>

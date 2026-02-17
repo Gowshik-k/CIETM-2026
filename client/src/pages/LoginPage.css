@@ -10,7 +10,7 @@
 
 /* Left Side - Branding */
 .login-brand {
-  width: 40%; 
+  width: 35%; /* Match RegisterPage */
   background: var(--primary-gradient);
   position: relative;
   overflow: hidden;
@@ -83,8 +83,8 @@
   gap: 1.25rem;
 }
 
-.feature-item {
-  display: flex;
+.register-feature-item {
+  display: inline-flex;
   align-items: center;
   gap: 1rem;
   font-size: 1rem;
@@ -94,9 +94,10 @@
   border-radius: 12px;
   backdrop-filter: blur(4px);
   width: fit-content;
+  max-width: 100%;
 }
 
-.feature-icon {
+.register-feature-icon {
   width: 24px;
   height: 24px;
   background: white;
@@ -106,51 +107,55 @@
   align-items: center;
   justify-content: center;
   font-size: 0.8rem;
+  flex-shrink: 0;
 }
 
 /* Right Side - Form Wrapper */
 .login-form-wrapper {
-  width: 60%;
-  padding: 2rem;
+  width: 65%; /* Adjusted to fill space */
+  padding: 1.5rem; /* Reduced padding */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: white;
   position: relative;
+  height: 100%;
+  overflow-y: auto; /* Allow internal scroll if needed */
 }
 
 .login-content {
     width: 100%;
-    max-width: 420px;
+    max-width: 380px; /* Slightly tighter max-width */
 }
 
 .login-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem; /* Reduced */
   text-align: center;
 }
 
 .login-icon-header {
-    width: 64px;
-    height: 64px;
+    width: 56px; /* Smaller icon container */
+    height: 56px;
     background: #eef2ff;
-    border-radius: 20px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1.5rem;
+    margin: 0 auto 1rem; /* Reduced */
     color: var(--primary);
 }
 
 .login-header h1 {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.75rem; /* Smaller font */
+  margin-bottom: 0.25rem;
   color: var(--text-main);
   letter-spacing: -0.02em;
 }
 
 .login-header p {
   color: var(--text-muted);
+  font-size: 0.95rem;
 }
 
 .login-form {
@@ -158,14 +163,14 @@
 }
 
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem; /* Reduced */
 }
 
 .form-group label {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
   font-weight: 600;
   color: var(--text-main);
   font-size: 0.9rem;
@@ -173,12 +178,12 @@
 
 .form-group input {
   width: 100%;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 1rem; /* Reduced padding */
   border-radius: 12px;
   border: 1.5px solid #e2e8f0;
   transition: all 0.3s ease;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 0.95rem;
   background: #f8fafc;
 }
 
@@ -191,18 +196,18 @@
 
 .login-btn {
   width: 100%;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   justify-content: center;
-  padding: 1rem;
-  font-size: 1rem;
+  padding: 0.875rem; /* Reduced */
+  font-size: 0.95rem;
 }
 
 .login-footer {
-  margin-top: 2rem;
+  margin-top: 1.5rem; /* Reduced */
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  font-size: 0.95rem;
+  gap: 0.5rem;
+  font-size: 0.9rem;
   color: var(--text-muted);
   text-align: center;
 }
