@@ -61,26 +61,26 @@ const HomePage = () => {
   const tracks = [
     { 
       id: '01', 
-      title: 'Advanced Computing', 
-      desc: 'Exploring Neural Networks, Quantum supremacy, and Edge Computing architectures.',
-      icon: <Sparkles className="w-12 h-12 text-indigo-600 mb-6" />
+      title: 'Engineering Innovations', 
+      desc: 'Advancements in Civil, Computer Science, Electrical, Electronics, Mechanical & Mechatronics Engineering.',
+      icon: <Layers className="w-12 h-12 text-indigo-600 mb-6" />
     },
     { 
       id: '02', 
-      title: 'Sustainable Management', 
-      desc: 'Circular economy, Green supply chains, and ESG-driven corporate strategies.',
+      title: 'Economic Sustainability', 
+      desc: 'Innovative models for Economic Sustainability, Circular Economy, and ESG-driven strategies.',
       icon: <Globe className="w-12 h-12 text-indigo-600 mb-6" />
     },
     { 
       id: '03', 
-      title: 'Digital Transformation', 
-      desc: 'FinTech innovations, Blockchain governance, and the future of remote work.',
-      icon: <Users className="w-12 h-12 text-indigo-600 mb-6" />
+      title: 'IT, AI & Communication', 
+      desc: 'Pioneering work in Information Technology, Artificial Intelligence, and Communication Engineering.',
+      icon: <Sparkles className="w-12 h-12 text-indigo-600 mb-6" />
     },
     { 
       id: '04', 
-      title: 'Human-Centric AI', 
-      desc: 'Ethics in automation, NLP for local languages, and cognitive computing.',
+      title: 'Green Technology', 
+      desc: 'Research in Renewable Energy, Green Technology, and Sustainable Infrastructure development.',
       icon: <Award className="w-12 h-12 text-indigo-600 mb-6" />
     }
   ];
@@ -129,7 +129,7 @@ const HomePage = () => {
             alt="Conference Background" 
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/45 via-slate-900/50 to-slate-50"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/30 via-slate-900/30 70% to-slate-50/100"></div>
         </div>
 
         <div className="w-full max-w-7xl mx-auto px-6 text-center">
@@ -146,7 +146,7 @@ const HomePage = () => {
             <p className="text-white text-lg md:text-xl font-bold mb-2 drop-shadow-md">
               Innovating the Future of Technology & Management
             </p>
-            <h1 className="text-5xl md:text-7xl font-extrabold leading-[1.1] mb-6 tracking-tight text-white drop-shadow-lg">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold leading-[1.1] mb-6 tracking-tight text-white drop-shadow-lg">
               Contemporary Innovations in Engineering, Technology & Management - <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">CIETM-26</span>
             </h1>
             <div className="flex flex-col md:flex-row gap-4 mb-10 justify-center w-full max-w-md md:max-w-none">
@@ -174,71 +174,44 @@ const HomePage = () => {
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-50/50 rounded-full blur-3xl pointer-events-none -ml-40 -mb-20"></div>
 
         <div className="w-full max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-20">
-            {/* Left Column: Text Content */}
-            <div>
-              <span className="inline-block px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5 border border-indigo-100">Introduction</span>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 tracking-tight leading-tight">
-                About the <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Conference</span>
-              </h2>
-              <p className="text-lg text-slate-600 leading-relaxed font-medium mb-8 text-justify">
-                The conference will focus on the contemporary cutting edge trends and advances in the field of Science, Engineering, Technology and Management domains. The conference aims to address the issues by providing a platform for the exchange of innovative ideas and information on recent advancements.
-              </p>
-              <p className="text-base text-slate-500 leading-relaxed mb-8 text-justify">
-                This Conference provides a forum for undergraduates, post graduates, research scholars, faculty members and Personnel's from industry to come together and discuss the latest developments and innovations in Science, Engineering, Technology and Management. This helps the delegates to update their knowledge and provide a platform for future research.
-              </p>
+          <div className="max-w-4xl mx-auto text-center mb-20">
+            {/* Centered Text Content */}
+            <span className="inline-block px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5 border border-indigo-100">Introduction</span>
+            <h2 className="text-4xl md:text-5xl font-bold mb-8 text-slate-900 tracking-tight leading-tight">
+              About the <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Conference</span>
+            </h2>
+            <p className="text-base md:text-lg text-slate-600 leading-relaxed font-medium mb-8 px-2">
+              The conference will focus on the contemporary cutting edge trends and advances in the field of Science, Engineering, Technology and Management domains. The conference aims to address the issues by providing a platform for the exchange of innovative ideas and information on recent advancements.
+            </p>
+            <p className="text-base text-slate-500 leading-relaxed mb-10">
+              This Conference provides a forum for undergraduates, post graduates, research scholars, faculty members and Personnel's from industry to come together and discuss the latest developments and innovations in Science, Engineering, Technology and Management. This helps the delegates to update their knowledge and provide a platform for future research.
+            </p>
 
-              {/* Highlights */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md hover:border-indigo-100 transition-all">
-                  <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
-                    <Globe size={20} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm">Global Network</h4>
-                    <span className="text-xs text-slate-400 font-medium">Connect worldwide</span>
-                  </div>
+            {/* Centered Highlights */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+              <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md hover:border-indigo-100 transition-all">
+                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+                  <Globe size={24} />
                 </div>
-                <div className="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md hover:border-indigo-100 transition-all">
-                  <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
-                    <BookOpen size={20} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm">Publication</h4>
-                    <span className="text-xs text-slate-400 font-medium">Scopus Indexed</span>
-                  </div>
+                <div className="text-left">
+                  <h4 className="font-bold text-slate-800 text-base">Global Network</h4>
+                  <span className="text-sm text-slate-400 font-medium">Connect worldwide</span>
                 </div>
               </div>
-            </div>
-
-            {/* Right Column: Visuals */}
-            <div className="relative lg:h-[500px] flex items-center justify-center">
-              <div className="relative w-full max-w-md aspect-[4/5] md:aspect-square lg:aspect-auto lg:h-full">
-                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-[40px] rotate-3 opacity-10"></div>
-                 <img 
-                  src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop" 
-                  alt="Conference Discussion" 
-                  className="w-full h-full object-cover rounded-[40px] shadow-2xl relative z-10 rotate-[-2deg] hover:rotate-0 transition-transform duration-500 border-4 border-white"
-                 />
-                 
-                 {/* Floating Card */}
-                 <div className="absolute -bottom-6 -left-6 md:-bottom-10 md:-left-10 bg-white p-6 rounded-3xl shadow-xl border border-slate-50 z-20 max-w-[200px] animate-float">
-                    <div className="flex -space-x-3 mb-3">
-                      {[1,2,3].map(i => (
-                        <div key={i} className={`w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden`}>
-                          <img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="User" className="w-full h-full object-cover" />
-                        </div>
-                      ))}
-                      <div className="w-8 h-8 rounded-full border-2 border-white bg-indigo-600 text-white flex items-center justify-center text-[0.6rem] font-bold">+500</div>
-                    </div>
-                    <p className="text-xs font-bold text-slate-800 leading-tight">Join elite researchers and innovators.</p>
-                 </div>
+              <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md hover:border-indigo-100 transition-all">
+                <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
+                  <BookOpen size={24} />
+                </div>
+                <div className="text-left">
+                  <h4 className="font-bold text-slate-800 text-base">Publication</h4>
+                  <span className="text-sm text-slate-400 font-medium">Scopus Indexed</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Topics of Interest - Updated from Reference */}
-          <div className="bg-slate-900 rounded-[40px] p-8 md:p-16 text-white relative overflow-hidden shadow-2xl border border-white/10">
+          <div className="bg-slate-900 rounded-[30px] md:rounded-[40px] p-6 sm:p-10 md:p-16 text-white relative overflow-hidden shadow-2xl border border-white/10">
             <div className="absolute top-0 right-0 w-[600px] h-full bg-gradient-to-l from-indigo-900/50 to-transparent pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-full h-[300px] bg-gradient-to-t from-slate-900 to-transparent pointer-events-none"></div>
             
@@ -282,16 +255,26 @@ const HomePage = () => {
             <p className="text-lg text-slate-500 font-medium">Everything you need to know about participating in CIETM 2026.</p>
           </div>
 
-          <div className="bg-[#020b1c] rounded-[40px] p-8 md:p-20 text-white relative overflow-hidden shadow-2xl border border-white/5">
+          <div className="bg-[#020b1c] rounded-[30px] md:rounded-[40px] p-6 sm:p-10 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5 max-w-6xl mx-auto">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_60%)] pointer-events-none"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-16 lg:gap-20 items-start relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-start relative z-10">
               {/* Guidelines Pane */}
               <div>
-                <h3 className="text-3xl md:text-4xl font-extrabold mb-10 text-white">Author Guidelines</h3>
+                <h3 className="text-2xl md:text-4xl font-extrabold mb-8 text-white text-center md:text-left">Author Guidelines</h3>
                 <ul className="flex flex-col gap-8 md:gap-10">
                   <li className="flex gap-6 text-lg text-slate-400 leading-relaxed font-medium">
                     <CheckCircle className="text-sky-400 mt-1 shrink-0" size={26} />
-                    <span>Original work not published elsewhere and must follow IEEE formatting.</span>
+                    <div className="flex flex-col gap-3">
+                      <span>Original work not published elsewhere and must follow IEEE formatting.</span>
+                      <a 
+                        href="https://www.ieee.org/content/dam/ieee-org/ieee/web/org/conferences/Conference-template-A4.doc" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm font-bold text-sky-400 hover:text-sky-300 transition-colors w-fit"
+                      >
+                        <Download size={18} /> Download IEEE Template (.doc)
+                      </a>
+                    </div>
                   </li>
                   <li className="flex gap-6 text-lg text-slate-400 leading-relaxed font-medium">
                     <CheckCircle className="text-sky-400 mt-1 shrink-0" size={26} />
@@ -302,31 +285,41 @@ const HomePage = () => {
                     <span>Plagiarism must be under 15% to be considered for evaluation.</span>
                   </li>
                 </ul>
-                <div className="mt-12 md:mt-16 bg-white/5 border border-white/10 rounded-3xl p-8 md:p-10">
+                <div className="mt-10 md:mt-12 bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8">
                   <div className="text-sm font-black text-sky-400 uppercase tracking-widest mb-8 border-b border-white/10 pb-5">Registration Fee</div>
-                  <div className="flex flex-col sm:flex-row gap-8 sm:gap-14">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-12">
+                    <div className="flex gap-4 items-center">
+                      <div className="w-11 h-11 bg-sky-400/10 rounded-2xl flex items-center justify-center text-sky-400 border border-sky-400/20 shrink-0"><GraduationCap size={20} /></div>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">UG/PG Students</span>
+                        <span className="text-xl font-extrabold text-white">₹ 500</span>
+                      </div>
+                    </div>
                     <div className="flex gap-4 items-center">
                       <div className="w-11 h-11 bg-sky-400/10 rounded-2xl flex items-center justify-center text-sky-400 border border-sky-400/20 shrink-0"><Users size={20} /></div>
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">National</span>
-                        <span className="text-xl font-extrabold text-white">₹ 500</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Faculty/Research Scholars</span>
+                        <span className="text-xl font-extrabold text-white">₹ 750</span>
                       </div>
                     </div>
                     <div className="flex gap-4 items-center">
                       <div className="w-11 h-11 bg-sky-400/10 rounded-2xl flex items-center justify-center text-sky-400 border border-sky-400/20 shrink-0"><Globe size={20} /></div>
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">International</span>
-                        <span className="text-xl font-extrabold text-white">₹ 1000</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">External / Online Presentation</span>
+                        <span className="text-xl font-extrabold text-white">₹ 300</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 items-center">
+                      <div className="w-11 h-11 bg-sky-400/10 rounded-2xl flex items-center justify-center text-sky-400 border border-sky-400/20 shrink-0"><Award size={20} /></div>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Industry Personnel</span>
+                        <span className="text-xl font-extrabold text-white">₹ 900</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-10 md:mt-12 flex justify-center lg:justify-start">
-                  <Link to="/register" className="btn btn-primary px-10 py-4 text-base">
-                    Register Now <ArrowRight size={20} />
-                  </Link>
-                </div>
+
               </div>
 
               {/* Vertical Timeline Pane */}
@@ -340,7 +333,7 @@ const HomePage = () => {
                     { icon: <Sparkles size={22} />, title: 'Payment confirmation deadline', date: 'April 12, 2026' },
                     { icon: <GraduationCap size={22} />, title: 'Conference date', date: 'April 29, 2026', active: true }
                   ].map((item, index, arr) => (
-                    <div key={index} className={`relative pl-16 pb-12 ${index === arr.length - 1 ? 'pb-0' : ''}`}>
+                    <div key={index} className={`relative pl-16 pb-10 ${index === arr.length - 1 ? 'pb-0' : ''}`}>
                        {index !== arr.length - 1 && (
                          <div className="absolute left-[20px] top-[30px] bottom-0 w-0.5 bg-white/10"></div>
                        )}
@@ -354,6 +347,11 @@ const HomePage = () => {
                     </div>
                   ))}
                 </div>
+                <div className="mt-10 flex justify-center lg:justify-start">
+                  <Link to="/register" className="btn btn-primary px-10 py-4 text-base shadow-xl shadow-indigo-500/20">
+                    Register Now <ArrowRight size={20} />
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -361,7 +359,7 @@ const HomePage = () => {
       </section>
 
       {/* Tracks Section */}
-      <section id="tracks" className="py-16 md:py-24">
+      <section id="tracks" className="py-12 md:py-20">
         <div className="w-full max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5">Academic Tracks</span>
@@ -387,7 +385,7 @@ const HomePage = () => {
       </section>
 
       {/* Speakers Section */}
-      <section id="speakers" className="py-16 md:py-24 bg-slate-50 overflow-hidden">
+      <section id="speakers" className="py-12 md:py-20 bg-white">
         <div className="w-full max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5">Experts</span>
@@ -395,7 +393,11 @@ const HomePage = () => {
             <p className="text-lg text-slate-500 font-medium max-w-2xl mx-auto">Meet the visionary leaders sharing their insights at CIETM 2026.</p>
           </div>
 
-          <div className="relative w-full py-6 group">
+          <div className="relative max-w-6xl mx-auto py-6 group overflow-hidden">
+            {/* Fading Edges Mask */}
+            <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+
             <div 
               className="flex gap-8 hover:[animation-play-state:paused]"
               style={{ 
@@ -408,7 +410,7 @@ const HomePage = () => {
                 <motion.div 
                   key={i}
                   whileHover={{ y: -5 }}
-                  className="w-[220px] shrink-0 bg-white rounded-[20px] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-400 group/card h-full flex flex-col"
+                  className="w-[220px] shrink-0 bg-white rounded-[20px] overflow-hidden border border-slate-50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_-12px_rgba(99,102,241,0.2)] transition-all duration-500 group/card h-full flex flex-col"
                 >
                   <div className="relative h-[200px] overflow-hidden">
                     <img src={s.img} alt={s.name} className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110" />
@@ -438,7 +440,7 @@ const HomePage = () => {
       </section>
 
       {/* Patrons Section */}
-      <section id="patrons" className="py-16 md:py-24 relative bg-white overflow-hidden">
+      <section id="patrons" className="pt-12 pb-16 md:pt-16 md:pb-24 relative bg-white overflow-hidden">
         {/* Mesh Backgrounds */}
         <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-purple-500/15 rounded-full blur-[60px] -z-10 pointer-events-none"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-blue-400/15 rounded-full blur-[60px] -z-10 pointer-events-none"></div>
@@ -502,6 +504,46 @@ const HomePage = () => {
                   </div>
                   <h3 className="text-[1.35rem] font-bold text-slate-800 mb-2 leading-tight">{p.name}</h3>
                   <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider border-b-2 border-transparent group-hover:border-indigo-600 transition-colors pb-0.5 inline-block">{p.role}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            <h3 className="text-2xl font-bold text-slate-500 uppercase tracking-[0.2em] text-center mb-12 mt-20 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[60px] before:bg-slate-300 after:content-[''] after:h-px after:w-[60px] after:bg-slate-300">Convenor</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-3xl mx-auto justify-center">
+              {[
+                { name: "Convenor Name 1", role: "Professor & Head", img: null },
+                { name: "Convenor Name 2", role: "Professor & Head", img: null }
+              ].map((p, i) => (
+                <motion.div 
+                  key={i}
+                  whileHover={{ y: -8 }}
+                  className="bg-white p-12 md:p-8 rounded-2xl text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-200 hover:border-indigo-500 transition-all duration-300 relative overflow-hidden group h-full"
+                >
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="mb-7 inline-block relative">
+                    <div className="w-[140px] h-[140px] rounded-[20px] bg-blue-50 text-indigo-600 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-105">
+                      <User size={36} strokeWidth={2} />
+                    </div>
+                  </div>
+                  <h3 className="text-[1.35rem] font-bold text-slate-800 mb-2 leading-tight">{p.name}</h3>
+                  <span className="text-sm font-semibold text-indigo-600 uppercase tracking-wider border-b-2 border-transparent group-hover:border-indigo-600 transition-colors pb-0.5 inline-block">{p.role}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            <h3 className="text-xl font-bold text-slate-400 uppercase tracking-[0.2em] text-center mb-12 mt-24 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[40px] before:bg-slate-200 after:content-[''] after:h-px after:w-[40px] after:bg-slate-200">Organizing Team</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto px-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((m) => (
+                <motion.div 
+                  key={m}
+                  whileHover={{ y: -4 }}
+                  className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300 flex flex-col items-center text-center"
+                >
+                  <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mb-4 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                    <User size={20} />
+                  </div>
+                  <h4 className="text-base font-bold text-slate-800 mb-1">Team Member {m}</h4>
+                  <span className="text-[0.7rem] font-bold text-indigo-500 uppercase tracking-wider">Designation / Dept.</span>
                 </motion.div>
               ))}
             </div>

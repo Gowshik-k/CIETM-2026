@@ -24,24 +24,32 @@ const Navbar = () => {
       setScrolled(window.scrollY > 20);
     };
 
-    // Intersection Observer for active section highlighting
-    const sections = ['#hero', '#about-conference', '#conference', '#tracks', '#speakers', '#about'];
+    // Intersection Observer for highlighting sections
+    // We use IDs directly for observation
+    const sectionIds = ['hero', 'about-conference', 'conference', 'tracks', 'speakers', 'about'];
+    
     const observerOptions = {
       root: null,
-      rootMargin: '-20% 0px -70% 0px',
+      rootMargin: '-40% 0px -40% 0px', // Detect when middle of section is in middle of viewport
       threshold: 0
     };
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          setActiveSection(`#${entry.target.id}`);
+          const id = `#${entry.target.id}`;
+          // Map sub-sections to their parent nav links if necessary
+          if (id === '#about-conference') {
+            setActiveSection('#hero');
+          } else {
+            setActiveSection(id);
+          }
         }
       });
     }, observerOptions);
 
-    sections.forEach(id => {
-      const el = document.querySelector(id);
+    sectionIds.forEach(id => {
+      const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
 
@@ -59,21 +67,27 @@ const Navbar = () => {
 
   const scrollToSection = (id) => {
     setIsOpen(false);
-    if (location.pathname !== '/') {
-      navigate('/' + id);
-      return;
-    }
-    const element = document.querySelector(id);
-    if (element) {
-      const offset = 80;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
+    setActiveSection(id); // Immediate visual feedback
+    
+    // Give the menu a moment to start closing before scrolling
+    setTimeout(() => {
+      if (location.pathname !== '/') {
+        navigate('/' + id);
+        return;
+      }
+      
+      const element = document.querySelector(id);
+      if (element) {
+        const headerOffset = 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }, 150);
   };
 
   const isHome = location.pathname === '/';
@@ -203,70 +217,72 @@ const Navbar = () => {
         </motion.div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Dropdown */}
       <AnimatePresence>
         {isOpen && (
           <motion.div 
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 bg-white z-40 flex flex-col p-8 pt-24 gap-6 md:hidden"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-2xl md:hidden overflow-hidden z-50"
           >
-            <div className="flex flex-col gap-2">
-              <span className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Navigation</span>
-              {navLinks.map((item) => (
-                <a 
-                  key={item.name} 
-                  href={item.href} 
-                  onClick={(e) => { e.preventDefault(); scrollToSection(item.href); }}
-                  className={`flex items-center justify-between p-4 rounded-2xl text-xl font-bold transition-all ${
-                    activeSection === item.href 
-                      ? 'bg-indigo-50 text-indigo-600' 
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  {item.name}
-                  <ChevronRight size={20} className={activeSection === item.href ? 'opacity-100' : 'opacity-0'} />
-                </a>
-              ))}
-            </div>
+            <div className="p-6 flex flex-col gap-2 bg-white">
+              <div className="flex flex-col gap-1 mb-6">
+                <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-slate-400 mb-2 px-2">Menu</span>
+                {navLinks.map((item) => (
+                  <a 
+                    key={item.name} 
+                    href={item.href} 
+                    onClick={(e) => { e.preventDefault(); scrollToSection(item.href); }}
+                    className={`flex items-center justify-between p-4 rounded-xl text-base font-bold transition-all ${
+                      activeSection === item.href 
+                        ? 'text-indigo-600 bg-indigo-50 border-l-4 border-indigo-600 pl-3' 
+                        : 'text-slate-800 hover:bg-slate-50'
+                    }`}
+                  >
+                    {item.name}
+                    <ChevronRight size={16} className={activeSection === item.href ? 'opacity-100' : 'opacity-20'} />
+                  </a>
+                ))}
+              </div>
 
-            <div className="mt-auto flex flex-col gap-4">
-              {user ? (
-                <>
-                  <Link 
-                    to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'} 
-                    className="w-full btn btn-primary py-4 rounded-2xl flex items-center justify-center gap-2 font-bold"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Go to Dashboard <ChevronRight size={18} />
-                  </Link>
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full p-4 rounded-2xl border-2 border-slate-100 text-slate-600 font-bold hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all flex items-center justify-center gap-2"
-                  >
-                    <LogOut size={18} /> Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link 
-                    to="/login" 
-                    className="w-full p-4 rounded-2xl border-2 border-slate-100 text-slate-700 font-bold text-center"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Login
-                  </Link>
-                  <Link 
-                    to="/register" 
-                    className="w-full btn btn-primary py-4 rounded-2xl font-bold text-center shadow-xl shadow-indigo-100"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Register for CIETM 2026
-                  </Link>
-                </>
-              )}
+              <div className="pt-6 border-t border-slate-100 flex flex-col gap-3">
+                {user ? (
+                  <>
+                    <Link 
+                      to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'} 
+                      className="w-full bg-indigo-600 text-white py-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-sm shadow-md shadow-indigo-100"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <User size={18} /> Dashboard
+                    </Link>
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full py-3.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm flex items-center justify-center gap-2"
+                    >
+                      <LogOut size={18} /> Logout
+                    </button>
+                  </>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Link 
+                      to="/login" 
+                      className="w-full py-3.5 rounded-xl border border-slate-200 text-slate-800 font-bold text-sm text-center"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Login
+                    </Link>
+                    <Link 
+                      to="/register" 
+                      className="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold text-sm text-center shadow-md shadow-indigo-100"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Register
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
