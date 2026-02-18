@@ -122,16 +122,16 @@ const HomePage = () => {
   ];
 
   const advisoryBoard = [
-    { name: "Prof. Robert Chen", affiliation: "University of Oxford", img: "https://i.pravatar.cc/400?img=21" },
-    { name: "Dr. Elena Rossi", affiliation: "Research Director, CERN", img: "https://i.pravatar.cc/400?img=22" },
-    { name: "Prof. Sanjay Gupta", affiliation: "IIT Delhi", img: "https://i.pravatar.cc/400?img=23" },
-    { name: "Dr. Sarah Miller", affiliation: "Director of AI, Google", img: "https://i.pravatar.cc/400?img=24" },
-    { name: "Prof. Yuki Tanaka", affiliation: "University of Tokyo", img: "https://i.pravatar.cc/400?img=25" },
-    { name: "Dr. James Wilson", affiliation: "Fellow, IEEE", img: "https://i.pravatar.cc/400?img=26" },
-    { name: "Prof. Maria Garcia", affiliation: "Technical University of Munich", img: "https://i.pravatar.cc/400?img=27" },
-    { name: "Dr. Ahmed Mansour", affiliation: "KAUST", img: "https://i.pravatar.cc/400?img=28" },
-    { name: "Prof. Linda Thompson", affiliation: "UC Berkeley", img: "https://i.pravatar.cc/400?img=29" },
-    { name: "Dr. Thomas Wright", affiliation: "Chief Scientist, IBM Research", img: "https://i.pravatar.cc/400?img=30" }
+    { name: "Prof. Robert Chen", affiliation: "University of Oxford", img: "https://images.unsplash.com/photo-1507003211169-7a5171755184?w=400&h=400&fit=crop" },
+    { name: "Dr. Elena Rossi", affiliation: "Research Director, CERN", img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop" },
+    { name: "Prof. Sanjay Gupta", affiliation: "IIT Delhi", img: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop" },
+    { name: "Dr. Sarah Miller", affiliation: "Director of AI, Google", img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop" },
+    { name: "Prof. Yuki Tanaka", affiliation: "University of Tokyo", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop" },
+    { name: "Dr. James Wilson", affiliation: "Fellow, IEEE", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop" },
+    { name: "Prof. Maria Garcia", affiliation: "Technical University of Munich", img: "https://images.unsplash.com/photo-1551836022-d5d8b5c9d67d?w=400&h=400&fit=crop" },
+    { name: "Dr. Ahmed Mansour", affiliation: "KAUST", img: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=400&h=400&fit=crop" },
+    { name: "Prof. Linda Thompson", affiliation: "UC Berkeley", img: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=400&fit=crop" },
+    { name: "Dr. Thomas Wright", affiliation: "Chief Scientist, IBM Research", img: "https://images.unsplash.com/photo-1548142813-c348350df52b?w=400&h=400&fit=crop" }
   ];
 
   // Calculate duration based on total width to maintain constant velocity (80px/s)
@@ -167,18 +167,18 @@ const HomePage = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="max-w-5xl mx-auto flex flex-col items-center"
+            className="max-w-5xl mx-auto flex flex-col items-center -mt-24"
           >
-            <div className="section-tag mb-6 text-xs md:text-sm bg-white/10 backdrop-blur-md border-white/20 text-white">
+            <div className="section-tag mb-4 text-xs md:text-sm bg-white/10 backdrop-blur-md border-white/20 text-white">
               <Sparkles size={14} className="text-amber-400" />
               <span>National Conference 2026</span>
             </div>
 
-            <p className="text-indigo-300 text-base md:text-lg font-bold mb-3 tracking-[0.2em] uppercase">
+            <p className="text-indigo-300 text-base md:text-lg font-bold mb-2 tracking-[0.2em] uppercase">
               Innovating the Future of Technology & Management
             </p>
             
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-8 tracking-tighter text-white drop-shadow-2xl max-w-4xl">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-6 tracking-tighter text-white drop-shadow-2xl max-w-4xl">
               CONTEMPORARY IMPROVEMENTS IN <br className="hidden md:block" />
               ENGINEERING TECHNOLOGY & <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">MANAGEMENT</span> - CIETM-2026
@@ -554,8 +554,8 @@ const HomePage = () => {
           </div>
           <style>{`
             @keyframes board-scroll {
-                0% { transform: translateX(0); }
-                100% { transform: translateX(calc(-100% / 3)); }
+                0% { transform: translateX(calc(-100% / 3)); }
+                100% { transform: translateX(0); }
             }
           `}</style>
         </div>
@@ -725,44 +725,50 @@ const HomePage = () => {
                   The Coimbatore Institute of Engineering and Technology (CIET), Coimbatore, Tamilnadu (An Autonomous institute) was established in 2001 by the Kovai Kalaimagal Educational Trust (KKET) to provide quality education in Engineering, Technology and Management. CIET is affiliated to Anna University, approved by AICTE, accredited with 'A' Grade by NAAC.
                 </motion.p>
               </div>
-              <div className="absolute bottom-10 left-10 md:left-20 bg-white/10 backdrop-blur-md border border-white/20 py-3 px-6 rounded-2xl z-20 flex items-center gap-3 font-black text-sm shadow-2xl text-white">
-                <MapPin size={20} className="text-sky-400" /> CIET COIMBATORE
-              </div>
+              <a 
+                href="https://www.google.com/maps/place/Coimbatore+Institute+of+Engineering+and+Technology/@10.998811,76.7731654,1217m/data=!3m1!1e3!4m6!3m5!1s0x3ba86104b8f60b01:0x75c28a0ddc379a9d!8m2!3d10.9957852!4d76.7716835!16s%2Fm%2F03y8_13?entry=ttu&g_ep=EgoyMDI2MDIxMS4wIKXMDSoASAFQAw%3D%3D"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute bottom-10 left-10 md:left-20 bg-white/10 backdrop-blur-md border border-white/20 py-3 px-6 rounded-2xl z-20 flex items-center gap-3 font-black text-sm shadow-2xl text-white hover:bg-white/20 transition-all group/loc"
+              >
+                <MapPin size={20} className="text-sky-400 group-hover/loc:scale-110 transition-transform" /> CIET COIMBATORE
+              </a>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 max-w-7xl mx-auto">
-            <div className="flex gap-6 p-8 md:p-10 items-center rounded-[32px] bg-white border border-slate-100 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:border-indigo-500 group h-full">
-              <div className="w-[60px] h-[60px] bg-blue-500/10 rounded-[18px] flex items-center justify-center text-indigo-600 shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
-                  <GraduationCap size={28} />
-              </div>
-              <div>
-                <h4 className="text-xl font-bold mb-2 text-slate-900">Academic Scope</h4>
-                <p className="text-slate-500 text-[0.95rem] leading-relaxed">CIET offers 11 Under Graduate and a Post Graduate Engineering course including MBA - Business Administration.</p>
-              </div>
-            </div>
-            <div className="flex gap-6 p-8 md:p-10 items-center rounded-[32px] bg-white border border-slate-100 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:border-indigo-500 group h-full">
-              <div className="w-[60px] h-[60px] bg-blue-500/10 rounded-[18px] flex items-center justify-center text-indigo-600 shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
-                  <Globe size={28} />
-              </div>
-              <div>
-                <h4 className="text-xl font-bold mb-2 text-slate-900">Campus & Atmosphere</h4>
-                <p className="text-slate-500 text-[0.95rem] leading-relaxed">Located in a green campus spreading over 25 acres (25 kms from Coimbatore city) with a picturesque and serene atmosphere surrounded by green hillocks.</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 md:mt-24">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-7xl mx-auto items-stretch">
             {[
-                { icon: MapPin, title: 'Green Campus', desc: 'Spreading over 25 acres, located 25 kms from Coimbatore city.' },
-                { icon: Sparkles, title: 'Serene Vibe', desc: 'A picturesque atmosphere surrounded by beautiful green hillocks.' },
-                { icon: Award, title: "NAAC 'A' Grade", desc: 'Autonomous institute affiliated to Anna University and approved by AICTE.' }
-            ].map((amenity, i) => (
-                <motion.div key={i} whileHover={{ y: -5 }} className="bg-white p-8 md:p-10 rounded-3xl text-center border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-500 transition-all duration-300">
-                    <amenity.icon className="w-11 h-11 text-indigo-600 mx-auto mb-5" />
-                    <h3 className="text-xl font-bold mb-2 text-slate-900">{amenity.title}</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed">{amenity.desc}</p>
-                </motion.div>
+              {
+                icon: <Award className="w-10 h-10 text-indigo-500" />,
+                title: "Heritage & Trust",
+                desc: "Established in 2001 by the Kovai Kalaimagal Educational Trust (KKET). An Autonomous institute dedicated to world-class engineering education."
+              },
+              {
+                icon: <GraduationCap className="w-10 h-10 text-indigo-500" />,
+                title: "Academic Excellence",
+                desc: "Accredited with 'A' Grade by NAAC. Offering 11 UG and Post Graduate courses including MBA, focusing on innovation and research."
+              },
+              {
+                icon: <Sparkles className="w-10 h-10 text-indigo-500" />,
+                title: "Infrastructure",
+                desc: "Sprawling 25-acre green campus located 25 kms from Coimbatore. Features a serene atmosphere surrounded by picturesque hillocks."
+              }
+            ].map((pillar, i) => (
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -10 }}
+                className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm hover:shadow-2xl hover:border-indigo-500/30 transition-all duration-500 flex flex-col items-center text-center group"
+              >
+                <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+                  {pillar.icon}
+                </div>
+                <h3 className="text-2xl font-black mb-4 text-slate-900 tracking-tight">{pillar.title}</h3>
+                <p className="text-slate-500 text-base leading-relaxed font-medium">{pillar.desc}</p>
+              </motion.div>
             ))}
           </div>
         </div>
