@@ -185,11 +185,36 @@ const downloadPaper = async (req, res) => {
     }
 };
 
+// @desc    Update/Upload full paper after submission
+// @route   POST /api/registrations/upload-paper
+// @access  Private
+const updatePaper = async (req, res) => {
+    const { fileUrl, publicId, resourceType, originalName } = req.body;
+    try {
+        const registration = await Registration.findOne({ userId: req.user._id });
+        if (!registration) {
+            return res.status(404).json({ message: 'Registration not found' });
+        }
+
+        registration.paperDetails.fileUrl = fileUrl;
+        registration.paperDetails.publicId = publicId;
+        registration.paperDetails.resourceType = resourceType;
+        registration.paperDetails.originalName = originalName;
+        registration.updatedAt = Date.now();
+
+        await registration.save();
+        res.json(registration);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 module.exports = {
     saveDraft,
     submitRegistration,
     getMyRegistration,
     getAllRegistrations,
     reviewPaper,
-    downloadPaper
+    downloadPaper,
+    updatePaper
 };

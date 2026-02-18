@@ -32,11 +32,16 @@ const CountdownTimer = ({ targetDate }) => {
   }, [targetDate]);
 
   return (
-    <div className="flex gap-4 md:gap-6 justify-center flex-wrap">
+    <div className="flex gap-2 md:gap-4 justify-center flex-wrap backdrop-blur-md bg-white/5 p-3 md:p-4 rounded-3xl border border-white/10 shadow-2xl">
       {Object.entries(timeLeft).map(([label, value]) => (
-        <div key={label} className="flex flex-col min-w-[60px] md:min-w-[70px] items-center">
-          <span className="text-3xl md:text-[2.5rem] font-extrabold text-white drop-shadow-lg leading-none">{value}</span>
-          <span className="text-[0.65rem] md:text-[0.7rem] font-extrabold text-[#b700ff] tracking-widest uppercase mt-2">{label.toUpperCase()}</span>
+        <div key={label} className="flex flex-col min-w-[60px] md:min-w-[80px] items-center">
+          <div className="relative group overflow-hidden bg-white/10 w-full py-2 rounded-2xl border border-white/5 mb-1.5 transition-all duration-300 group-hover:bg-white/20">
+            <span className="text-2xl md:text-4xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] leading-none block">
+              {value.toString().padStart(2, '0')}
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          </div>
+          <span className="text-[0.55rem] md:text-[0.6rem] font-black text-indigo-300 tracking-[0.2em] uppercase">{label}</span>
         </div>
       ))}
     </div>
@@ -116,55 +121,98 @@ const HomePage = () => {
     }
   ];
 
+  const advisoryBoard = [
+    { name: "Prof. Robert Chen", affiliation: "University of Oxford", img: "https://i.pravatar.cc/400?img=21" },
+    { name: "Dr. Elena Rossi", affiliation: "Research Director, CERN", img: "https://i.pravatar.cc/400?img=22" },
+    { name: "Prof. Sanjay Gupta", affiliation: "IIT Delhi", img: "https://i.pravatar.cc/400?img=23" },
+    { name: "Dr. Sarah Miller", affiliation: "Director of AI, Google", img: "https://i.pravatar.cc/400?img=24" },
+    { name: "Prof. Yuki Tanaka", affiliation: "University of Tokyo", img: "https://i.pravatar.cc/400?img=25" },
+    { name: "Dr. James Wilson", affiliation: "Fellow, IEEE", img: "https://i.pravatar.cc/400?img=26" },
+    { name: "Prof. Maria Garcia", affiliation: "Technical University of Munich", img: "https://i.pravatar.cc/400?img=27" },
+    { name: "Dr. Ahmed Mansour", affiliation: "KAUST", img: "https://i.pravatar.cc/400?img=28" },
+    { name: "Prof. Linda Thompson", affiliation: "UC Berkeley", img: "https://i.pravatar.cc/400?img=29" },
+    { name: "Dr. Thomas Wright", affiliation: "Chief Scientist, IBM Research", img: "https://i.pravatar.cc/400?img=30" }
+  ];
+
   // Calculate duration based on total width to maintain constant velocity (80px/s)
   const duration = (speakers.length * (window.innerWidth > 968 ? 252 : window.innerWidth > 768 ? 236 : 220)) / 80;
+  const advisoryDuration = (advisoryBoard.length * (window.innerWidth > 968 ? 252 : window.innerWidth > 768 ? 236 : 220)) / 80;
 
   return (
     <div className="relative overflow-x-hidden bg-slate-50">
       {/* Hero Section */}
-      <section id="hero" className="relative min-h-[calc(100vh-80px)] flex items-center overflow-hidden py-10 z-10">
-        <div className="absolute inset-0 z-[-1]">
-          <img 
-            src="https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1470&auto=format&fit=crop" 
-            alt="Conference Background" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/30 via-slate-900/30 70% to-slate-50/100"></div>
+      <section id="hero" className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden bg-slate-950">
+        {/* Background Layer */}
+        <div className="absolute inset-0 z-0">
+          <motion.div 
+            initial={{ scale: 1.1, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="w-full h-full"
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1470&auto=format&fit=crop" 
+              alt="Modern Tech Conference" 
+              className="w-full h-full object-cover"
+            />
+          </motion.div>
+          {/* Lighter, more vibrant overlays */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/40 via-transparent to-slate-950/60"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.15),transparent_70%)]"></div>
+          <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px]"></div>
         </div>
 
-        <div className="w-full max-w-7xl mx-auto px-6 text-center">
+        <div className="w-full max-w-7xl mx-auto px-6 text-center relative z-20">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="max-w-4xl mx-auto flex flex-col items-center"
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="max-w-5xl mx-auto flex flex-col items-center"
           >
-            <div className="section-tag mb-6 text-xs md:text-sm">
-              <Sparkles size={14} />
-              <span>International Conference 2026</span>
+            <div className="section-tag mb-6 text-xs md:text-sm bg-white/10 backdrop-blur-md border-white/20 text-white">
+              <Sparkles size={14} className="text-amber-400" />
+              <span>National Conference 2026</span>
             </div>
-            <p className="text-white text-lg md:text-xl font-bold mb-2 drop-shadow-md">
+
+            <p className="text-indigo-300 text-base md:text-lg font-bold mb-3 tracking-[0.2em] uppercase">
               Innovating the Future of Technology & Management
             </p>
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold leading-[1.1] mb-6 tracking-tight text-white drop-shadow-lg">
-              Contemporary Innovations in Engineering, Technology & Management - <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">CIETM-26</span>
+            
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-8 tracking-tighter text-white drop-shadow-2xl max-w-4xl">
+              CONTEMPORARY IMPROVEMENTS IN <br className="hidden md:block" />
+              ENGINEERING TECHNOLOGY & <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">MANAGEMENT</span> - CIETM-2026
             </h1>
-            <div className="flex flex-col md:flex-row gap-4 mb-10 justify-center w-full max-w-md md:max-w-none">
-              <Link to="/register" className="btn btn-primary px-8 py-4 text-base md:text-lg shadow-xl shadow-indigo-500/30">
-                Join the Conference <ArrowRight size={20} />
+
+            <div className="flex flex-col md:flex-row gap-5 mb-10 justify-center w-full max-w-md md:max-w-none">
+              <Link to="/register" className="btn btn-primary px-10 py-5 text-lg shadow-[0_0_30px_rgba(99,102,241,0.4)]">
+                Join the Conference <ArrowRight size={22} />
               </Link>
-              <a href="#conference" className="btn btn-secondary bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/40 backdrop-blur-md px-8 py-4 text-base md:text-lg" onClick={(e) => {
+              <a href="#about-conference" className="btn glass group px-10 py-5 text-lg border-white/20 hover:border-white/40 text-white shadow-2xl bg-white/5 hover:bg-white/10" onClick={(e) => {
                 e.preventDefault();
-                document.querySelector('#conference')?.scrollIntoView({ behavior: 'smooth' });
+                document.querySelector('#about-conference')?.scrollIntoView({ behavior: 'smooth' });
               }}>
-                Conference Details
+                Explore Details
+                <ChevronRight className="group-hover:translate-x-1 transition-transform" size={20} />
               </a>
             </div>
-            <div className="mt-2">
-                <CountdownTimer targetDate="2026-04-29T00:00:00" />
+
+            <div className="mt-0">
+              <CountdownTimer targetDate="2026-04-29T00:00:00" />
             </div>
           </motion.div>
         </div>
+
+        {/* Scroll Indicator */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2, duration: 1 }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        >
+          <span className="text-[0.6rem] font-bold text-slate-400 uppercase tracking-widest">Scroll to explore</span>
+          <div className="w-px h-12 bg-gradient-to-b from-indigo-500 to-transparent"></div>
+        </motion.div>
       </section>
 
       {/* About Conference Section */}
@@ -177,69 +225,76 @@ const HomePage = () => {
           <div className="max-w-4xl mx-auto text-center mb-20">
             {/* Centered Text Content */}
             <span className="inline-block px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5 border border-indigo-100">Introduction</span>
-            <h2 className="text-4xl md:text-5xl font-bold mb-8 text-slate-900 tracking-tight leading-tight">
+            <h2 className="text-4xl md:text-5xl font-bold mb-8 text-slate-900 tracking-tight leading-tight uppercase">
               About the <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Conference</span>
             </h2>
-            <p className="text-base md:text-lg text-slate-600 leading-relaxed font-medium mb-8 px-2">
-              The conference will focus on the contemporary cutting edge trends and advances in the field of Science, Engineering, Technology and Management domains. The conference aims to address the issues by providing a platform for the exchange of innovative ideas and information on recent advancements.
+            <p className="text-lg md:text-2xl text-slate-600 leading-relaxed font-semibold mb-8 px-2 max-w-4xl mx-auto">
+              The conference will focus on the contemporary cutting edge trends and advances in the field of Science, Engineering, Technology and Management domains.
             </p>
-            <p className="text-base text-slate-500 leading-relaxed mb-10">
-              This Conference provides a forum for undergraduates, post graduates, research scholars, faculty members and Personnel's from industry to come together and discuss the latest developments and innovations in Science, Engineering, Technology and Management. This helps the delegates to update their knowledge and provide a platform for future research.
-            </p>
-
-            {/* Centered Highlights */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
-              <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md hover:border-indigo-100 transition-all">
-                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
-                  <Globe size={24} />
-                </div>
-                <div className="text-left">
-                  <h4 className="font-bold text-slate-800 text-base">Global Network</h4>
-                  <span className="text-sm text-slate-400 font-medium">Connect worldwide</span>
-                </div>
-              </div>
-              <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md hover:border-indigo-100 transition-all">
-                <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
-                  <BookOpen size={24} />
-                </div>
-                <div className="text-left">
-                  <h4 className="font-bold text-slate-800 text-base">Publication</h4>
-                  <span className="text-sm text-slate-400 font-medium">Scopus Indexed</span>
-                </div>
-              </div>
+            <div className="w-20 h-1 bg-indigo-600 mx-auto mb-8 rounded-full"></div>
+            <div className="flex flex-col gap-6 text-base text-slate-600 leading-relaxed mb-10 max-w-4xl mx-auto px-4">
+              <p>
+                The conference aims to address the issues by providing a platform for the exchange of innovative ideas and information on recent advancements. 
+                This Conference provides a forum for undergraduates, post graduates, research scholars, faculty members and Personnel's from industry to come together and discuss the latest developments and innovations in Science, Engineering, Technology and Management.
+              </p>
+              <p>
+                This helps the delegates to update their knowledge and provide a platform for future research. This also serves as a workshop for young researchers to build their research.
+              </p>
             </div>
+
           </div>
 
           {/* Topics of Interest - Updated from Reference */}
-          <div className="bg-slate-900 rounded-[30px] md:rounded-[40px] p-6 sm:p-10 md:p-16 text-white relative overflow-hidden shadow-2xl border border-white/10">
-            <div className="absolute top-0 right-0 w-[600px] h-full bg-gradient-to-l from-indigo-900/50 to-transparent pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-full h-[300px] bg-gradient-to-t from-slate-900 to-transparent pointer-events-none"></div>
-            
-            <div className="relative z-10 text-center max-w-5xl mx-auto">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 mb-8 text-orange-400 backdrop-blur-sm border border-white/10">
-                  <Sparkles size={32} />
-              </div>
-              <h3 className="text-2xl md:text-5xl font-extrabold mb-12 uppercase tracking-wide relative inline-block text-white leading-tight">
-                Themes <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">Unlimited</span>
-              </h3>
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-[40px] blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+            <div className="bg-slate-950 rounded-[30px] md:rounded-[40px] p-6 sm:p-10 md:p-16 text-white relative overflow-hidden shadow-2xl border border-white/5">
+              <div className="absolute top-0 right-0 w-[600px] h-full bg-[radial-gradient(circle_at_70%_30%,rgba(99,102,241,0.15),transparent_70%)] pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-full h-[300px] bg-gradient-to-t from-slate-950 to-transparent pointer-events-none"></div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12 text-left md:text-center text-lg md:text-xl font-medium text-slate-300">
-                <div className="p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
-                   Innovations in Civil, Computer Science, Electrical, Electronics, Mechanical & Mechatronics Engineering
+              <div className="relative z-10 text-center max-w-5xl mx-auto">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-[24px] bg-white/5 mb-8 text-indigo-400 backdrop-blur-md border border-white/10 rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                    <Sparkles size={40} className="drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
                 </div>
-                <div className="p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
-                   Innovative Models for Economic Sustainability & Circular Economy
+                <h3 className="text-3xl md:text-6xl font-black mb-12 uppercase tracking-tighter relative inline-block text-white leading-tight">
+                  Themes <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Unlimited</span>
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                  {[
+                    { dept: "Computing & AI", tech: "Artificial Intelligence, Machine Learning, Data Science & Cyber Security" },
+                    { dept: "Electronics & Communication", tech: "Internet of Things (IoT), VLSI, Robotics & 5G Networks" },
+                    { dept: "Mechanical & Mechatronics", tech: "Electric Vehicles (EV), Industry 4.0, Automation & Nano Tech" },
+                    { dept: "Civil & Infrastructure", tech: "Sustainable Engineering, BIM, Smart Cities & Green Building" },
+                    { dept: "Management & Economics", tech: "Digital Transformation, Fintech, ESG & Circular Economy" },
+                    { dept: "Applied Sciences", tech: "Advanced Materials, Quantum Physics & Environmental Science" }
+                  ].map((item, idx) => (
+                    <motion.div 
+                      key={idx}
+                      whileHover={{ scale: 1.02 }}
+                      className="p-6 md:p-8 rounded-[24px] bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/15 backdrop-blur-sm group/item relative overflow-hidden"
+                    >
+                      <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-600 opacity-0 group-hover/item:opacity-100 transition-opacity"></div>
+                      <div className="flex gap-4">
+                        <span className="text-indigo-500/40 font-black text-2xl">0{idx + 1}</span>
+                        <div>
+                          <h4 className="text-indigo-400 font-extrabold text-xs uppercase mb-2 tracking-widest">{item.dept}</h4>
+                          <p className="text-lg md:text-xl font-bold leading-relaxed text-slate-100 italic">
+                            "{item.tech}"
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-                <div className="p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
-                   Innovations in Information Technology, AI & Communication Engineering
+                
+                <div className="mt-12 pt-8 border-t border-white/10 flex flex-col items-center gap-4">
+                   <p className="text-sm text-slate-400 font-bold uppercase tracking-[0.3em]">And many more interdisciplinary topics</p>
+                   <div className="flex gap-2">
+                     {[1, 2, 3].map(i => (
+                       <div key={i} className="w-1.5 h-1.5 rounded-full bg-indigo-500/40"></div>
+                     ))}
+                   </div>
                 </div>
-                <div className="p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
-                   Green Technology, Renewable Energy & Sustainable Infrastructure
-                </div>
-              </div>
-              
-              <div className="mt-12 pt-8 border-t border-white/10 flex justify-center">
-                 <p className="text-sm text-slate-400 font-medium uppercase tracking-widest">And many more interdisciplinary topics</p>
               </div>
             </div>
           </div>
@@ -367,20 +422,39 @@ const HomePage = () => {
             <p className="text-lg text-slate-500 font-medium">We invite high-quality original research papers in the following tracks</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.1 }
+              }
+            }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+          >
             {tracks.map((track, i) => (
               <motion.div 
-                whileHover={{ y: -10 }}
+                variants={{
+                  hidden: { opacity: 0, y: 30 },
+                  visible: { opacity: 1, y: 0 }
+                }}
+                whileHover={{ y: -12, scale: 1.02 }}
                 key={track.id} 
-                className="bg-white p-8 md:p-12 rounded-3xl relative text-center flex flex-col items-center border border-slate-100 transition-all duration-400 hover:shadow-xl hover:border-indigo-500 group h-full justify-between"
+                className="bg-white p-8 md:p-10 rounded-[32px] relative text-center flex flex-col items-center border border-slate-100 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(99,102,241,0.12)] hover:border-indigo-200 group h-full justify-between"
               >
-                <div className="absolute top-6 right-6 text-4xl font-black opacity-5 pointer-events-none group-hover:text-indigo-600 group-hover:opacity-10 transition-colors">{track.id}</div>
-                {track.icon}
-                <h3 className="text-xl font-bold mb-3 text-slate-900">{track.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{track.desc}</p>
+                <div className="absolute top-8 right-8 text-5xl font-black text-slate-100 group-hover:text-indigo-500/10 transition-colors pointer-events-none">{track.id}</div>
+                <div className="p-5 rounded-2xl bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500 mb-6 group-hover:scale-110 group-hover:rotate-3">
+                  {React.cloneElement(track.icon, { className: "w-10 h-10 mb-0 transition-colors" })}
+                </div>
+                <h3 className="text-xl font-black mb-4 text-slate-900 leading-tight">{track.title}</h3>
+                <p className="text-slate-500 text-[0.95rem] leading-relaxed font-medium mb-4">{track.desc}</p>
+                <div className="w-10 h-1 bg-slate-100 group-hover:w-20 group-hover:bg-indigo-500 transition-all duration-500 rounded-full"></div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -439,6 +513,54 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Advisory Board Section */}
+      <section id="advisory-board" className="py-12 md:py-20 bg-slate-50">
+        <div className="w-full max-w-7xl mx-auto px-6">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5">Guidance</span>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 tracking-tight">Advisory <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Board</span></h2>
+            <p className="text-lg text-slate-500 font-medium max-w-2xl mx-auto">Distinguished global leaders providing expert guidance for the conference.</p>
+          </div>
+
+          <div className="relative max-w-6xl mx-auto py-6 group overflow-hidden">
+            {/* Fading Edges Mask */}
+            <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
+
+            <div 
+              className="flex gap-8 hover:[animation-play-state:paused]"
+              style={{ 
+                  animation: `board-scroll ${advisoryDuration}s linear infinite`,
+                  width: 'max-content'
+              }}
+            >
+                {/* 3 sets for smooth infinity scroll */}
+              {[...advisoryBoard, ...advisoryBoard, ...advisoryBoard].map((item, i) => (
+                <motion.div 
+                  key={i}
+                  whileHover={{ y: -5 }}
+                  className="w-[220px] shrink-0 bg-white rounded-[20px] overflow-hidden border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_-12px_rgba(99,102,241,0.2)] transition-all duration-500 group/card h-full flex flex-col"
+                >
+                  <div className="relative h-[200px] overflow-hidden bg-slate-100">
+                    <img src={item.img} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110" />
+                  </div>
+                  <div className="p-5 text-center flex flex-col flex-1">
+                    <h3 className="text-lg font-bold mb-1 text-slate-900">{item.name}</h3>
+                    <span className="block font-bold text-slate-400 text-xs mt-auto">{item.affiliation}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+          <style>{`
+            @keyframes board-scroll {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(calc(-100% / 3)); }
+            }
+          `}</style>
+        </div>
+      </section>
+
       {/* Patrons Section */}
       <section id="patrons" className="pt-12 pb-16 md:pt-16 md:pb-24 relative bg-white overflow-hidden">
         {/* Mesh Backgrounds */}
@@ -457,7 +579,7 @@ const HomePage = () => {
             <h3 className="text-2xl font-bold text-slate-500 uppercase tracking-[0.2em] text-center mb-12 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[60px] before:bg-slate-300 after:content-[''] after:h-px after:w-[60px] after:bg-slate-300">Chief Patron</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto justify-center">
               {[
-                { name: "Dr. K. A. Chinnaraju", role: "Director", img: null },
+                { name: "Dr. K. A. Chinnaraju", role: "Director", img: "/assets/Director.jpg" },
                 { name: "Thiru. M. Thangavelu", role: "Trustee", img: null },
                 { name: "Dr. P. Natarajan", role: "Academic Director", img: null }
               ].map((p, i) => (
@@ -485,7 +607,7 @@ const HomePage = () => {
             <h3 className="text-2xl font-bold text-slate-500 uppercase tracking-[0.2em] text-center mb-12 mt-20 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[60px] before:bg-slate-300 after:content-[''] after:h-px after:w-[60px] after:bg-slate-300">Patron</h3>
             <div className="max-w-sm mx-auto">
               {[
-                { name: "Dr. K. Manikanda Subramanian", role: "Principal", img: null }
+                { name: "Dr. K. Manikanda Subramanian", role: "Principal", img: "/assets/PRINCIPAL.png" }
               ].map((p, i) => (
                 <motion.div 
                   key={i}
@@ -533,17 +655,39 @@ const HomePage = () => {
 
             <h3 className="text-xl font-bold text-slate-400 uppercase tracking-[0.2em] text-center mb-12 mt-24 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[40px] before:bg-slate-200 after:content-[''] after:h-px after:w-[40px] after:bg-slate-200">Organizing Team</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto px-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((m) => (
+              {[
+                { name: "Mr. G. R. Seenivasan", role: "Assistant Professor", dept: "Civil Engineering", img: null },
+                { name: "R. Yoga", role: "Assistant Professor", dept: "CSE", img: "/organizing team/Yoga.png" },
+                { name: "M. ABIRAMI", role: "Assistant Professor", dept: "CSE", img: "/organizing team/ABIRAMI.png" },
+                { name: "P. Chandralakshmi", role: "Assistant Professor", dept: "EEE", img: "/organizing team/Chandralakshmi.jpeg" },
+                { name: "R. R. Yuganandhine", role: "Assistant Professor", dept: "ECE", img: "/organizing team/Yuganandhine.png" },
+                { name: "Dr. L. Venkatesh", role: "Associate Professor", dept: "Mechanical Engineering", img: null },
+                { name: "Mr. K. Senthilkumar", role: "Assistant Professor", dept: "Mechatronics Engineering", img: null },
+                { name: "Ms. K. Preetha", role: "Assistant Professor", dept: "Information Technology", img: null },
+                { name: "T. Malarvizhi", role: "Assistant Professor", dept: "AI & DS", img: "/organizing team/Malarvizhi.png" },
+                { name: "Dr. M. Arunmozhi", role: "Associate Professor", dept: "MBA/DoMS", img: "/organizing team/Arunmozhi.jpeg" }
+              ].map((m, idx) => (
                 <motion.div 
-                  key={m}
+                  key={idx}
                   whileHover={{ y: -4 }}
-                  className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300 flex flex-col items-center text-center"
+                  className={`bg-white p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300 flex flex-col items-center text-center group h-full ${idx === 9 ? 'lg:col-start-2' : ''}`}
                 >
-                  <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mb-4 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                    <User size={20} />
+                  <div className="w-20 h-20 mb-4 relative">
+                    {m.img ? (
+                      <img 
+                        src={m.img} 
+                        alt={m.name} 
+                        className="w-full h-full rounded-full object-cover border-2 border-slate-100 group-hover:border-indigo-500 transition-colors"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-slate-50 text-slate-400 rounded-full flex items-center justify-center border-2 border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                        <User size={32} />
+                      </div>
+                    )}
                   </div>
-                  <h4 className="text-base font-bold text-slate-800 mb-1">Team Member {m}</h4>
-                  <span className="text-[0.7rem] font-bold text-indigo-500 uppercase tracking-wider">Designation / Dept.</span>
+                  <h4 className="text-base font-bold text-slate-800 mb-1">{m.name}</h4>
+                  <span className="text-[0.7rem] font-bold text-indigo-500 uppercase tracking-wider mb-1">{m.role}</span>
+                  <span className="text-[0.6rem] font-medium text-slate-400 uppercase tracking-tighter">{m.dept}</span>
                 </motion.div>
               ))}
             </div>
@@ -554,18 +698,35 @@ const HomePage = () => {
       {/* About College Section */}
       <section id="about" className="py-16 md:py-24">
         <div className="w-full max-w-7xl mx-auto px-6">
-          <div className="w-full mb-14 flex justify-center">
-            <div className="relative w-full max-w-7xl min-h-[450px] md:min-h-[500px] lg:min-h-[600px] rounded-[30px] md:rounded-[40px] overflow-hidden shadow-2xl flex items-center justify-center">
-              <img src="https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=1400&q=80" alt="College Campus" className="absolute inset-0 w-full h-full object-cover z-0" />
-              <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 to-slate-900/50 z-10"></div>
+          <div className="w-full mb-14 group">
+            <div className="relative w-full max-w-7xl min-h-[500px] md:min-h-[650px] rounded-[40px] md:rounded-[60px] overflow-hidden shadow-2xl flex items-center justify-center border border-slate-200">
+              <img src="/assets/ciet.jpeg" alt="College Campus" className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-[2s] group-hover:scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent z-10 transition-opacity group-hover:opacity-60"></div>
               
-              <div className="relative z-20 p-8 md:p-16 max-w-4xl text-center text-white">
-                <span className="inline-block px-5 py-2 rounded-full bg-white/10 text-white font-extrabold text-xs tracking-widest uppercase mb-6 backdrop-blur-md">Host Institution</span>
-                <h2 className="text-3xl md:text-5xl font-extrabold mb-8 leading-tight tracking-tight text-white">Coimbatore Institute of <span className="text-sky-400">Engineering and Technology</span></h2>
-                <p className="text-base md:text-xl font-medium leading-relaxed opacity-90 mb-0">The Coimbatore Institute of Engineering and Technology (CIET), Coimbatore, Tamilnadu (An Autonomous institute) was established in 2001 by the Kovai Kalaimagal Educational Trust (KKET) to provide quality education in Engineering, Technology and Management. CIET is affiliated to Anna University, approved by AICTE, accredited with 'A' Grade by NAAC.</p>
+              <div className="relative z-20 p-8 md:p-20 max-w-4xl text-center text-white">
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="mb-8"
+                >
+                  <span className="inline-block px-6 py-2 rounded-full bg-sky-500/20 text-sky-300 font-black text-xs tracking-[0.2em] uppercase mb-4 backdrop-blur-xl border border-sky-500/30">Host Institution</span>
+                  <h2 className="text-4xl md:text-7xl font-black mb-8 leading-[1.1] tracking-tighter text-white drop-shadow-2xl">
+                    Coimbatore Institute <br /> of <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">Engineering and Technology</span>
+                  </h2>
+                </motion.div>
+                <motion.p 
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3 }}
+                  className="text-lg md:text-2xl font-medium leading-relaxed opacity-90 mb-0 text-slate-200"
+                >
+                  The Coimbatore Institute of Engineering and Technology (CIET), Coimbatore, Tamilnadu (An Autonomous institute) was established in 2001 by the Kovai Kalaimagal Educational Trust (KKET) to provide quality education in Engineering, Technology and Management. CIET is affiliated to Anna University, approved by AICTE, accredited with 'A' Grade by NAAC.
+                </motion.p>
               </div>
-              <div className="absolute bottom-6 md:bottom-8 right-6 md:right-10 bg-white py-3 px-5 rounded-xl z-20 flex items-center gap-2 font-extrabold text-sm shadow-lg text-slate-900">
-                <MapPin size={16} /> CIET Coimbatore
+              <div className="absolute bottom-10 left-10 md:left-20 bg-white/10 backdrop-blur-md border border-white/20 py-3 px-6 rounded-2xl z-20 flex items-center gap-3 font-black text-sm shadow-2xl text-white">
+                <MapPin size={20} className="text-sky-400" /> CIET COIMBATORE
               </div>
             </div>
           </div>
@@ -577,7 +738,7 @@ const HomePage = () => {
               </div>
               <div>
                 <h4 className="text-xl font-bold mb-2 text-slate-900">Academic Scope</h4>
-                <p className="text-slate-500 text-[0.95rem] leading-relaxed">CIET offers 11 Under Graduate and a Post Graduate Engineering course including MBA-Business Administration.</p>
+                <p className="text-slate-500 text-[0.95rem] leading-relaxed">CIET offers 11 Under Graduate and a Post Graduate Engineering course including MBA - Business Administration.</p>
               </div>
             </div>
             <div className="flex gap-6 p-8 md:p-10 items-center rounded-[32px] bg-white border border-slate-100 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:border-indigo-500 group h-full">
@@ -586,7 +747,7 @@ const HomePage = () => {
               </div>
               <div>
                 <h4 className="text-xl font-bold mb-2 text-slate-900">Campus & Atmosphere</h4>
-                <p className="text-slate-500 text-[0.95rem] leading-relaxed">CIET is located in a green campus spreading over 25 acres with a picturesque and serene atmosphere surrounded by green hillocks.</p>
+                <p className="text-slate-500 text-[0.95rem] leading-relaxed">Located in a green campus spreading over 25 acres (25 kms from Coimbatore city) with a picturesque and serene atmosphere surrounded by green hillocks.</p>
               </div>
             </div>
           </div>
@@ -612,7 +773,7 @@ const HomePage = () => {
         <div className="w-full max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
           <div className="flex flex-col">
             <h2 className="text-[3.5rem] font-bold mb-2 tracking-tight leading-none">20+</h2>
-            <p className="opacity-90 font-bold uppercase tracking-[0.1rem] text-sm">Speaker Countries</p>
+            <p className="opacity-90 font-bold uppercase tracking-[0.1rem] text-sm">Experts</p>
           </div>
           <div className="flex flex-col">
             <h2 className="text-[3.5rem] font-bold mb-2 tracking-tight leading-none">150+</h2>

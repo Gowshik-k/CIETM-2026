@@ -12,10 +12,11 @@ const registrationSchema = new mongoose.Schema({
         mobile: String,
         institution: String,
         department: String,
-        registerNumber: String,
+        designation: String,
+        yearOfStudy: String,
         category: {
             type: String,
-            enum: ['Inter-college Student', 'External Student', 'Industrial Delegate', 'Research Scholar']
+            enum: ['UG/PG STUDENTS', 'FACULTY/RESEARCH SCHOLARS', 'EXTERNAL / ONLINE PRESENTATION', 'INDUSTRY PERSONNEL', 'Inter-college Student', 'External Student', 'Industrial Delegate', 'Research Scholar']
         }
     },
     teamMembers: [{
@@ -23,7 +24,13 @@ const registrationSchema = new mongoose.Schema({
         email: String,
         affiliation: String,
         department: String,
-        registerNumber: String
+        designation: String,
+        yearOfStudy: String,
+        mobile: String,
+        category: {
+            type: String,
+            enum: ['UG/PG STUDENTS', 'FACULTY/RESEARCH SCHOLARS', 'EXTERNAL / ONLINE PRESENTATION', 'INDUSTRY PERSONNEL', 'Inter-college Student', 'External Student', 'Industrial Delegate', 'Research Scholar']
+        }
     }],
     paperDetails: {
         title: String,

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import { 
   Users, FileCheck, Clock, CheckCircle, 
-  XCircle, Search, Filter, ExternalLink
+  XCircle, Search, Filter, ExternalLink, Home, LayoutDashboard
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -172,7 +173,14 @@ const AuthorDetailModal = ({ registration, onClose, onReview, token }) => {
                   <div key={i} className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex flex-col">
                     <span className="font-bold text-slate-800 text-sm">{member.name}</span>
                     <span className="text-xs text-slate-500 font-medium">{member.email}</span>
-                    <span className="text-xs text-indigo-500 font-semibold mt-1">{member.affiliation}</span>
+                    <div className="mt-1 flex flex-col gap-0.5">
+                      <span className="text-[0.7rem] text-indigo-600 font-extrabold uppercase tracking-tight">{member.affiliation}</span>
+                      <span className="text-[0.65rem] text-slate-400 font-bold uppercase tracking-widest">{member.department}</span>
+                    </div>
+                    <div className="mt-2 flex justify-between items-center text-[0.65rem]">
+                       <span className="text-slate-500 font-bold">📞 {member.mobile || 'N/A'}</span>
+                       <span className="px-1.5 py-0.5 bg-slate-200 rounded text-slate-700 font-black tracking-tighter uppercase">{member.category}</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -227,9 +235,17 @@ const AuthorDetailModal = ({ registration, onClose, onReview, token }) => {
   );
 
   return (
-    <div className="h-[calc(100vh-80px)] p-6 md:px-10 md:py-8 bg-slate-50 flex flex-col overflow-hidden animate-[fadeIn_0.5s_ease-out]">
-      <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 gap-4">
-        <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">Admin Dashboard</h1>
+    <div className="h-screen p-6 md:px-10 md:py-8 bg-slate-50 flex flex-col overflow-hidden animate-[fadeIn_0.5s_ease-out]">
+      <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 gap-6">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+             <Link to="/" className="p-2 bg-white rounded-xl border border-slate-200 text-slate-400 hover:text-indigo-600 transition-colors shadow-sm">
+               <Home size={20} />
+             </Link>
+             <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight uppercase">Admin Dashboard</h1>
+          </div>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">CIETM 2026 Management</p>
+        </div>
         <div className="flex flex-wrap gap-4">
           <div className="bg-white px-5 py-3 rounded-2xl flex items-center gap-4 shadow-sm border border-slate-100 min-w-[160px] transition-transform hover:-translate-y-1">
              <Users className="text-indigo-500 opacity-90" size={24} />

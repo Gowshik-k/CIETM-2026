@@ -21,20 +21,16 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
     mobile: '',
     institution: 'Coimbatore Institute of Engineering and Technology',
     department: '',
-    registerNumber: '',
-    category: 'External Student',
+    designation: '',
+    yearOfStudy: '',
+    category: 'UG/PG STUDENTS',
     teamMembers: [],
     paperTitle: '',
     abstract: '',
     keywords: '',
     track: 'CIDT',
-    paperFile: null,
     password: '',
     confirmPassword: '',
-    fileUrl: '',
-    publicId: '',
-    resourceType: '',
-    originalName: '',
     agreedToTerms: false
   });
 
@@ -54,17 +50,14 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
               mobile: data.personalDetails?.mobile || user.phone || '',
               institution: data.personalDetails?.institution || '',
               department: data.personalDetails?.department || '',
-              registerNumber: data.personalDetails?.registerNumber || '',
+              designation: data.personalDetails?.designation || '',
+              yearOfStudy: data.personalDetails?.yearOfStudy || '',
               category: data.personalDetails?.category || 'External Student',
               teamMembers: data.teamMembers || [],
               paperTitle: data.paperDetails?.title || '',
               abstract: data.paperDetails?.abstract || '',
               keywords: data.paperDetails?.keywords?.join(', ') || '',
-              track: data.paperDetails?.track || 'CIDT',
-              fileUrl: data.paperDetails?.fileUrl || '',
-              publicId: data.paperDetails?.publicId || '',
-              resourceType: data.paperDetails?.resourceType || '',
-              originalName: data.paperDetails?.originalName || ''
+              track: data.paperDetails?.track || 'CIDT'
             }));
             
             // If starting from step 1 but user logged in and has draft/data
@@ -133,17 +126,38 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
             toast.error("Department is required");
             return false;
         }
-        if (!formData.registerNumber) {
-            setErrors({ registerNumber: true });
-            toast.error("Register Number is required");
+        if (formData.category === 'UG/PG STUDENTS' && !formData.yearOfStudy) {
+            setErrors({ yearOfStudy: true });
+            toast.error("Year/Course is required");
             return false;
+        }
+        if ((formData.category === 'FACULTY/RESEARCH SCHOLARS' || formData.category === 'INDUSTRY PERSONNEL') && !formData.designation) {
+            setErrors({ designation: true });
+            toast.error("Designation is required");
+            return false;
+        }
+        return true;
+      case 3:
+        for (let i = 0; i < formData.teamMembers.length; i++) {
+          const m = formData.teamMembers[i];
+          if (!m.name || !m.email || !m.mobile || !m.affiliation || !m.department) {
+            toast.error(`Please fill in all core details for co-author ${i + 1}`);
+            return false;
+          }
+          if (m.category === 'UG/PG STUDENTS' && !m.yearOfStudy) {
+             toast.error(`Year/Course is required for co-author ${i + 1}`);
+             return false;
+          }
+          if ((m.category === 'FACULTY/RESEARCH SCHOLARS' || m.category === 'INDUSTRY PERSONNEL') && !m.designation) {
+             toast.error(`Designation is required for co-author ${i + 1}`);
+             return false;
+          }
         }
         return true;
       case 4:
         if (!formData.paperTitle) newErrors.paperTitle = true;
         if (!formData.abstract) newErrors.abstract = true;
         if (!formData.keywords) newErrors.keywords = true;
-        if (!formData.fileUrl && !formData.paperFile) newErrors.paperFile = true;
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
@@ -157,41 +171,14 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
   };
 
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setLoading(true);
-    const uploadData = new FormData();
-    uploadData.append('paper', file);
-
-    try {
-      const { data: uploadRes } = await axios.post('/api/registrations/upload', uploadData, {
-        headers: { 
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${user?.token}`
-        }
-      });
-      setFormData({ 
-        ...formData, 
-        paperFile: file, 
-        fileUrl: uploadRes.url, 
-        publicId: uploadRes.publicId,
-        resourceType: uploadRes.resourceType,
-        originalName: uploadRes.originalName
-      });
-      toast.success("File uploaded and saved to draft");
-    } catch (error) {
-      toast.error("File upload failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const addTeamMember = () => {
+    if (formData.teamMembers.length >= 3) {
+        toast.error("Maximum 3 co-authors are allowed");
+        return;
+    }
     setFormData({
       ...formData,
-      teamMembers: [...formData.teamMembers, { name: '', email: '', affiliation: '' }]
+      teamMembers: [...formData.teamMembers, { name: '', email: '', mobile: '', affiliation: '', department: '', designation: '', yearOfStudy: '', category: 'UG/PG STUDENTS' }]
     });
   };
 
@@ -212,7 +199,8 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
           mobile: formData.mobile,
           institution: formData.institution,
           department: formData.department,
-          registerNumber: formData.registerNumber,
+          designation: formData.designation,
+          yearOfStudy: formData.yearOfStudy,
           category: formData.category
         },
         teamMembers: formData.teamMembers,
@@ -220,11 +208,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
           title: formData.paperTitle,
           abstract: formData.abstract,
           keywords: formData.keywords.split(',').map(k => k.trim()).filter(k => k),
-          track: formData.track,
-          fileUrl: formData.fileUrl,
-          publicId: formData.publicId,
-          resourceType: formData.resourceType,
-          originalName: formData.originalName
+          track: formData.track
         }
       }, {
         headers: { Authorization: `Bearer ${user.token}` }
@@ -360,6 +344,13 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
 
   const isHostInstitution = hostColleges.includes(formData.institution);
 
+  const registrationCategories = {
+    'UG/PG STUDENTS': { fee: 500 },
+    'FACULTY/RESEARCH SCHOLARS': { fee: 750 },
+    'EXTERNAL / ONLINE PRESENTATION': { fee: 300 },
+    'INDUSTRY PERSONNEL': { fee: 900 }
+  };
+
   // Helper classes
   const labelClass = "block mb-2 font-bold text-slate-800 text-sm";
   const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 text-sm";
@@ -466,11 +457,11 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
               <h2 className="text-2xl font-bold text-slate-900 mb-6 shrink-0">Step 2: Institutional Details</h2>
               
               <div className={groupClass}>
-                <label className={labelClass}>Institution Details</label>
+                <label className={labelClass}>{formData.category === 'INDUSTRY PERSONNEL' ? 'Organization Details' : 'Institution Details'}</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div 
                         className={`border-2 rounded-xl p-5 cursor-pointer transition-all duration-200 flex items-center gap-4 bg-white hover:border-slate-300 hover:bg-slate-50 relative overflow-hidden group ${isHostInstitution ? 'border-indigo-600 bg-indigo-50/50 shadow-lg shadow-indigo-500/10' : 'border-slate-200'}`}
-                        onClick={() => setFormData({...formData, institution: hostColleges[0], category: 'Inter-college Student'})}
+                        onClick={() => setFormData({...formData, institution: hostColleges[0]})}
                     >
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isHostInstitution ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 group-hover:border-slate-400'}`}>
                             <div className={`w-2 h-2 bg-white rounded-full transition-all ${isHostInstitution ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`}></div>
@@ -483,7 +474,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
 
                     <div 
                         className={`border-2 rounded-xl p-5 cursor-pointer transition-all duration-200 flex items-center gap-4 bg-white hover:border-slate-300 hover:bg-slate-50 relative overflow-hidden group ${!isHostInstitution ? 'border-indigo-600 bg-indigo-50/50 shadow-lg shadow-indigo-500/10' : 'border-slate-200'}`}
-                        onClick={() => setFormData({...formData, institution: '', category: 'External Student'})}
+                        onClick={() => setFormData({...formData, institution: ''})}
                     >
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${!isHostInstitution ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 group-hover:border-slate-400'}`}>
                             <div className={`w-2 h-2 bg-white rounded-full transition-all ${!isHostInstitution ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`}></div>
@@ -492,6 +483,30 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                             <span className={`font-bold text-sm mb-0.5 ${!isHostInstitution ? 'text-indigo-700' : 'text-slate-800'}`}>External Institution</span>
                             <span className="text-xs text-slate-500">Other College or Organization</span>
                         </div>
+                    </div>
+                </div>
+
+                <div className={`${groupClass} mt-8 animate-in fade-in slide-in-from-bottom-2 duration-500`}>
+                    <label className={labelClass}>{formData.category === 'INDUSTRY PERSONNEL' ? 'Select Professional Category' : 'Select Participant Category'} <span className="text-red-500">*</span></label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        {Object.entries(registrationCategories).map(([key, data]) => (
+                            <div 
+                                key={key}
+                                className={`border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 flex flex-col gap-1 bg-white hover:border-slate-300 hover:bg-slate-50 relative overflow-hidden group ${formData.category === key ? 'border-indigo-600 bg-indigo-50/50 shadow-md shadow-indigo-500/5' : 'border-slate-200'}`}
+                                onClick={() => setFormData({...formData, category: key})}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${formData.category === key ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 group-hover:border-slate-400 font-black'}`}>
+                                        <div className={`w-1.5 h-1.5 bg-white rounded-full transition-all ${formData.category === key ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`}></div>
+                                    </div>
+                                    <span className={`font-black text-[0.65rem] uppercase tracking-wider ${formData.category === key ? 'text-indigo-700' : 'text-slate-700'}`}>{key}</span>
+                                </div>
+                                <div className="pl-7 flex items-baseline gap-1 mt-1">
+                                    <span className="text-base font-black text-slate-900 font-mono tracking-tighter">₹{data.fee}</span>
+                                    <span className="text-[0.65rem] text-slate-400 font-bold uppercase tracking-tight">Registration Fee</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
@@ -511,12 +526,12 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                     </div>
                 ) : (
                     <div className="animate-in slide-in-from-top-2 duration-300">
-                        <label className={labelClass}>Enter College Name</label>
+                        <label className={labelClass}>Enter {formData.category === 'INDUSTRY PERSONNEL' ? 'Organization' : 'College'} Name</label>
                         <input 
                             name="institution" 
                             value={formData.institution} 
                             onChange={handleChange} 
-                            placeholder="e.g. PSG College of Technology" 
+                            placeholder={formData.category === 'INDUSTRY PERSONNEL' ? 'e.g. Google India' : 'e.g. PSG College of Technology'} 
                             autoFocus
                             className={`${inputClass} border-indigo-500 bg-white ring-4 ring-indigo-500/10`}
                         />
@@ -524,27 +539,44 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                 )}
               </div>
 
-               <div className={`${groupClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100`}>
-                <label className={labelClass}>Department <span className="text-red-500">*</span></label>
-                <input 
-                    name="department" 
-                    value={formData.department} 
-                    onChange={handleChange} 
-                    placeholder="e.g. Computer Science and Engineering" 
-                    className={`${inputClass} ${errors.department ? errorInputClass : ''}`}
-                />
-              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className={`${groupClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100`}>
+                    <label className={labelClass}>{formData.category === 'INDUSTRY PERSONNEL' ? 'Vertical / Department' : 'Department'} <span className="text-red-500">*</span></label>
+                    <input 
+                        name="department" 
+                        value={formData.department} 
+                        onChange={handleChange} 
+                        placeholder="e.g. Computer Science" 
+                        className={`${inputClass} ${errors.department ? errorInputClass : ''}`}
+                    />
+                  </div>
 
-              <div className={`${groupClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200`}>
-                <label className={labelClass}>Register Number <span className="text-red-500">*</span></label>
-                <input 
-                    name="registerNumber" 
-                    value={formData.registerNumber} 
-                    onChange={handleChange} 
-                    placeholder="e.g. 710012345678" 
-                    className={`${inputClass} ${errors.registerNumber ? errorInputClass : ''}`}
-                />
-              </div>
+                  {formData.category === 'UG/PG STUDENTS' && (
+                    <div className={`${groupClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200`}>
+                        <label className={labelClass}>Year / Course <span className="text-red-500">*</span></label>
+                        <input 
+                            name="yearOfStudy" 
+                            value={formData.yearOfStudy} 
+                            onChange={handleChange} 
+                            placeholder="e.g. 4th Year B.E" 
+                            className={`${inputClass} ${errors.yearOfStudy ? errorInputClass : ''}`}
+                        />
+                    </div>
+                  )}
+
+                  {(formData.category === 'FACULTY/RESEARCH SCHOLARS' || formData.category === 'INDUSTRY PERSONNEL') && (
+                    <div className={`${groupClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200`}>
+                        <label className={labelClass}>Designation <span className="text-red-500">*</span></label>
+                        <input 
+                            name="designation" 
+                            value={formData.designation} 
+                            onChange={handleChange} 
+                            placeholder="e.g. Assistant Professor" 
+                            className={`${inputClass} ${errors.designation ? errorInputClass : ''}`}
+                        />
+                    </div>
+                  )}
+               </div>
             </div>
           )}
 
@@ -567,16 +599,71 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                         Remove
                     </button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <input placeholder="Name" value={m.name} onChange={(e) => updateTeamMember(i, 'name', e.target.value)} className={inputClass} />
-                      <input placeholder="Email" value={m.email} onChange={(e) => updateTeamMember(i, 'email', e.target.value)} className={inputClass} />
-                      <input placeholder="Institution" value={m.affiliation} onChange={(e) => updateTeamMember(i, 'affiliation', e.target.value)} className={inputClass} />
-                      <input placeholder="Department" value={m.department} onChange={(e) => updateTeamMember(i, 'department', e.target.value)} className={inputClass} />
-                      <input placeholder="Register Number" value={m.registerNumber} onChange={(e) => updateTeamMember(i, 'registerNumber', e.target.value)} className={inputClass} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Full Name</label>
+                        <input placeholder="Name" value={m.name} onChange={(e) => updateTeamMember(i, 'name', e.target.value)} className={inputClass} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Email</label>
+                        <input placeholder="Email" value={m.email} onChange={(e) => updateTeamMember(i, 'email', e.target.value)} className={inputClass} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Mobile</label>
+                        <input placeholder="Mobile Number" value={m.mobile} onChange={(e) => updateTeamMember(i, 'mobile', e.target.value)} className={inputClass} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Category</label>
+                        <select 
+                          value={m.category} 
+                          onChange={(e) => updateTeamMember(i, 'category', e.target.value)} 
+                          className={inputClass}
+                        >
+                          {Object.keys(registrationCategories).map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 mt-1 pt-3 border-t border-slate-100">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">{m.category === 'INDUSTRY PERSONNEL' ? 'Organization' : 'Institution'}</label>
+                          <input placeholder={m.category === 'INDUSTRY PERSONNEL' ? 'Organization' : 'Institution'} value={m.affiliation} onChange={(e) => updateTeamMember(i, 'affiliation', e.target.value)} className={inputClass} />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">{m.category === 'INDUSTRY PERSONNEL' ? 'Vertical' : 'Department'}</label>
+                          <input placeholder={m.category === 'INDUSTRY PERSONNEL' ? 'Vertical' : 'Department'} value={m.department} onChange={(e) => updateTeamMember(i, 'department', e.target.value)} className={inputClass} />
+                        </div>
+                        {m.category === 'UG/PG STUDENTS' && (
+                          <div className="md:col-span-2">
+                             <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Year / Course</label>
+                             <input placeholder="e.g. 3rd Year B.Tech" value={m.yearOfStudy} onChange={(e) => updateTeamMember(i, 'yearOfStudy', e.target.value)} className={inputClass} />
+                          </div>
+                        )}
+                        {(m.category === 'FACULTY/RESEARCH SCHOLARS' || m.category === 'INDUSTRY PERSONNEL') && (
+                          <div className="md:col-span-2">
+                             <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Designation</label>
+                             <input placeholder="e.g. Professor / Project Manager" value={m.designation} onChange={(e) => updateTeamMember(i, 'designation', e.target.value)} className={inputClass} />
+                          </div>
+                        )}
+                      </div>
                   </div>
                 </div>
               ))}
-              <button onClick={addTeamMember} className="btn btn-outline w-full md:w-auto">+ Add Co-author</button>
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={addTeamMember} 
+                  disabled={formData.teamMembers.length >= 3}
+                  className={`btn btn-outline w-full md:w-auto ${formData.teamMembers.length >= 3 ? 'opacity-50 cursor-not-allowed border-slate-200 text-slate-400' : ''}`}
+                >
+                  + Add Co-author
+                </button>
+                {formData.teamMembers.length >= 3 && (
+                  <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
+                    Maximum limit of 3 co-authors reached
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -620,17 +707,6 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                     className={`${inputClass} ${errors.keywords ? errorInputClass : ''}`}
                 />
               </div>
-              <div className={groupClass}>
-                <label className={labelClass}>Upload Paper (PDF only) <span className="text-red-500">*</span></label>
-                <div 
-                  className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer relative transition-all duration-300 flex flex-col items-center justify-center gap-2 text-slate-500 hover:border-indigo-500 hover:bg-indigo-50/30 hover:text-indigo-600 ${errors.paperFile ? 'border-red-500 bg-red-50 text-red-600' : 'border-slate-300'}`}
-                >
-                  <Upload size={24} />
-                  <input type="file" accept=".pdf" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                  <span>{formData.paperFile ? formData.paperFile.name : formData.fileUrl ? 'File already uploaded' : 'Select PDF file'}</span>
-                </div>
-                {formData.fileUrl && <p className="text-xs text-emerald-600 mt-1 font-semibold flex items-center gap-1"><CheckCircle size={12} /> File saved in draft</p>}
-              </div>
             </div>
           )}
 
@@ -644,7 +720,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                 </p>
                 <p className="flex justify-between mb-4">
                   <strong className="text-slate-700">Registration Fee:</strong> 
-                  <span className="text-slate-900 font-black">{formData.category === 'Inter-college Student' ? '₹500' : '₹1000'}</span>
+                  <span className="text-slate-900 font-black">₹{registrationCategories[formData.category]?.fee || 0}</span>
                 </p>
                 <p className="text-xs text-slate-500 italic mt-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
                   Note: Final submission will lock your details for review. Please make sure all information is correct.

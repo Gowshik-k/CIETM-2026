@@ -6,7 +6,8 @@ const {
     getMyRegistration,
     getAllRegistrations,
     reviewPaper,
-    downloadPaper
+    downloadPaper,
+    updatePaper
 } = require('../controllers/registrationController');
 const { protect, admin } = require('../middleware/authMiddleware');
 const { upload } = require('../config/cloudinary');
@@ -17,6 +18,7 @@ router.post('/submit', protect, submitRegistration);
 router.get('/my', protect, getMyRegistration);
 router.get('/', protect, admin, getAllRegistrations);
 router.put('/:id/review', protect, admin, reviewPaper);
+router.post('/update-paper', protect, updatePaper);
 
 // File upload route
 router.post('/upload', protect, upload.single('paper'), (req, res) => {

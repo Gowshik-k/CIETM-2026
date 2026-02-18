@@ -6,7 +6,7 @@ import {
   FileText, CheckCircle, Clock, AlertCircle, 
   CreditCard, User, Settings, Bell, Download,
   Menu, X, Search, ChevronRight, LogOut, LayoutDashboard,
-  Calendar, MapPin, ShieldCheck, Award, Layers
+  Calendar, MapPin, ShieldCheck, Award, Layers, Upload, Home
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import RegistrationForm from '../components/RegistrationForm';
@@ -15,6 +15,7 @@ const Dashboard = () => {
   const { user, logout } = useAuth();
   const [registration, setRegistration] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -44,6 +45,50 @@ const Dashboard = () => {
     window.open(`/api/registrations/download/${registration._id}?token=${user.token}`, '_blank');
   };
 
+  const handleFullPaperUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+        return toast.error("Please upload a PDF file");
+    }
+
+    const confirmUpload = window.confirm("Are you sure you want to upload this full paper?");
+    if (!confirmUpload) return;
+
+    setUploading(true);
+    const uploadData = new FormData();
+    uploadData.append('paper', file);
+
+    try {
+        // First upload to Cloudinary via server
+        const { data: uploadRes } = await axios.post('/api/registrations/upload', uploadData, {
+            headers: { 
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${user?.token}`
+            }
+        });
+
+        // Then update the registration record with file details
+        await axios.post('/api/registrations/update-paper', {
+            fileUrl: uploadRes.url,
+            publicId: uploadRes.publicId,
+            resourceType: uploadRes.resourceType,
+            originalName: uploadRes.originalName
+        }, {
+            headers: { Authorization: `Bearer ${user.token}` }
+        });
+
+        toast.success("Full paper uploaded successfully!");
+        fetchRegistration(); // Refresh registration data
+    } catch (error) {
+        toast.error("Paper upload failed. Please try again.");
+        console.error("Upload error", error);
+    } finally {
+        setUploading(false);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'Draft': return 'text-slate-500 bg-slate-100 border-slate-200';
@@ -55,6 +100,14 @@ const Dashboard = () => {
     }
   };
 
+  const categoryAmounts = {
+    'UG/PG STUDENTS': 500,
+    'FACULTY/RESEARCH SCHOLARS': 750,
+    'EXTERNAL / ONLINE PRESENTATION': 300,
+    'INDUSTRY PERSONNEL': 900
+  };
+  const currentFee = categoryAmounts[registration?.personalDetails?.category] || 1000;
+
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
       <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
@@ -63,133 +116,173 @@ const Dashboard = () => {
   );
 
   const renderOverview = () => (
-    <div className="animate-[fadeIn_0.6s_ease-out]">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-white">
-        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 p-7 rounded-3xl shadow-lg relative overflow-hidden group hover:shadow-xl transition-all duration-300 border border-white/10">
-          <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 text-white shadow-inner"><FileText size={24} /></div>
-          <div className="relative z-10">
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-100 opacity-80 block mb-1">Submission Status</span>
-            <span className="text-3xl lg:text-4xl font-black tracking-tight">{registration?.status || 'Not Started'}</span>
-          </div>
-           {/* Decor */}
-           <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+    <div className="animate-[fadeIn_0.6s_ease-out] space-y-8">
+      {/* Welcome Section */}
+      <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
+        <div className="relative z-10">
+          <h2 className="text-2xl md:text-3xl font-black text-slate-800 mb-2 font-display">
+            Welcome back, {user.name.split(' ')[0]}! 👋
+          </h2>
+          <p className="text-slate-500 font-medium max-w-md">
+            Here's what's happening with your conference submission today.
+          </p>
         </div>
-        <div className="bg-gradient-to-br from-purple-500 to-fuchsia-600 p-7 rounded-3xl shadow-lg relative overflow-hidden group hover:shadow-xl transition-all duration-300 border border-white/10">
-          <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 text-white shadow-inner"><Award size={24} /></div>
-          <div className="relative z-10">
-            <span className="text-xs font-bold uppercase tracking-wider text-purple-100 opacity-80 block mb-1">Global Track</span>
-            <span className="text-xl lg:text-2xl font-black tracking-tight leading-tight line-clamp-2">{registration?.paperDetails?.track || 'N/A'}</span>
-          </div>
-           <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+        
+        <div className="flex flex-wrap gap-3 relative z-10">
+          {!registration?.paperDetails?.fileUrl && registration?.status !== 'Draft' && registration?.status && (
+            <button 
+              onClick={() => setActiveTab('paper')}
+              className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-100 flex items-center gap-2 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all"
+            >
+              <Upload size={18} /> Upload Full Paper
+            </button>
+          )}
+          <button 
+            onClick={() => setActiveTab('paper')}
+            className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-slate-200 transition-all font-sans"
+          >
+            {registration ? 'View Submission' : 'Start Submission'} <ChevronRight size={16} />
+          </button>
         </div>
-        <div className="bg-slate-800 p-7 rounded-3xl shadow-lg relative overflow-hidden group hover:shadow-xl transition-all duration-300 border border-slate-700">
-          <div className="w-12 h-12 bg-emerald-500/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 text-emerald-400 shadow-inner border border-emerald-500/20"><CheckCircle size={24} /></div>
-          <div className="relative z-10">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 opacity-80 block mb-1">Profile Verification</span>
-            <span className="text-xl lg:text-2xl font-black tracking-tight text-white">Verified {user.role?.toUpperCase()}</span>
-          </div>
-           <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
-        </div>
+
+        {/* Decor */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full -mr-32 -mt-32 opacity-50"></div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
-        {/* Left Column: Dates & Guidelines */}
-        <div className="flex flex-col gap-8">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-            <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-50">
-              <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Calendar size={20} /></div>
-              <h3 className="text-lg font-bold text-slate-800">Important Deadlines</h3>
+      {/* Quick Status Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { 
+            label: 'Submission ID', 
+            value: registration ? `#CMP-26-${registration._id.slice(-4).toUpperCase()}` : 'N/A', 
+            icon: FileText, 
+            color: 'text-blue-600', 
+            bg: 'bg-blue-50' 
+          },
+          { 
+            label: 'Current Status', 
+            value: registration?.status || 'No Submission', 
+            icon: Clock, 
+            color: 'text-amber-600', 
+            bg: 'bg-amber-50' 
+          },
+          { 
+            label: 'Global Track', 
+            value: registration?.paperDetails?.track || 'Not Selected', 
+            icon: Award, 
+            color: 'text-purple-600', 
+            bg: 'bg-purple-50' 
+          },
+          { 
+            label: 'Payment', 
+            value: registration?.paymentStatus || 'Pending', 
+            icon: CreditCard, 
+            color: 'text-emerald-600', 
+            bg: 'bg-emerald-50' 
+          }
+        ].map((stat, i) => (
+          <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center shrink-0`}>
+              <stat.icon size={22} />
             </div>
-            <div className="flex flex-col gap-0 relative pl-4">
-               {/* Vertical Line */}
-               <div className="absolute left-[29px] top-4 bottom-4 w-0.5 bg-slate-100"></div>
+            <div className="min-w-0">
+              <span className="text-[0.65rem] font-black uppercase text-slate-400 tracking-wider block mb-0.5">{stat.label}</span>
+              <span className="text-sm font-bold text-slate-800 truncate block">{stat.value}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Timeline Card */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Calendar size={20} /></div>
+                <h3 className="text-lg font-bold text-slate-800">Critical Deadlines</h3>
+              </div>
+              <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">CIETM 2026</span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: 'Abstract Submission', date: 'March 8, 2026', status: 'completed' },
-                { label: 'Full Paper Submission', date: 'March 16, 2026', status: 'active' },
-                { label: 'Acceptance Notification', date: 'March 24, 2026', status: 'pending' },
-                { label: 'Conference Date', date: 'April 29, 2026', status: 'pending' }
+                { label: 'Abstract', date: 'Mar 08', status: 'completed' },
+                { label: 'Full Paper', date: 'Mar 16', status: 'active' },
+                { label: 'Acceptance', date: 'Mar 24', status: 'pending' },
+                { label: 'Conference', date: 'Apr 29', status: 'pending' }
               ].map((item, idx) => (
-                <div key={idx} className={`relative flex gap-6 pb-8 last:pb-0 group ${item.status === 'active' ? 'opacity-100' : 'opacity-70 hover:opacity-100 transition-opacity'}`}>
-                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center z-10 shrink-0 bg-white transition-all duration-300 ${item.status === 'completed' ? 'border-indigo-500 bg-indigo-500' : item.status === 'active' ? 'border-indigo-500 text-indigo-600 shadow-[0_0_0_4px_rgba(99,102,241,0.15)]' : 'border-slate-200'}`}>
-                        {item.status === 'completed' && <CheckCircle size={14} className="text-white" />}
-                        {item.status === 'active' && <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>}
-                    </div>
-                    <div className="flex flex-col pt-1">
-                        <span className={`text-base font-bold ${item.status === 'active' ? 'text-indigo-900' : 'text-slate-700'}`}>{item.label}</span>
-                        <span className={`text-sm font-semibold ${item.status === 'active' ? 'text-indigo-600' : 'text-slate-400'}`}>{item.date}</span>
-                    </div>
+                <div key={idx} className={`p-5 rounded-2xl border transition-all duration-300 ${item.status === 'active' ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-50 bg-white'}`}>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className={`text-[0.6rem] font-black uppercase tracking-widest ${item.status === 'completed' ? 'text-emerald-500' : item.status === 'active' ? 'text-indigo-600 animate-pulse' : 'text-slate-400'}`}>
+                      {item.status}
+                    </span>
+                    {item.status === 'completed' && <CheckCircle size={14} className="text-emerald-500" />}
+                    {item.status === 'active' && <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full shadow-[0_0_0_2px_rgba(99,102,241,0.2)]"></div>}
+                  </div>
+                  <h4 className="font-bold text-slate-800 mb-1">{item.label}</h4>
+                  <p className="text-xs font-semibold text-slate-500">{item.date}, 2026</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -z-0"></div>
-            <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-50 relative z-10">
-              <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><ShieldCheck size={20} /></div>
-              <h3 className="text-lg font-bold text-slate-800">Submission Guidelines</h3>
+          <div className="bg-slate-900 rounded-3xl p-8 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600 rounded-full blur-[100px] opacity-20 transition-all duration-500 group-hover:opacity-30"></div>
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="flex items-center gap-5 text-left">
+                <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-indigo-400 border border-white/10 shrink-0">
+                  <ShieldCheck size={28} />
+                </div>
+                <div>
+                  <h4 className="text-white font-bold text-lg">Identity Verification</h4>
+                  <p className="text-slate-400 text-sm font-medium">Your account is verified as an active conference participant.</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => toast.success('Digital ID available after full paper acceptance')}
+                className="w-full md:w-auto bg-white text-slate-900 px-8 py-3.5 rounded-xl font-bold text-sm hover:bg-slate-100 transition-all shadow-xl active:scale-95 shrink-0"
+              >
+                Download Entry ID
+              </button>
             </div>
-            <ul className="flex flex-col gap-5 relative z-10">
+          </div>
+        </div>
+
+        {/* Right Sidebar: Guidelines */}
+        <div className="space-y-6">
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 h-full flex flex-col">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><Layers size={20} /></div>
+              <h3 className="text-lg font-bold text-slate-800">Submission Rules</h3>
+            </div>
+            
+            <div className="flex-1 space-y-4 mb-8">
               {[
-                { icon: Layers, text: 'Must follow IEEE double-column template.'},
-                { icon: FileText, text: 'Maximum 6 pages including references.'},
-                { icon: AlertCircle, text: 'Plagiarism must be below 15% (Turnitin).'}
+                { icon: Layers, text: 'IEEE double-column format' },
+                { icon: FileText, text: 'Limit to 6 pages including refs' },
+                { icon: AlertCircle, text: 'Plagiarism must be below 15%' },
+                { icon: ShieldCheck, text: 'Original, unpublished work' }
               ].map((g, i) => (
-                <li key={i} className="flex items-center gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100 hover:border-emerald-200 transition-colors">
-                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-emerald-500 shadow-sm shrink-0 border border-emerald-100"><g.icon size={14} /></div>
-                    <span className="text-slate-600 font-medium text-sm">{g.text}</span>
-                </li>
+                <div key={i} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-emerald-200 transition-colors">
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm"><g.icon size={14}/></div>
+                  <span className="text-xs font-bold text-slate-600">{g.text}</span>
+                </div>
               ))}
-            </ul>
-            <div className="mt-8 pt-4 border-t border-slate-50 relative z-10">
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="text-[0.65rem] font-black uppercase text-slate-400 tracking-widest px-1">Resources</h4>
               <a 
                 href="https://www.ieee.org/conferences/publishing/templates.html" 
                 target="_blank" 
                 rel="noreferrer" 
-                className="inline-flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-700 hover:underline"
+                className="flex items-center justify-center gap-3 w-full py-4 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-xs hover:bg-indigo-100 transition-all border border-indigo-100/50 group"
               >
-                <Download size={16} /> Get IEEE Template
+                <Download size={16} className="transition-transform group-hover:translate-y-0.5" />
+                IEEE Template (DOCX/PDF)
               </a>
             </div>
-          </div>
-        </div>
-
-        {/* Right Column: Host & Participation */}
-        <div className="flex flex-col gap-6">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 group hover:shadow-md transition-shadow">
-            <div className="relative h-40 rounded-2xl overflow-hidden mb-5">
-              <img src="https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=400&auto=format&fit=crop" alt="Campus" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-              <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-lg text-xs font-bold text-slate-800 shadow-sm">CIET, Coimbatore</div>
-            </div>
-            <div className="px-2">
-              <h4 className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">Host Institution</h4>
-              <p className="font-bold text-slate-800 text-lg leading-tight mb-2">Coimbatore Institute of Engineering and Technology</p>
-              <div className="flex items-center gap-2 text-slate-500 text-sm font-medium">
-                <MapPin size={14} /> <span>An Autonomous Institute, NAAC 'A'</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-lg relative overflow-hidden">
-             <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600 rounded-full blur-3xl opacity-30 pointer-events-none"></div>
-             <div className="relative z-10">
-                <div className="flex justify-between gap-4 mb-8">
-                    <div className="flex flex-col">
-                        <span className="text-3xl font-black text-white leading-none mb-1">20+</span>
-                        <span className="text-[0.65rem] font-bold uppercase tracking-widest text-slate-400">Countries</span>
-                    </div>
-                    <div className="flex flex-col items-end">
-                        <span className="text-3xl font-black text-white leading-none mb-1">150+</span>
-                        <span className="text-[0.65rem] font-bold uppercase tracking-widest text-slate-400">Papers</span>
-                    </div>
-                </div>
-                <button 
-                    onClick={() => toast.success('ID Card will be available after registration verification')}
-                    className="w-full bg-white text-slate-900 py-4 rounded-xl font-bold text-sm hover:bg-indigo-50 transition-colors shadow-lg"
-                >
-                    Download ID Card
-                </button>
-             </div>
           </div>
         </div>
       </div>
@@ -329,12 +422,38 @@ const Dashboard = () => {
             )}
           </div>
 
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-            <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
-              <Download size={18} />
-              Download Manuscript
-            </button>
-          </div>
+          {!registration?.paperDetails?.fileUrl && (
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 border-indigo-100 bg-indigo-50/20">
+                <h3 className="text-xs font-black text-indigo-600 uppercase tracking-[0.15em] mb-6 flex items-center gap-2">
+                    <AlertCircle size={14} /> Action Required
+                </h3>
+                <p className="text-slate-600 text-sm font-medium mb-6">Your registration is complete, but the full manuscript has not been uploaded yet. Please upload it for review.</p>
+                <div className="relative">
+                    <input 
+                        type="file" 
+                        accept=".pdf" 
+                        onChange={handleFullPaperUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
+                        disabled={uploading}
+                    />
+                    <button className="w-full flex items-center justify-center gap-3 bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
+                        {uploading ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        ) : <Upload size={18} />}
+                        {uploading ? 'Uploading...' : 'Upload Full Paper (PDF)'}
+                    </button>
+                </div>
+            </div>
+          )}
+
+          {registration?.paperDetails?.fileUrl && (
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+              <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
+                <Download size={18} />
+                Download Manuscript
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -351,7 +470,7 @@ const Dashboard = () => {
         <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex justify-between items-center">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Payment Balance</p>
-            <p className="text-3xl font-black text-slate-800">₹ {registration?.paymentStatus === 'Completed' ? '0' : (registration?.personalDetails?.category === 'Inter-college Student' ? '500' : '1000')}</p>
+            <p className="text-3xl font-black text-slate-800">₹ {registration?.paymentStatus === 'Completed' ? '0' : currentFee}</p>
           </div>
           <div className="text-right">
             <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Verification</p>
@@ -366,7 +485,7 @@ const Dashboard = () => {
             <h4 className="font-extrabold text-slate-800 mb-6 text-lg">Fee Breakdown</h4>
             <div className="flex justify-between py-3 border-b border-slate-50">
               <span className="text-slate-500 font-medium text-sm">Conference Registration</span>
-              <span className="font-bold text-slate-700">₹ {registration?.personalDetails?.category === 'Inter-college Student' ? '500' : '1000'}</span>
+              <span className="font-bold text-slate-700">₹ {currentFee}</span>
             </div>
             <div className="flex justify-between py-3 border-b border-slate-50">
               <span className="text-slate-500 font-medium text-sm">Processing Fee (0%)</span>
@@ -374,7 +493,7 @@ const Dashboard = () => {
             </div>
             <div className="flex justify-between pt-6 mt-2">
                <span className="font-extrabold text-slate-400 uppercase tracking-widest text-xs">Total Amount</span>
-               <p className="text-xl font-black text-slate-900">₹ {registration?.personalDetails?.category === 'Inter-college Student' ? '500' : '1000'}</p>
+               <p className="text-xl font-black text-slate-900">₹ {currentFee}</p>
             </div>
           </div>
 
@@ -427,121 +546,187 @@ const Dashboard = () => {
       <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 bg-purple-300/20 rounded-full blur-3xl pointer-events-none z-0"></div>
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 w-[280px] bg-white border-r border-slate-100 flex flex-col h-full z-50 transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-5 flex items-center gap-4 bg-slate-50/50 rounded-2xl mx-4 mt-6 mb-8 border border-slate-100/50">
-          <div className="w-11 h-11 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md shadow-indigo-200">{user?.name?.charAt(0)}</div>
-          <div className="flex flex-col">
-            <h3 className="font-bold text-slate-900 text-sm leading-tight line-clamp-1">{user?.name}</h3>
-            <span className="text-[0.65rem] font-extrabold text-indigo-500 uppercase tracking-wider mt-0.5">{user?.role === 'author' ? 'AUTHOR' : 'ATTENDEE'}</span>
+      <aside className={`fixed inset-y-0 left-0 w-[280px] bg-white border-r border-slate-100 flex flex-col h-full z-50 transition-all duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0 outline-none' : '-translate-x-full shadow-2xl'}`}>
+        {/* Logo/Brand */}
+        <div className="p-8 pb-6">
+          <Link to="/" className="text-2xl font-black text-slate-800 tracking-tighter flex items-center gap-2 mb-2 font-display hover:opacity-80 transition-opacity">
+            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+              <LayoutDashboard size={20} />
+            </div>
+            <span>CIETM <span className="text-indigo-600">2026</span></span>
+          </Link>
+        </div>
+        
+        {/* User Card */}
+        <div className="px-4 mb-6">
+          <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100/50 flex items-center gap-3">
+            <div className="w-11 h-11 bg-white text-indigo-600 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm border border-slate-100 shrink-0">
+              {user?.name?.charAt(0)}
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-extrabold text-slate-800 text-xs truncate uppercase tracking-wider">{user?.name}</h3>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                <span className="text-[0.6rem] font-black text-slate-400 uppercase tracking-widest truncate">{user?.role} portal</span>
+              </div>
+            </div>
           </div>
         </div>
         
-        <nav className="flex-1 px-4 flex flex-col gap-2 overflow-y-auto">
+        <nav className="flex-1 px-4 flex flex-col gap-1.5 overflow-y-auto pt-2">
+          <Link 
+            to="/" 
+            className="flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all duration-200 text-left group relative w-full text-slate-500 font-bold hover:bg-slate-50 hover:text-slate-800 mb-2"
+          >
+            <Home size={20} className="transition-transform duration-300 group-hover:scale-110" />
+            <span className="text-sm tracking-tight">Main Website</span>
+          </Link>
+
+          <div className="h-px bg-slate-100 mx-4 mb-4"></div>
+
           {[
             { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
             { id: 'paper', icon: FileText, label: 'Submission' },
-            { id: 'payment', icon: CreditCard, label: 'Payment' },
-            { id: 'notifications', icon: Bell, label: 'Notifications' },
+            { id: 'payment', icon: CreditCard, label: 'Payments' },
+            { id: 'notifications', icon: Bell, label: 'Updates' },
             { id: 'settings', icon: Settings, label: 'Settings' }
           ].map((item) => (
-            <div 
+            <button 
               key={item.id}
-              className={`flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all duration-200 cursor-pointer group relative overflow-hidden ${activeTab === item.id ? 'bg-indigo-50 text-indigo-700 font-bold shadow-sm ring-1 ring-indigo-100' : 'text-slate-500 font-semibold hover:bg-slate-50 hover:text-slate-800'}`}
+              className={`flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all duration-200 text-left group relative w-full ${
+                activeTab === item.id 
+                ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-100' 
+                : 'text-slate-500 font-bold hover:bg-slate-50 hover:text-slate-800'
+              }`}
               onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }}
             >
-              <item.icon size={20} className={`transition-colors ${activeTab === item.id ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
-              <span className="relative z-10">{item.label}</span>
-              {activeTab === item.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-r-lg"></div>}
-            </div>
+              <item.icon size={20} className={`transition-transform duration-300 ${activeTab === item.id ? 'scale-110' : 'group-hover:scale-110'}`} />
+              <span className="text-sm tracking-tight">{item.label}</span>
+              {activeTab === item.id && (
+                <div className="absolute right-3 w-1.5 h-1.5 bg-white rounded-full"></div>
+              )}
+            </button>
           ))}
         </nav>
 
-        <div className="p-4 mt-auto">
-          <button className="w-full flex items-center justify-center gap-3 px-5 py-3 rounded-xl text-slate-500 font-bold text-sm hover:bg-red-50 hover:text-red-600 transition-colors border border-transparent hover:border-red-100" onClick={logout}>
-            <LogOut size={18} /> Logout
+        <div className="p-4 mt-auto border-t border-slate-50/50">
+          <button 
+            className="w-full flex items-center justify-center gap-3 px-5 py-4 rounded-xl text-slate-500 font-black text-[0.7rem] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all group" 
+            onClick={logout}
+          >
+            <LogOut size={16} className="transition-transform group-hover:-translate-x-1" /> Logout Account
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10 bg-slate-50/50 backdrop-blur-[2px]">
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10 bg-slate-50/30">
         {/* Header */}
-        <header className="px-6 md:px-10 py-6 md:py-8 shrink-0 flex justify-between items-center bg-white/50 lg:bg-transparent backdrop-blur-md lg:backdrop-blur-none border-b lg:border-none border-slate-100 sticky top-0 z-40 lg:static">
-          <button className="lg:hidden p-2 -ml-2 text-slate-600 bg-white border border-slate-200 rounded-lg shadow-sm" onClick={() => setIsSidebarOpen(true)}>
-            <Menu size={20} />
-          </button>
-
-          <div className="flex flex-col md:flex-row md:items-end gap-2 md:gap-6">
-            <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight leading-none">{activeTab === 'paper' ? 'Submission Details' : (activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}</h1>
-            {activeTab === 'paper' && (
-              <div className="hidden md:block px-3 py-1 bg-slate-200 rounded-md text-[0.65rem] font-bold text-slate-600 uppercase tracking-widest mb-1">
-                #CMP-26-{(registration?._id || 'XXX').slice(-4).toUpperCase()}
+        <header className="px-6 md:px-10 py-5 shrink-0 flex justify-between items-center bg-white/80 backdrop-blur-xl border-b border-slate-100 sticky top-0 z-40">
+          <div className="flex items-center gap-4">
+            <button 
+              className="lg:hidden p-2 text-slate-600 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors" 
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu size={20} />
+            </button>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 md:hidden mb-0.5">
+                <span className="text-[0.6rem] font-black text-indigo-600 uppercase tracking-[0.2em]">CIETM 2026</span>
               </div>
-            )}
+              <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">
+                {activeTab === 'paper' ? 'Submission details' : activeTab}
+              </h1>
+              <div className="flex items-center gap-2 mt-1 hidden md:flex">
+                <span className="text-[0.6rem] font-black text-slate-400 uppercase tracking-widest">
+                  CIETM 2026 Management System
+                </span>
+              </div>
+            </div>
           </div>
           
-          <div className="flex items-center gap-4">
-             {activeTab === 'paper' && (
-               <div className={`px-4 py-1.5 rounded-full text-[0.7rem] font-bold uppercase tracking-wider hidden sm:block ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                 {registration?.paperDetails?.reviewStatus || 'Awaiting Review'}
+          <div className="flex items-center gap-3 md:gap-5">
+             {/* Small Logo for mobile right side if needed, or just stay as is */}
+             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-100 md:hidden">
+                <div className="w-5 h-5 bg-indigo-600 rounded flex items-center justify-center text-[0.5rem] text-white font-bold">C</div>
+                <span className="text-[0.6rem] font-bold text-slate-800">CIETM</span>
+             </div>
+             
+             {activeTab === 'paper' && registration && (
+               <div className={`px-4 py-1.5 rounded-full text-[0.6rem] font-black uppercase tracking-widest hidden sm:flex items-center gap-2 shadow-sm border ${
+                 registration?.paperDetails?.reviewStatus === 'Accepted' 
+                 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                 : 'bg-amber-50 text-amber-600 border-amber-100'
+               }`}>
+                 <div className={`w-1.5 h-1.5 rounded-full ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`}></div>
+                 {registration?.paperDetails?.reviewStatus || 'In Review'}
                </div>
              )}
-             <div className="w-10 h-10 bg-white rounded-full border border-slate-200 shadow-sm flex items-center justify-center text-slate-400 cursor-pointer hover:text-indigo-600 hover:border-indigo-100 transition-colors">
-                <Bell size={18} />
+             <div className="relative group">
+               <div className="w-11 h-11 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-center text-slate-400 cursor-pointer hover:text-indigo-600 hover:border-indigo-200 transition-all hover:shadow-md active:scale-95">
+                  <Bell size={20} />
+                  <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
+               </div>
              </div>
           </div>
         </header>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6 md:px-10 md:pb-12 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-          {activeTab === 'overview' && renderOverview()}
-          {activeTab === 'paper' && renderSubmissionTab()}
-          {activeTab === 'payment' && renderPayment()}
-          {activeTab === 'notifications' && (
-            <div className="animate-[fadeIn_0.6s_ease-out]">
-              <div className="bg-white p-16 text-center rounded-3xl shadow-sm border border-slate-100 max-w-2xl mx-auto mt-10">
-                <div className="w-24 h-24 bg-blue-50 text-blue-500 mx-auto mb-8 rounded-full flex items-center justify-center">
-                  <Bell size={40} />
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+          <div className="max-w-7xl mx-auto pb-10">
+            {activeTab === 'overview' && renderOverview()}
+            {activeTab === 'paper' && renderSubmissionTab()}
+            {activeTab === 'payment' && renderPayment()}
+            {activeTab === 'notifications' && (
+              <div className="animate-fade-in flex flex-col items-center justify-center min-h-[60vh]">
+                <div className="w-32 h-32 bg-indigo-50 text-indigo-500 rounded-[2.5rem] flex items-center justify-center mb-8 rotate-12 group hover:rotate-0 transition-transform duration-500">
+                  <Bell size={48} />
                 </div>
-                <h3 className="text-2xl font-bold mb-3 text-slate-800">Notifications</h3>
-                <p className="text-slate-500 font-medium">You have no new notifications at the moment.</p>
+                <h3 className="text-2xl font-black mb-3 text-slate-800 uppercase tracking-tight">No notifications</h3>
+                <p className="text-slate-500 font-medium text-center max-w-sm">We'll keep you posted when there's an update on your submission status.</p>
               </div>
-            </div>
-          )}
-          {activeTab === 'settings' && (
-            <div className="animate-[fadeIn_0.6s_ease-out]">
-               <div className="bg-white p-10 rounded-3xl shadow-sm border border-slate-100 max-w-3xl mx-auto">
-                <h3 className="text-2xl font-bold mb-10 flex items-center gap-3 text-slate-800">
-                  <Settings size={28} className="text-slate-400" /> Account Settings
-                </h3>
-                <div className="grid gap-10">
-                  <div>
-                    <h4 className="text-xs font-black uppercase text-slate-400 mb-6 tracking-widest">Profile Information</h4>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="p-5 bg-slate-50/50 rounded-2xl border border-slate-100">
-                        <label className="text-xs font-bold text-slate-400 block mb-2 uppercase tracking-wide">Full Name</label>
-                        <span className="font-bold text-slate-800 text-lg">{user.name}</span>
-                      </div>
-                      <div className="p-5 bg-slate-50/50 rounded-2xl border border-slate-100">
-                        <label className="text-xs font-bold text-slate-400 block mb-2 uppercase tracking-wide">Email Address</label>
-                        <span className="font-bold text-slate-800 text-lg">{user.email}</span>
+            )}
+            {activeTab === 'settings' && (
+              <div className="animate-fade-in">
+                <div className="bg-white p-10 rounded-[2rem] shadow-sm border border-slate-100 max-w-4xl">
+                  <h3 className="text-2xl font-black mb-10 flex items-center gap-3 text-slate-800 uppercase tracking-tight">
+                    <span className="p-2 bg-slate-100 rounded-lg"><Settings size={24} className="text-slate-500" /></span> Account Settings
+                  </h3>
+                  <div className="space-y-12">
+                    <div>
+                      <h4 className="text-[0.65rem] font-black uppercase text-slate-400 mb-6 tracking-[0.2em]">Profile Information</h4>
+                      <div className="grid md:grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                          <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                          <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-slate-700">{user.name}</div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                          <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-slate-700">{user.email}</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="h-px bg-slate-100 w-full"></div>
-                  <div>
-                    <h4 className="text-xs font-black uppercase text-slate-400 mb-6 tracking-widest">Security</h4>
-                    <button className="px-6 py-3 rounded-xl border-2 border-slate-100 text-slate-600 font-bold hover:border-indigo-600 hover:text-indigo-600 transition-colors">Change Account Password</button>
+                    <div className="pt-8 border-t border-slate-100">
+                      <h4 className="text-[0.65rem] font-black uppercase text-slate-400 mb-6 tracking-[0.2em]">Security</h4>
+                      <button className="px-8 py-4 rounded-xl border-2 border-slate-100 text-slate-600 font-bold hover:border-indigo-600 hover:text-indigo-600 transition-all active:scale-95 shadow-sm hover:shadow-md">
+                        Change Account Password
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </main>
 
       {/* Sidebar Backdrop Mobile */}
-      {isSidebarOpen && <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden animate-fade-in" onClick={() => setIsSidebarOpen(false)}></div>}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden animate-fade-in" 
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
     </div>
   );
 };

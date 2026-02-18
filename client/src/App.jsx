@@ -16,11 +16,12 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 
 const AppContent = () => {
   const location = useLocation();
-  const hideFooter = location.pathname === '/register' || location.pathname === '/login' || location.pathname === '/admin/login';
+  const hideNavbar = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin/dashboard');
+  const hideFooter = hideNavbar || location.pathname === '/register' || location.pathname === '/login' || location.pathname === '/admin/login';
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      {!hideNavbar && <Navbar />}
       <main className="flex-1 relative">
         <Suspense fallback={<div className="flex justify-center items-center h-[60vh] text-2xl font-bold text-primary">Loading CIETM...</div>}>
           <Routes>

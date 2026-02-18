@@ -20,7 +20,13 @@ const initPayment = async (req, res) => {
         }
 
         const txnid = `TXN_${Date.now()}`;
-        const amount = registration.personalDetails.category === 'Inter-college Student' ? 500 : 1000;
+        const categoryAmounts = {
+            'UG/PG STUDENTS': 500,
+            'FACULTY/RESEARCH SCHOLARS': 750,
+            'EXTERNAL / ONLINE PRESENTATION': 300,
+            'INDUSTRY PERSONNEL': 900
+        };
+        const amount = categoryAmounts[registration.personalDetails.category] || 1000;
 
         const paymentData = {
             txnid,
