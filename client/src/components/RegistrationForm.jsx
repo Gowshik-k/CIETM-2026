@@ -140,10 +140,23 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
       case 3:
         for (let i = 0; i < formData.teamMembers.length; i++) {
           const m = formData.teamMembers[i];
+          // Core details validation
           if (!m.name || !m.email || !m.mobile || !m.affiliation || !m.department) {
             toast.error(`Please fill in all core details for co-author ${i + 1}`);
             return false;
           }
+          // Email format validation
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(m.email)) {
+            toast.error(`Invalid email format for co-author ${i + 1}`);
+            return false;
+          }
+          // Mobile validation (simple)
+          if (m.mobile.length < 10) {
+            toast.error(`Invalid mobile number for co-author ${i + 1}`);
+            return false;
+          }
+          
           if (m.category === 'UG/PG STUDENTS' && !m.yearOfStudy) {
              toast.error(`Year/Course is required for co-author ${i + 1}`);
              return false;
@@ -176,6 +189,16 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
         toast.error("Maximum 3 co-authors are allowed");
         return;
     }
+    
+    // Check if the last co-author is filled before adding another
+    if (formData.teamMembers.length > 0) {
+      const lastMember = formData.teamMembers[formData.teamMembers.length - 1];
+      if (!lastMember.name || !lastMember.email) {
+        toast.error("Please fill the details of the current co-author first");
+        return;
+      }
+    }
+
     setFormData({
       ...formData,
       teamMembers: [...formData.teamMembers, { name: '', email: '', mobile: '', affiliation: '', department: '', designation: '', yearOfStudy: '', category: 'UG/PG STUDENTS' }]
@@ -191,6 +214,9 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
   const handleSaveDraft = async () => {
     if (!user) return; 
     
+    // Filter out empty team members before saving
+    const validTeamMembers = formData.teamMembers.filter(m => m.name && m.name.trim() !== '');
+
     try {
       await axios.post('/api/registrations/draft', {
         personalDetails: {
@@ -203,7 +229,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
           yearOfStudy: formData.yearOfStudy,
           category: formData.category
         },
-        teamMembers: formData.teamMembers,
+        teamMembers: validTeamMembers,
         paperDetails: {
           title: formData.paperTitle,
           abstract: formData.abstract,
@@ -354,7 +380,9 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
   const calculateTotalFee = () => {
     let total = registrationCategories[formData.category]?.fee || 0;
     formData.teamMembers.forEach(member => {
-      total += registrationCategories[member.category]?.fee || 0;
+      if (member.name && member.name.trim() !== '') {
+        total += registrationCategories[member.category]?.fee || 0;
+      }
     });
     return total;
   };
@@ -732,7 +760,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                     <span className="text-sm font-bold text-slate-900">₹{registrationCategories[formData.category]?.fee || 0}</span>
                   </div>
                   
-                  {formData.teamMembers.map((m, idx) => (
+                  {formData.teamMembers.filter(m => m.name && m.name.trim() !== '').map((m, idx) => (
                     <div key={idx} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 mb-1">
                       <span className="text-sm font-bold text-slate-600">Co-author {idx + 1} ({m.category})</span>
                       <span className="text-sm font-bold text-slate-900">₹{registrationCategories[m.category]?.fee || 0}</span>

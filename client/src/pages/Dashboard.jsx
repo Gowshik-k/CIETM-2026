@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import RegistrationForm from '../components/RegistrationForm';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -25,6 +26,8 @@ const Dashboard = () => {
   const [changingPassword, setChangingPassword] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [showIDCard, setShowIDCard] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [lastSync, setLastSync] = useState(new Date());
 
   // Moved fetchRegistration outside useEffect to allow refreshing
   const fetchRegistration = useCallback(async () => {
@@ -39,6 +42,7 @@ const Dashboard = () => {
       console.error("Failed to fetch registration", error);
     } finally {
       setLoading(false);
+      setLastSync(new Date());
     }
   }, [user]);
 
@@ -246,6 +250,34 @@ const Dashboard = () => {
   };
 
   const currentFee = calculateCurrentFee();
+  const unreadNotifications = notifications.filter(n => !n.isRead).length;
+
+  const renderBreadcrumbs = () => {
+    const crumbs = [
+      { label: 'Dashboard', tab: 'overview' },
+      { label: activeTab.charAt(0).toUpperCase() + activeTab.slice(1), tab: activeTab }
+    ];
+
+    if (activeTab === 'paper') crumbs[1].label = 'Submission';
+    if (activeTab === 'drafts') crumbs[1].label = 'My Draft';
+    if (activeTab === 'notifications') crumbs[1].label = 'Updates';
+
+    return (
+      <div className="flex items-center gap-2 text-[0.65rem] font-black uppercase tracking-[0.15em] text-slate-400">
+        {crumbs.map((crumb, i) => (
+          <React.Fragment key={i}>
+            <span 
+              className={`cursor-pointer hover:text-indigo-600 transition-colors ${i === crumbs.length - 1 ? 'text-slate-800' : ''}`}
+              onClick={() => setActiveTab(crumb.tab)}
+            >
+              {crumb.label}
+            </span>
+            {i < crumbs.length - 1 && <ChevronRight size={10} />}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  };
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
@@ -255,181 +287,281 @@ const Dashboard = () => {
   );
 
   const renderOverview = () => (
-    <div className="animate-[fadeIn_0.6s_ease-out] space-y-8">
-      {/* Welcome Section */}
-      <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
-        <div className="relative z-10">
-          <h2 className="text-2xl md:text-3xl font-black text-slate-800 mb-2 font-display">
-            Welcome back, {user.name.split(' ')[0]}! 👋
-          </h2>
-          <p className="text-slate-500 font-medium max-w-md">
-            Here's what's happening with your conference submission today.
-          </p>
-        </div>
-        
-        <div className="flex flex-wrap gap-3 relative z-10">
-          {!registration?.paperDetails?.fileUrl && registration?.status !== 'Draft' && registration?.status && registration?.status !== 'Accepted' && registration?.status !== 'Rejected' && (
-            <button 
-              onClick={() => setActiveTab('paper')}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-100 flex items-center gap-2 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all"
-            >
-              <Upload size={18} /> Upload Word Document
-            </button>
-          )}
-          <button 
-            onClick={() => setActiveTab('paper')}
-            className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-slate-200 transition-all font-sans"
-          >
-            {registration ? 'View Submission' : 'Start Submission'} <ChevronRight size={16} />
-          </button>
-        </div>
-
-        {/* Decor */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full -mr-32 -mt-32 opacity-50"></div>
-      </div>
-
-      {/* Quick Status Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { 
-            label: 'Submission ID', 
-            value: registration ? `#CMP-26-${registration._id.slice(-4).toUpperCase()}` : 'N/A', 
-            icon: FileText, 
-            color: 'text-blue-600', 
-            bg: 'bg-blue-50' 
-          },
-          { 
-            label: 'Current Status', 
-            value: registration?.status || 'No Submission', 
-            icon: Clock, 
-            color: 'text-amber-600', 
-            bg: 'bg-amber-50' 
-          },
-          { 
-            label: 'Global Track', 
-            value: registration?.paperDetails?.track || 'Not Selected', 
-            icon: Award, 
-            color: 'text-purple-600', 
-            bg: 'bg-purple-50' 
-          },
-          { 
-            label: 'Payment', 
-            value: registration?.paymentStatus || 'Pending', 
-            icon: CreditCard, 
-            color: 'text-emerald-600', 
-            bg: 'bg-emerald-50' 
-          }
-        ].map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center shrink-0`}>
-              <stat.icon size={22} />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[0.65rem] font-black uppercase text-slate-400 tracking-wider block mb-0.5">{stat.label}</span>
-              <span className="text-sm font-bold text-slate-800 truncate block">{stat.value}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Timeline Card */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-            <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Calendar size={20} /></div>
-                <h3 className="text-lg font-bold text-slate-800">Critical Deadlines</h3>
-              </div>
-              <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">CIETM 2026</span>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { label: 'Abstract', date: 'Mar 08', status: 'completed' },
-                { label: 'Full Paper', date: 'Mar 16', status: 'active' },
-                { label: 'Acceptance', date: 'Mar 24', status: 'pending' },
-                { label: 'Conference', date: 'Apr 29', status: 'pending' }
-              ].map((item, idx) => (
-                <div key={idx} className={`p-5 rounded-2xl border transition-all duration-300 ${item.status === 'active' ? 'border-indigo-200 bg-indigo-50/30' : 'border-slate-50 bg-white'}`}>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className={`text-[0.6rem] font-black uppercase tracking-widest ${item.status === 'completed' ? 'text-emerald-500' : item.status === 'active' ? 'text-indigo-600 animate-pulse' : 'text-slate-400'}`}>
-                      {item.status}
-                    </span>
-                    {item.status === 'completed' && <CheckCircle size={14} className="text-emerald-500" />}
-                    {item.status === 'active' && <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full shadow-[0_0_0_2px_rgba(99,102,241,0.2)]"></div>}
-                  </div>
-                  <h4 className="font-bold text-slate-800 mb-1">{item.label}</h4>
-                  <p className="text-xs font-semibold text-slate-500">{item.date}, 2026</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-slate-900 rounded-3xl p-8 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600 rounded-full blur-[100px] opacity-20 transition-all duration-500 group-hover:opacity-30"></div>
-            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-              <div className="flex items-center gap-5 text-left">
-                <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-indigo-400 border border-white/10 shrink-0">
-                  <ShieldCheck size={28} />
-                </div>
-                <div>
-                  <h4 className="text-white font-bold text-lg">Identity Verification</h4>
-                  <p className="text-slate-400 text-sm font-medium">Your account is verified as an active conference participant.</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => {
-                  if (registration?.paperDetails?.reviewStatus === 'Accepted' && registration?.paymentStatus === 'Completed') {
-                    setShowIDCard(true);
-                  } else {
-                    toast.error('Digital ID available after full paper acceptance and payment confirmation');
-                  }
-                }}
-                className="w-full md:w-auto bg-white text-slate-900 px-8 py-3.5 rounded-xl font-bold text-sm hover:bg-slate-100 transition-all shadow-xl active:scale-95 shrink-0"
-              >
-                View Entry ID
+    <div className="animate-fade-in space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+         <div>
+           <h1 className="text-2xl font-black text-slate-800 tracking-tight font-display">Overview</h1>
+           <p className="text-sm font-medium text-slate-500">Welcome back, {user.name}.</p>
+         </div>
+         <div className="flex gap-2">
+            {!registration?.paperDetails?.fileUrl && registration?.status !== 'Accepted' && (
+              <button onClick={() => setActiveTab('paper')} className="btn btn-primary px-5 py-2 text-xs shadow-indigo-200">
+                <Upload size={16} /> Upload Paper
               </button>
-            </div>
-          </div>
-        </div>
+            )}
+         </div>
+      </div>
 
-        {/* Right Sidebar: Guidelines */}
-        <div className="space-y-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 h-full flex flex-col">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><Layers size={20} /></div>
-              <h3 className="text-lg font-bold text-slate-800">Submission Rules</h3>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+         {/* Main Status Column */}
+         <div className="lg:col-span-2 space-y-6">
             
-            <div className="flex-1 space-y-4 mb-8">
-              {[
-                { icon: Layers, text: 'IEEE double-column format' },
-                { icon: FileText, text: 'Limit to 6 pages including refs' },
-                { icon: AlertCircle, text: 'Plagiarism must be below 15%' },
-                { icon: ShieldCheck, text: 'Original, unpublished work' }
-              ].map((g, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-emerald-200 transition-colors">
-                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-slate-400 shadow-sm"><g.icon size={14}/></div>
-                  <span className="text-xs font-bold text-slate-600">{g.text}</span>
-                </div>
-              ))}
+            {/* Gradient Status Card */}
+            <div className={`rounded-3xl p-8 relative overflow-hidden text-white shadow-xl transition-all ${
+               registration?.status === 'Accepted' ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200' :
+               registration?.status === 'Rejected' ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-200' :
+               'bg-gradient-to-br from-indigo-600 to-violet-600 shadow-indigo-200'
+            }`}>
+               {/* Background Patterns */}
+               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+               <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
+               
+               <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-8">
+                     <div>
+                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/20 backdrop-blur-md border border-white/10 text-xs font-bold uppercase tracking-wider mb-2">
+                           {registration?.status === 'Accepted' ? <CheckCircle size={14} /> : <Clock size={14} />}
+                           {registration?.status || 'No Submission'}
+                        </span>
+                        <h2 className="text-3xl font-black tracking-tight leading-tight">
+                           {registration?.status === 'Accepted' ? 'Paper Accepted' :
+                            registration?.status === 'Under Review' ? 'Under Review' :
+                            registration?.paperDetails?.fileUrl ? 'Submission Received' :
+                            'Pending Submission'}
+                        </h2>
+                     </div>
+                     <div className="text-right hidden sm:block">
+                        <p className="text-xs font-bold opacity-70 uppercase tracking-widest mb-1">Paper ID</p>
+                        <p className="font-mono text-lg font-bold">#{registration?._id?.slice(-4).toUpperCase() || '----'}</p>
+                     </div>
+                  </div>
+
+                  {/* Visual Progress Bar */}
+                  <div className="bg-black/20 rounded-full h-1.5 w-full mb-4 overflow-hidden backdrop-blur-sm">
+                     <div 
+                        className="bg-white h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                        style={{ width: `${
+                           registration?.status === 'Accepted' || registration?.status === 'Rejected' ? '100%' :
+                           registration?.paymentStatus === 'Completed' ? '100%' :
+                           ['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? '75%' :
+                           registration?.paperDetails?.fileUrl ? '50%' :
+                           registration?.paperDetails?.abstract ? '25%' : '5%'
+                        }`}}
+                     ></div>
+                  </div>
+                  
+                  <div className="flex justify-between text-xs font-medium text-white/80">
+                     <span>Draft</span>
+                     <span>Upload</span>
+                     <span>Review</span>
+                     <span>Decision</span>
+                  </div>
+               </div>
             </div>
 
-            <div className="space-y-3">
-              <h4 className="text-[0.65rem] font-black uppercase text-slate-400 tracking-widest px-1">Resources</h4>
-              <a 
-                href="https://www.ieee.org/conferences/publishing/templates.html" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="flex items-center justify-center gap-3 w-full py-4 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-xs hover:bg-indigo-100 transition-all border border-indigo-100/50 group"
-              >
-                <Download size={16} className="transition-transform group-hover:translate-y-0.5" />
-                IEEE Template (DOCX)
-              </a>
+            {/* Quick Stats Row */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between group hover:border-indigo-100 transition-all">
+                  <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><Layers size={20} /></div>
+                  <div>
+                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Track</span>
+                     <p className="text-sm font-bold text-slate-800 truncate" title={registration?.paperDetails?.track}>{registration?.paperDetails?.track?.split(' ')[0] || 'Not Set'}</p>
+                  </div>
+               </div>
+               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between group hover:border-indigo-100 transition-all">
+                  <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><CreditCard size={20} /></div>
+                  <div>
+                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Payment</span>
+                     <p className="text-sm font-bold text-slate-800">{registration?.paymentStatus || 'Pending'}</p>
+                  </div>
+               </div>
+               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between group hover:border-indigo-100 transition-all col-span-2 md:col-span-1">
+                  <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><Calendar size={20} /></div>
+                  <div>
+                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Next Deadline</span>
+                     <p className="text-sm font-bold text-slate-800">16 Mar 2026</p>
+                  </div>
+               </div>
             </div>
-          </div>
-        </div>
+
+            {/* Deadlines List */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm relative overflow-hidden group/timeline">
+               <h3 className="text-sm font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
+                    <Clock size={16} />
+                  </div>
+                  Timeline & Deadlines
+               </h3>
+               
+               <div className="relative space-y-1">
+                  {/* Vertical Connector Line */}
+                  <div className="absolute left-[27px] top-4 bottom-4 w-0.5 bg-slate-100 group-hover/timeline:bg-indigo-50 transition-colors"></div>
+
+                  {[
+                     { label: 'Abstract Submission', date: '2026-03-08', done: true },
+                     { label: 'Full Paper Submission', date: '2026-03-16', active: true },
+                     { label: 'Acceptance Notification', date: '2026-03-24' },
+                     { label: 'Registration Deadline', date: '2026-04-10' },
+                     { label: 'Conference Date', date: '2026-04-29' }
+                  ].map((item, i) => (
+                     <div key={i} className="relative flex items-center justify-between p-3 rounded-xl hover:bg-slate-50/80 transition-all duration-300 group/item">
+                        <div className="flex items-center gap-4 relative z-10">
+                           {/* Status Icon Column */}
+                           <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                              item.done ? 'bg-emerald-500 border-emerald-400 text-white' : 
+                              item.active ? 'bg-white border-indigo-600 text-indigo-600 scale-110 shadow-lg shadow-indigo-100' : 
+                              'bg-white border-slate-200 text-slate-300'
+                           }`}>
+                              {item.done ? <CheckCircle size={14} /> : 
+                               item.active ? <Clock size={14} className="animate-spin-slow" /> : 
+                               <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>}
+                           </div>
+
+                           <div className="flex flex-col">
+                              <span className={`text-sm font-bold transition-colors ${
+                                 item.active ? 'text-indigo-700' : 
+                                 item.done ? 'text-slate-400 line-through' : 'text-slate-600'
+                              }`}>
+                                 {item.label}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-400 md:hidden uppercase tracking-wider">
+                                 {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
+                              </span>
+                           </div>
+                        </div>
+                        <span className="hidden md:block text-xs font-bold text-slate-400 font-mono bg-slate-50 px-2 py-1 rounded-md border border-slate-100 group-hover/item:border-indigo-100 group-hover/item:text-indigo-600 transition-all">
+                           {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
+                        </span>
+                     </div>
+                  ))}
+               </div>
+            </div>
+         </div>
+
+         {/* Sidebar */}
+         <div className="space-y-6">
+            {/* Next Action Card */}
+            <div className="bg-white rounded-2xl border-2 border-indigo-100 p-6 shadow-sm relative overflow-hidden">
+                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-4 text-center relative z-10">Action Required</h3>
+                
+                {/* Background Pattern */}
+                <div className="absolute -right-4 -top-4 opacity-5 rotate-12 transition-transform group-hover:scale-110 pointer-events-none text-indigo-900">
+                  {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={100} /> :
+                   registration?.status === 'Accepted' ? <CreditCard size={100} /> :
+                   registration?.paperDetails?.fileUrl ? <Clock size={100} /> :
+                   <Upload size={100} />}
+                </div>
+               
+               <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-1 animate-bounce-slow">
+                     {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={24} /> :
+                      registration?.status === 'Accepted' ? <CreditCard size={24} /> :
+                      registration?.paperDetails?.fileUrl ? <Clock size={24} /> :
+                      <Upload size={24} />}
+                  </div>
+                  
+                  <div>
+                     <h4 className="font-bold text-slate-900 text-base mb-1">
+                        {registration?.paymentStatus === 'Completed' ? 'All Set!' :
+                         registration?.status === 'Accepted' ? 'Pay Registration' :
+                         registration?.paperDetails?.fileUrl ? 'Await Review' :
+                         'Upload Full Paper'}
+                     </h4>
+                     <p className="text-[10px] text-slate-500 leading-relaxed px-2">
+                        {registration?.paymentStatus === 'Completed' ? 'Access your ID below.' :
+                         registration?.status === 'Accepted' ? 'Secure your spot now.' :
+                         registration?.paperDetails?.fileUrl ? 'Paper under review.' :
+                         'Upload Word doc.'}
+                     </p>
+                  </div>
+
+                  {registration?.paymentStatus !== 'Completed' && (
+                     <button 
+                        onClick={() => {
+                           if (registration?.status === 'Accepted') handlePayment();
+                           else setActiveTab('paper');
+                        }}
+                        disabled={registration?.status === 'Submitted' || registration?.status === 'Under Review'}
+                        className="w-full btn btn-primary py-2.5 text-xs shadow-indigo-200"
+                     >
+                        {registration?.status === 'Accepted' ? 'Pay Now' : 
+                         registration?.paperDetails?.fileUrl ? 'View Submission' : 'Upload Now'}
+                     </button>
+                  )}
+               </div>
+            </div>
+
+            {/* ID Card / Verification */}
+            <div className={`rounded-2xl p-6 border relative overflow-hidden ${registration?.paymentStatus === 'Completed' ? 'bg-slate-900 text-white border-slate-800' : 'bg-slate-50 border-slate-100 text-slate-400'} transition-all`}>
+               {/* Background Icon */}
+               <div className={`absolute -right-4 -bottom-4 opacity-10 rotate-12 transition-transform group-hover:scale-110 ${registration?.paymentStatus === 'Completed' ? 'text-white' : 'text-slate-500'}`}>
+                  {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={100} /> : <div className="text-slate-300"><ShieldCheck size={100} /></div>}
+               </div>
+
+               <div className="flex items-center justify-between mb-4 relative z-10">
+                  <span className="text-xs font-bold uppercase tracking-wider">Digital Pass</span>
+                  <ShieldCheck size={18} />
+               </div>
+               <div className="mb-6 relative z-10">
+                  <p className="text-2xl font-black tracking-tight mb-1">
+                     {registration?.paymentStatus === 'Completed' ? 'ADMIT ONE' : 'LOCKED'}
+                  </p>
+                  <p className="text-[10px] font-medium opacity-60">Authorize Entry</p>
+               </div>
+               <button 
+                  onClick={() => setShowIDCard(true)}
+                  disabled={registration?.paymentStatus !== 'Completed'}
+                  className={`w-full py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all relative z-10 ${
+                     registration?.paymentStatus === 'Completed' 
+                     ? 'bg-white text-slate-900 hover:bg-slate-100 shadow-lg' 
+                     : 'bg-slate-200 cursor-not-allowed'
+                  }`}
+               >
+                  View ID Card
+               </button>
+            </div>
+
+            {/* Author Guidelines Card (Full Content) */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm relative overflow-hidden group hover:border-indigo-200 transition-all">
+               <div className="absolute -top-6 -right-6 text-slate-50 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity rotate-12 pointer-events-none">
+                  <FileText size={180} />
+               </div>
+               
+               <div className="flex items-center gap-3 mb-4 relative z-10">
+                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                     <FileText size={18} />
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Author Guidelines</h3>
+               </div>
+
+               <div className="space-y-4 relative z-10">
+                  <ul className="space-y-3">
+                     <li className="flex gap-3 text-[10px] text-slate-500 font-medium leading-relaxed">
+                        <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={14} />
+                        <span>Original work not published elsewhere and must follow IEEE formatting.</span>
+                     </li>
+                     <li className="flex gap-3 text-[10px] text-slate-500 font-medium leading-relaxed">
+                        <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={14} />
+                        <span>Max 6 pages allowed with strict double-blind peer review.</span>
+                     </li>
+                     <li className="flex gap-3 text-[10px] text-slate-500 font-medium leading-relaxed">
+                        <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={14} />
+                        <span>Plagiarism must be under 15% for evaluation.</span>
+                     </li>
+                  </ul>
+                  
+                  <a 
+                     href="https://www.ieee.org/content/dam/ieee-org/ieee/web/org/conferences/Conference-template-A4.doc" 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     className="flex items-center justify-center gap-2 w-full py-2.5 bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-xl text-[10px] font-bold border border-slate-200 hover:border-indigo-200 transition-all"
+                  >
+                     <Download size={14} /> Download IEEE Template
+                  </a>
+               </div>
+            </div>
+         </div>
       </div>
     </div>
   );
@@ -558,47 +690,74 @@ const Dashboard = () => {
             
             <h3 className="text-[10px] font-black text-indigo-300/60 uppercase tracking-[0.3em] mb-10 relative z-10">Status Timeline</h3>
             <div className="flex flex-col gap-0 relative z-10">
-               {/* Fixed Vertical Line Alignment */}
-               <div className="absolute left-[13.5px] top-6 bottom-6 w-px bg-white/10"></div>
+               {/* Vertical Line with Motion */}
+               <motion.div 
+                 initial={{ height: 0 }}
+                 animate={{ height: 'calc(100% - 48px)' }}
+                 transition={{ duration: 1.5, ease: "easeInOut" }}
+                 className="absolute left-[13.5px] top-6 w-px bg-indigo-500/30"
+               ></motion.div>
               
-              <div className="relative flex gap-6 pb-10">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="relative flex gap-6 pb-10"
+              >
                 <div className="w-7 h-7 bg-emerald-500 border-2 border-emerald-400 rounded-full flex items-center justify-center text-white z-10 shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.4)]">
                     <CheckCircle size={14} />
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col text-left">
                   <span className="text-sm font-bold text-white tracking-wide">Paper Submitted</span>
                   <span className="text-[10px] font-semibold text-slate-400 mt-0.5">{registration?.createdAt ? new Date(registration.createdAt).toLocaleDateString() : 'N/A'}</span>
                 </div>
-              </div>
+              </motion.div>
               
-              <div className="relative flex gap-6 pb-10">
-                <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 shrink-0 transition-all duration-500 ${registration?.paperDetails?.reviewStatus ? 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-[#0f172a] border-indigo-500/50 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]'}`}>
-                     {registration?.paperDetails?.reviewStatus ? <CheckCircle size={14} /> : <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse transition-all"></div>}
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="relative flex gap-6 pb-10"
+              >
+                <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 shrink-0 transition-all duration-500 ${['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-[#0f172a] border-indigo-500/50 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]'}`}>
+                     {['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? <CheckCircle size={14} /> : <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse transition-all"></div>}
                 </div>
-                <div className="flex flex-col">
-                  <span className={`text-sm font-bold tracking-wide ${registration?.paperDetails?.reviewStatus ? 'text-white' : 'text-indigo-200'}`}>Review Process</span>
+                <div className="flex flex-col text-left">
+                  <span className={`text-sm font-bold tracking-wide ${['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? 'text-white' : 'text-indigo-200'}`}>Review Process</span>
                   <span className="text-[10px] font-semibold text-slate-400 mt-0.5 uppercase tracking-tighter">Technical Committee</span>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="relative flex gap-6">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 }}
+                className="relative flex gap-6"
+              >
                 <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 shrink-0 transition-all duration-500 ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-[#0f172a] border-slate-700 text-slate-500'}`}>
                     {registration?.paperDetails?.reviewStatus === 'Accepted' ? <CheckCircle size={14} /> : <div className="w-1.5 h-1.5 bg-slate-700 rounded-full"></div>}
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col text-left">
                   <span className={`text-sm font-bold tracking-wide ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'text-white' : 'text-slate-500'}`}>Registration Confirmation</span>
                   <span className="text-[10px] font-semibold text-slate-600 mt-0.5">Awaiting Official Decision</span>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
 
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-6">Reviewer Comments</h3>
             {registration?.paperDetails?.reviewerComments ? (
-              <div className="bg-orange-50 border border-orange-100 rounded-2xl p-6">
-                <p className="text-orange-900 leading-relaxed text-sm font-medium">{registration.paperDetails.reviewerComments}</p>
-              </div>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 relative overflow-hidden group"
+              >
+                <div className="absolute top-0 right-0 p-3 text-indigo-200 group-hover:text-indigo-400 transition-colors">
+                  <AlertCircle size={40} />
+                </div>
+                <p className="text-indigo-900 leading-relaxed text-sm font-medium relative z-10 pr-12">{registration.paperDetails.reviewerComments}</p>
+              </motion.div>
             ) : (
               <div className="flex items-center gap-3 text-slate-400 py-2">
                 <Clock size={18} className="opacity-50" />
@@ -825,6 +984,11 @@ const Dashboard = () => {
             >
               <item.icon size={20} className={`transition-transform duration-300 ${activeTab === item.id ? 'scale-110' : 'group-hover:scale-110'}`} />
               <span className="text-sm tracking-tight">{item.label}</span>
+              {item.id === 'notifications' && unreadNotifications > 0 && (
+                <div className="ml-auto bg-indigo-100 text-indigo-700 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black border border-indigo-200">
+                  {unreadNotifications}
+                </div>
+              )}
               {activeTab === item.id && (
                 <div className="absolute right-3 w-1.5 h-1.5 bg-white rounded-full"></div>
               )}
@@ -835,7 +999,7 @@ const Dashboard = () => {
         <div className="p-4 mt-auto border-t border-slate-50/50">
           <button 
             className="w-full flex items-center justify-center gap-3 px-5 py-4 rounded-xl text-slate-500 font-black text-[0.7rem] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all group" 
-            onClick={logout}
+            onClick={() => setShowLogoutModal(true)}
           >
             <LogOut size={16} className="transition-transform group-hover:-translate-x-1" /> Logout Account
           </button>
@@ -854,15 +1018,16 @@ const Dashboard = () => {
               <Menu size={20} />
             </button>
             <div className="flex flex-col">
-              <div className="flex items-center gap-2 md:hidden mb-0.5">
-                <span className="text-[0.6rem] font-black text-indigo-600 uppercase tracking-[0.2em]">CIETM 2026</span>
+              <div className="hidden md:block mb-1">
+                 {renderBreadcrumbs()}
               </div>
               <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">
                 {activeTab === 'paper' ? 'Submission details' : activeTab}
               </h1>
               <div className="flex items-center gap-2 mt-1 hidden md:flex">
-                <span className="text-[0.6rem] font-black text-slate-400 uppercase tracking-widest">
-                  CIETM 2026 Management System
+                <span className="text-[0.6rem] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <div className="w-1 h-1 bg-emerald-500 rounded-full"></div>
+                  Last synced: {lastSync.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             </div>
@@ -895,7 +1060,7 @@ const Dashboard = () => {
         </header>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
           <div className="max-w-7xl mx-auto pb-10">
             {activeTab === 'overview' && renderOverview()}
             {activeTab === 'drafts' && renderDraftsTab()}
@@ -990,58 +1155,73 @@ const Dashboard = () => {
         {/* Change Password Modal */}
         {showPasswordModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative animate-scale-in">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden"
+            >
+               {/* Decor */}
+               <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl opacity-60"></div>
+               
               <button 
                 onClick={() => setShowPasswordModal(false)}
-                className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+                className="absolute top-8 right-8 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all z-20"
               >
                 <X size={20} />
               </button>
               
-              <h3 className="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tight">Change Password</h3>
-              <p className="text-slate-500 text-sm font-medium mb-8">Secure your account by updating your credentials.</p>
-              
-              <form onSubmit={handlePasswordChange} className="space-y-5">
-                <div className="space-y-2">
-                  <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
-                  <input 
-                    type="password" 
-                    required
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
-                    value={passwordData.currentPassword}
-                    onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                  />
+              <div className="relative z-10">
+                <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
+                  <ShieldCheck size={28} />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
-                  <input 
-                    type="password" 
-                    required
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
-                    value={passwordData.newPassword}
-                    onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New Password</label>
-                  <input 
-                    type="password" 
-                    required
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                  />
-                </div>
+                <h3 className="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tight">Security Update</h3>
+                <p className="text-slate-500 text-sm font-medium mb-8">Ensure your account remains secure with a strong password.</p>
                 
-                <button 
-                  disabled={changingPassword}
-                  className="w-full py-4 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all mt-4 flex items-center justify-center gap-2"
-                >
-                  {changingPassword ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <ShieldCheck size={16} />}
-                  {changingPassword ? 'Updating...' : 'Update Password'}
-                </button>
-              </form>
-            </div>
+                <form onSubmit={handlePasswordChange} className="space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
+                    <input 
+                      type="password" 
+                      required
+                      placeholder="••••••••"
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-sm"
+                      value={passwordData.currentPassword}
+                      onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
+                    <input 
+                      type="password" 
+                      required
+                      placeholder="Min. 6 characters"
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-sm"
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New Password</label>
+                    <input 
+                      type="password" 
+                      required
+                      placeholder="Repeat new password"
+                      className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-sm"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                    />
+                  </div>
+                  
+                  <button 
+                    disabled={changingPassword}
+                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all mt-4 flex items-center justify-center gap-2 shadow-lg shadow-indigo-100 active:scale-[0.98]"
+                  >
+                    {changingPassword ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <ShieldCheck size={16} />}
+                    {changingPassword ? 'Updating...' : 'Save New Password'}
+                  </button>
+                </form>
+              </div>
+            </motion.div>
           </div>
         )}
 
@@ -1149,13 +1329,45 @@ const Dashboard = () => {
         )}
       </main>
 
-      {/* Sidebar Backdrop Mobile */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden animate-fade-in" 
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
+      {/* Logout Confirmation Modal */}
+      <AnimatePresence>
+        {showLogoutModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative overflow-hidden"
+            >
+               {/* Decor */}
+               <div className="absolute -top-10 -right-10 w-32 h-32 bg-red-50 rounded-full blur-3xl opacity-50"></div>
+               
+               <div className="relative z-10 text-center">
+                  <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <LogOut size={32} />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">Sign Out?</h3>
+                  <p className="text-slate-500 text-sm font-medium mb-8">Are you sure you want to end your current session?</p>
+                  
+                  <div className="flex flex-col gap-3">
+                    <button 
+                      onClick={logout}
+                      className="w-full py-4 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all shadow-lg shadow-red-100 flex items-center justify-center gap-2"
+                    >
+                      Confirm Logout
+                    </button>
+                    <button 
+                      onClick={() => setShowLogoutModal(false)}
+                      className="w-full py-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all"
+                    >
+                      Keep Session
+                    </button>
+                  </div>
+               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

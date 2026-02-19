@@ -19,9 +19,12 @@ const saveDraft = async (req, res) => {
                 return res.status(403).json({ message: `Cannot modify registration as it has already been ${registration.status.toLowerCase()}.` });
             }
 
+            // Filter team members
+            const validTeamMembers = teamMembers ? teamMembers.filter(m => m.name && m.name.trim() !== '') : registration.teamMembers;
+
             // Update existing draft
             registration.personalDetails = personalDetails || registration.personalDetails;
-            registration.teamMembers = teamMembers || registration.teamMembers;
+            registration.teamMembers = validTeamMembers;
             registration.paperDetails = { ...registration.paperDetails, ...paperDetails };
 
             // Explicitly handle merging paperDetails to avoid overwriting nested fields if partial
@@ -38,11 +41,14 @@ const saveDraft = async (req, res) => {
 
             await registration.save();
         } else {
+            // Filter team members
+            const validTeamMembers = teamMembers ? teamMembers.filter(m => m.name && m.name.trim() !== '') : [];
+
             // Create new draft
             registration = await Registration.create({
                 userId,
                 personalDetails,
-                teamMembers,
+                teamMembers: validTeamMembers,
                 paperDetails,
                 status: 'Draft'
             });

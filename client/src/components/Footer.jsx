@@ -68,6 +68,7 @@ const Footer = () => {
               <ul className="space-y-4">
                 <li><Link to="/login" className={footerLinkClass}>Author Login</Link></li>
                 <li><Link to="/register" className={footerLinkClass}>Registration</Link></li>
+                <li><Link to="/terms" className={footerLinkClass}>Terms & Conditions</Link></li>
                 <li><a href="#" className={footerLinkClass}>Paper Template</a></li>
                 <li><a href="#" className={footerLinkClass}>Contact Support</a></li>
               </ul>
