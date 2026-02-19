@@ -656,21 +656,24 @@ const HomePage = () => {
             <h3 className="text-xl font-bold text-slate-400 uppercase tracking-[0.2em] text-center mb-12 mt-24 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[40px] before:bg-slate-200 after:content-[''] after:h-px after:w-[40px] after:bg-slate-200">Organizing Team</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto px-4">
               {[
-                { name: "Mr. G. R. Seenivasan", role: "Assistant Professor", dept: "Civil Engineering", img: null },
+                { name: "Mr. G. R. Seenivasan", role: "Assistant Professor", dept: "Civil Engineering", img: "/organizing team/G R Seenivasan.jpeg" },
                 { name: "R. Yoga", role: "Assistant Professor", dept: "CSE", img: "/organizing team/Yoga.png" },
                 { name: "M. ABIRAMI", role: "Assistant Professor", dept: "CSE", img: "/organizing team/ABIRAMI.png" },
                 { name: "P. Chandralakshmi", role: "Assistant Professor", dept: "EEE", img: "/organizing team/Chandralakshmi.jpeg" },
                 { name: "R. R. Yuganandhine", role: "Assistant Professor", dept: "ECE", img: "/organizing team/Yuganandhine.png" },
                 { name: "Dr. L. Venkatesh", role: "Associate Professor", dept: "Mechanical Engineering", img: null },
-                { name: "Mr. K. Senthilkumar", role: "Assistant Professor", dept: "Mechatronics Engineering", img: null },
+                { name: "Mr. K. Senthilkumar", role: "Assistant Professor", dept: "Mechatronics Engineering", img: "/organizing team/Senthilkumar K.jpg.jpeg" },
                 { name: "Ms. K. Preetha", role: "Assistant Professor", dept: "Information Technology", img: null },
                 { name: "T. Malarvizhi", role: "Assistant Professor", dept: "AI & DS", img: "/organizing team/Malarvizhi.png" },
-                { name: "Dr. M. Arunmozhi", role: "Associate Professor", dept: "MBA/DoMS", img: "/organizing team/Arunmozhi.jpeg" }
+                { name: "Dr. M. Arunmozhi", role: "Associate Professor", dept: "MBA/DoMS", img: "/organizing team/Arunmozhi.jpeg" },
+                { name: "S.R.Sarvada", role: "Assistant Professor", dept: "S&H - English", img: "/organizing team/S.R.Sarvada.jpeg" },
+                { name: "V.Mohana Priya", role: "Assistant Professor", dept: "Mathematics", img: "/organizing team/Mohana-Priya .jpeg" },
+                { name: "Sangavi", role: "Assistant Professor", dept: "S&H", img: "/organizing team/Sangavi.jpeg" }
               ].map((m, idx) => (
                 <motion.div 
                   key={idx}
                   whileHover={{ y: -4 }}
-                  className={`bg-white p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300 flex flex-col items-center text-center group h-full ${idx === 9 ? 'lg:col-start-2' : ''}`}
+                  className={`bg-white p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300 flex flex-col items-center text-center group h-full ${idx === 12 ? 'lg:col-start-2' : ''}`}
                 >
                   <div className="w-20 h-20 mb-4 relative">
                     {m.img ? (

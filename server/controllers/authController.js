@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const PendingUser = require('../models/PendingUser');
 const generateToken = require('../utils/generateToken');
+const sendEmail = require('../utils/sendEmail');
+
 
 // @desc    Register a new user (Create PendingUser)
 // @route   POST /api/auth/register
@@ -44,38 +46,23 @@ const registerUser = async (req, res) => {
         });
     }
 
-    // Send verification email
-    const nodemailer = require('nodemailer');
-
-    // Create transporter (you'll need to configure this with your email service)
-    const transporter = nodemailer.createTransport({
-        service: 'gmail', // or your email service
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-        }
-    });
-
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'CIETM 2026 - Email Verification',
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #6366f1;">Welcome to CIETM 2026!</h2>
-                <p>Hello ${name},</p>
-                <p>Thank you for registering. Please verify your email to complete your account creation.</p>
-                <p>Your verification code is:</p>
-                <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
-                    <h1 style="color: #6366f1; font-size: 32px; letter-spacing: 8px; margin: 0;">${verificationCode}</h1>
-                </div>
-                <p>This code will expire in 1 hour.</p>
-            </div>
-        `
-    };
-
     try {
-        await transporter.sendMail(mailOptions);
+        await sendEmail({
+            email,
+            subject: 'CIETM 2026 - Email Verification',
+            message: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #6366f1;">Welcome to CIETM 2026!</h2>
+                    <p>Hello ${name},</p>
+                    <p>Thank you for registering. Please verify your email to complete your account creation.</p>
+                    <p>Your verification code is:</p>
+                    <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
+                        <h1 style="color: #6366f1; font-size: 32px; letter-spacing: 8px; margin: 0;">${verificationCode}</h1>
+                    </div>
+                    <p>This code will expire in 1 hour.</p>
+                </div>
+            `
+        });
         res.status(201).json({
             message: 'Verification code sent to your email. Please verify to complete registration.'
         });
@@ -210,35 +197,22 @@ const resendVerification = async (req, res) => {
     pendingUser.createdAt = Date.now(); // Reset TTL
     await pendingUser.save();
 
-    // Send email
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-        }
-    });
-
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'CIETM 2026 - New Verification Code',
-        html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #6366f1;">New Verification Code</h2>
-                <p>Hello ${pendingUser.name},</p>
-                <p>Here is your new verification code:</p>
-                <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
-                    <h1 style="color: #6366f1; font-size: 32px; letter-spacing: 8px; margin: 0;">${verificationCode}</h1>
-                </div>
-                <p>This code will expire in 1 hour.</p>
-            </div>
-        `
-    };
-
     try {
-        await transporter.sendMail(mailOptions);
+        await sendEmail({
+            email,
+            subject: 'CIETM 2026 - New Verification Code',
+            message: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #6366f1;">New Verification Code</h2>
+                    <p>Hello ${pendingUser.name},</p>
+                    <p>Here is your new verification code:</p>
+                    <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
+                        <h1 style="color: #6366f1; font-size: 32px; letter-spacing: 8px; margin: 0;">${verificationCode}</h1>
+                    </div>
+                    <p>This code will expire in 1 hour.</p>
+                </div>
+            `
+        });
         res.json({ message: 'New verification code sent to your email' });
     } catch (error) {
         console.error('Email send error:', error);
@@ -284,20 +258,10 @@ const forgotPassword = async (req, res) => {
         `;
 
         try {
-            const nodemailer = require('nodemailer');
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                }
-            });
-
-            await transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: user.email,
+            await sendEmail({
+                email: user.email,
                 subject: 'CIETM 2026 - Password Reset',
-                html: message
+                message: message
             });
 
             res.status(200).json({ message: 'Email sent' });
