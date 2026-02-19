@@ -774,7 +774,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
               </button>
             ) : (
               <button onClick={handleSubmit} className="btn btn-primary ml-auto" disabled={loading}>
-                {loading ? 'Submitting...' : 'Complete Registration'}
+                {loading ? 'Submitting...' : showAccountCreation ? 'Complete Registration' : 'Update Submission'}
               </button>
             )}
           </div>

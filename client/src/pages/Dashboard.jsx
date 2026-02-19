@@ -289,28 +289,57 @@ const Dashboard = () => {
     </div>
   );
 
-  const renderSubmissionTab = () => {
-    // If no registration field or status is Draft, show form
-    if (!registration || registration.status === 'Draft' || !registration.status) {
-        return (
-            <div className="animate-[fadeIn_0.6s_ease-out]">
-                 <div className="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-slate-100 max-w-5xl mx-auto">
-                    <h2 className="text-3xl font-bold mb-8 text-slate-800 border-b border-slate-100 pb-6">
+  const getInitialStep = () => {
+    if (!registration) return 2;
+    // Step 2: Personal Details
+    if (!registration.personalDetails?.institution || !registration.personalDetails?.department) return 2;
+    // Step 4: Paper Details (Step 3 is optional)
+    if (!registration.paperDetails?.title || !registration.paperDetails?.abstract) return 4;
+    // Step 5: Review
+    return 5;
+  };
+
+  const renderDraftsTab = () => {
+    return (
+        <div className="animate-[fadeIn_0.6s_ease-out]">
+             <div className="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-slate-100 max-w-5xl mx-auto">
+                <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
+                    <h2 className="text-3xl font-bold text-slate-800">
                         {registration && registration.status === 'Draft' ? 'Continue Submission' : 'Start Submission'}
                     </h2>
-                    <RegistrationForm 
-                        startStep={2} 
-                        showAccountCreation={false} 
-                        onSuccess={() => {
-                            fetchRegistration();
-                            toast.success("Submission Completed!");
-                        }} 
-                    />
-                 </div>
+                </div>
+                <RegistrationForm 
+                    startStep={getInitialStep()} 
+                    showAccountCreation={false} 
+                    onSuccess={() => {
+                        fetchRegistration();
+                        setActiveTab('paper');
+                        toast.success("Submission Completed!");
+                    }} 
+                />
+             </div>
+        </div>
+    );
+  };
+
+  const renderSubmissionTab = () => {
+    if (!registration || registration.status === 'Draft' || !registration.status) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+                <div className="w-20 h-20 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center mb-6">
+                    <FileText size={40} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">No Official Submission Yet</h3>
+                <p className="text-slate-500 mb-8 max-w-sm">Complete your draft to view your official conference submission details here.</p>
+                <button 
+                    onClick={() => setActiveTab('drafts')}
+                    className="btn btn-primary"
+                >
+                    Go to Drafts
+                </button>
             </div>
         );
     }
-    // Otherwise show the details view
     return renderMyPaper();
   };
 
@@ -319,141 +348,157 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 xl:grid-cols-[1.8fr_1.2fr] gap-8">
         {/* Left Column: Paper Details */}
         <div className="flex flex-col gap-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 leading-tight">{registration?.paperDetails?.title || 'Untitled Research Submission'}</h2>
-          </div>
-
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-6">Abstract</h3>
-            <div className="text-slate-600 text-lg leading-relaxed font-serif italic text-justify">
-              <p>{registration?.paperDetails?.abstract || 'No abstract content available at this moment.'}</p>
+          {/* Main Paper Overview */}
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-8 border-b border-slate-50">
+               <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 leading-tight mb-4">{registration?.paperDetails?.title || 'Untitled Research Submission'}</h2>
+               <div className="flex flex-wrap gap-2">
+                 <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold uppercase tracking-wider">{registration?.paperDetails?.track || 'General track'}</span>
+                 <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wider">{registration?.personalDetails?.category || 'Student'}</span>
+               </div>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-            <div className="flex flex-col gap-2">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Conference Track</span>
-              <span className="text-lg font-bold text-slate-800">{registration?.paperDetails?.track || 'General Intelligence'}</span>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Author Category</span>
-              <span className="text-lg font-bold text-slate-800">{registration?.personalDetails?.category || 'Professional'}</span>
-            </div>
-          </div>
-
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-6">Research Team</h3>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-4 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl">
-                <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shrink-0 shadow-md shadow-indigo-200">{user.name?.charAt(0)}</div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-slate-900 text-lg">{user.name}</span>
-                  <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Principal Author</span>
-                </div>
+            <div className="p-8 bg-slate-50/30">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Abstract Overview</h3>
+              <div className="text-slate-600 text-base leading-relaxed font-serif italic text-justify">
+                <p>{registration?.paperDetails?.abstract || 'No abstract content available at this moment.'}</p>
               </div>
-              {registration?.teamMembers?.map((member, idx) => (
-                <div key={idx} className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                  <div className="w-10 h-10 bg-white text-slate-500 border border-slate-200 rounded-xl flex items-center justify-center font-bold shrink-0">{member.name?.charAt(0)}</div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-slate-800">{member.name}</span>
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Co-Author</span>
-                  </div>
-                </div>
-              ))}
             </div>
+          </div>
+
+          {/* Submission Metadata Group */}
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+             <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-6">Submission Context \u0026 Team</h3>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Keywords/Metadata */}
+                <div className="flex flex-col gap-4">
+                   <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Keywords</span>
+                      <p className="text-sm font-semibold text-slate-700">{registration?.paperDetails?.keywords?.join(', ') || 'N/A'}</p>
+                   </div>
+                   <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Submitted On</span>
+                      <p className="text-sm font-semibold text-slate-700">{registration?.createdAt ? new Date(registration.createdAt).toLocaleDateString() : 'Pending'}</p>
+                   </div>
+                </div>
+
+                {/* Team Members */}
+                <div className="flex flex-col gap-4 border-l border-slate-100 pl-8">
+                   <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-sm shrink-0">{user.name?.charAt(0)}</div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-slate-800 text-sm leading-none">{user.name}</span>
+                        <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-tight">Principal Author</span>
+                      </div>
+                   </div>
+                   {registration?.teamMembers?.map((member, idx) => (
+                    <div key={idx} className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg flex items-center justify-center font-bold text-sm shrink-0">{member.name?.charAt(0)}</div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-slate-700 text-sm leading-none">{member.name}</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Co-Author</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+             </div>
           </div>
         </div>
 
         {/* Right Column: Status & Actions */}
         <div className="flex flex-col gap-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-8">Submission Timeline</h3>
-            <div className="flex flex-col gap-0 relative pl-4">
-               {/* Vertical Line */}
-               <div className="absolute left-[13px] top-6 bottom-4 w-0.5 bg-slate-100"></div>
+          <div className="bg-gradient-to-br from-[#0f172a] via-[#0f172a] to-[#1e1b4b] p-8 rounded-3xl shadow-2xl shadow-indigo-950/40 border border-white/5 text-white relative overflow-hidden group">
+            {/* Ambient Background Glow */}
+            <div className="absolute -right-24 -top-24 w-48 h-48 bg-indigo-500/10 blur-[80px] rounded-full group-hover:bg-indigo-500/20 transition-all duration-700"></div>
+            
+            <h3 className="text-[10px] font-black text-indigo-300/60 uppercase tracking-[0.3em] mb-10 relative z-10">Status Timeline</h3>
+            <div className="flex flex-col gap-0 relative z-10">
+               {/* Fixed Vertical Line Alignment */}
+               <div className="absolute left-[13.5px] top-6 bottom-6 w-px bg-white/10"></div>
               
-              <div className="relative flex gap-5 pb-8">
-                <div className="w-7 h-7 bg-indigo-600 border-2 border-indigo-600 rounded-full flex items-center justify-center text-white z-10 shrink-0">
+              <div className="relative flex gap-6 pb-10">
+                <div className="w-7 h-7 bg-emerald-500 border-2 border-emerald-400 rounded-full flex items-center justify-center text-white z-10 shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.4)]">
                     <CheckCircle size={14} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-slate-800">Paper Submitted</span>
-                  <span className="text-xs font-semibold text-slate-400">{new Date(registration?.createdAt || Date.now()).toLocaleDateString()}</span>
+                  <span className="text-sm font-bold text-white tracking-wide">Paper Submitted</span>
+                  <span className="text-[10px] font-semibold text-slate-400 mt-0.5">{registration?.createdAt ? new Date(registration.createdAt).toLocaleDateString() : 'N/A'}</span>
                 </div>
               </div>
               
-              <div className="relative flex gap-5 pb-8">
-                <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 shrink-0 bg-white transition-all ${registration?.paperDetails?.reviewStatus ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-indigo-500 shadow-[0_0_0_4px_rgba(99,102,241,0.15)]'}`}>
-                     {registration?.paperDetails?.reviewStatus ? <CheckCircle size={14} /> : <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></div>}
+              <div className="relative flex gap-6 pb-10">
+                <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 shrink-0 transition-all duration-500 ${registration?.paperDetails?.reviewStatus ? 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-[#0f172a] border-indigo-500/50 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]'}`}>
+                     {registration?.paperDetails?.reviewStatus ? <CheckCircle size={14} /> : <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse transition-all"></div>}
                 </div>
                 <div className="flex flex-col">
-                  <span className={`text-sm font-bold ${registration?.paperDetails?.reviewStatus ? 'text-slate-800' : 'text-indigo-700'}`}>Review Process</span>
-                  <span className="text-xs font-semibold text-slate-400">Technical Committee</span>
+                  <span className={`text-sm font-bold tracking-wide ${registration?.paperDetails?.reviewStatus ? 'text-white' : 'text-indigo-200'}`}>Review Process</span>
+                  <span className="text-[10px] font-semibold text-slate-400 mt-0.5 uppercase tracking-tighter">Technical Committee</span>
                 </div>
               </div>
 
-              <div className="relative flex gap-5">
-                <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 shrink-0 bg-white ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-200'}`}>
-                    {registration?.paperDetails?.reviewStatus === 'Accepted' ? <CheckCircle size={14} /> : <div className="w-2 h-2 bg-slate-300 rounded-full"></div>}
+              <div className="relative flex gap-6">
+                <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 shrink-0 transition-all duration-500 ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-[#0f172a] border-slate-700 text-slate-500'}`}>
+                    {registration?.paperDetails?.reviewStatus === 'Accepted' ? <CheckCircle size={14} /> : <div className="w-1.5 h-1.5 bg-slate-700 rounded-full"></div>}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-slate-400">Final Decision</span>
-                  <span className="text-xs font-semibold text-slate-300">Final Notification</span>
+                  <span className={`text-sm font-bold tracking-wide ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'text-white' : 'text-slate-500'}`}>Registration Confirmation</span>
+                  <span className="text-[10px] font-semibold text-slate-600 mt-0.5">Awaiting Official Decision</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-6">Committee Remarks</h3>
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-6">Reviewer Comments</h3>
             {registration?.paperDetails?.reviewerComments ? (
-              <div className="bg-orange-50 border border-dashed border-orange-200 rounded-2xl p-6">
-                <div className="flex items-center gap-2 text-orange-700 font-black text-xs uppercase tracking-wider mb-3">
-                  <AlertCircle size={14} />
-                  <span>Peer Review Feedback</span>
-                </div>
+              <div className="bg-orange-50 border border-orange-100 rounded-2xl p-6">
                 <p className="text-orange-900 leading-relaxed text-sm font-medium">{registration.paperDetails.reviewerComments}</p>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-8 gap-4 text-slate-400">
-                <Clock size={32} className="opacity-50" />
-                <p className="font-semibold text-sm">Awaiting feedback</p>
+              <div className="flex items-center gap-3 text-slate-400 py-2">
+                <Clock size={18} className="opacity-50" />
+                <p className="font-semibold text-sm italic">Review in progress...</p>
               </div>
             )}
           </div>
 
-          {!registration?.paperDetails?.fileUrl && (
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 border-indigo-100 bg-indigo-50/20">
-                <h3 className="text-xs font-black text-indigo-600 uppercase tracking-[0.15em] mb-6 flex items-center gap-2">
-                    <AlertCircle size={14} /> Action Required
-                </h3>
-                <p className="text-slate-600 text-sm font-medium mb-6">Your registration is complete, but the full manuscript has not been uploaded yet. Please upload it for review.</p>
+          <div className="flex flex-col gap-3 pt-4">
+            {!registration?.paperDetails?.fileUrl ? (
+              <div className="relative">
+                  <input 
+                      type="file" 
+                      accept=".pdf" 
+                      onChange={handleFullPaperUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
+                      disabled={uploading}
+                  />
+                  <button className="w-full flex items-center justify-center gap-3 bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
+                      {uploading ? (
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      ) : <Upload size={18} />}
+                      {uploading ? 'Uploading...' : 'Upload Manuscript (PDF)'}
+                  </button>
+              </div>
+            ) : (
+              <>
+                <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
+                  <Download size={18} />
+                  Download Manuscript
+                </button>
                 <div className="relative">
-                    <input 
-                        type="file" 
-                        accept=".pdf" 
-                        onChange={handleFullPaperUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
-                        disabled={uploading}
-                    />
-                    <button className="w-full flex items-center justify-center gap-3 bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
-                        {uploading ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        ) : <Upload size={18} />}
-                        {uploading ? 'Uploading...' : 'Upload Full Paper (PDF)'}
-                    </button>
+                  <input 
+                      type="file" 
+                      accept=".pdf" 
+                      onChange={handleFullPaperUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
+                      disabled={uploading}
+                  />
+                  <button className="w-full flex items-center justify-center gap-2 bg-slate-50 text-slate-500 border border-slate-200 px-6 py-3 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all mt-2">
+                      {uploading ? 'Updating...' : 'Update Manuscript'}
+                  </button>
                 </div>
-            </div>
-          )}
-
-          {registration?.paperDetails?.fileUrl && (
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-              <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
-                <Download size={18} />
-                Download Manuscript
-              </button>
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -586,6 +631,9 @@ const Dashboard = () => {
 
           {[
             { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
+            ...(registration?.paymentStatus !== 'Completed' ? [
+                { id: 'drafts', icon: Layers, label: 'My Draft' }
+            ] : []),
             { id: 'paper', icon: FileText, label: 'Submission' },
             { id: 'payment', icon: CreditCard, label: 'Payments' },
             { id: 'notifications', icon: Bell, label: 'Updates' },
@@ -675,6 +723,7 @@ const Dashboard = () => {
         <div className="flex-1 overflow-y-auto p-6 md:p-10 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
           <div className="max-w-7xl mx-auto pb-10">
             {activeTab === 'overview' && renderOverview()}
+            {activeTab === 'drafts' && renderDraftsTab()}
             {activeTab === 'paper' && renderSubmissionTab()}
             {activeTab === 'payment' && renderPayment()}
             {activeTab === 'notifications' && (
