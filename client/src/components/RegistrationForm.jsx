@@ -351,6 +351,14 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
     'INDUSTRY PERSONNEL': { fee: 900 }
   };
 
+  const calculateTotalFee = () => {
+    let total = registrationCategories[formData.category]?.fee || 0;
+    formData.teamMembers.forEach(member => {
+      total += registrationCategories[member.category]?.fee || 0;
+    });
+    return total;
+  };
+
   // Helper classes
   const labelClass = "block mb-2 font-bold text-slate-800 text-sm";
   const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 text-sm";
@@ -503,7 +511,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                                 </div>
                                 <div className="pl-7 flex items-baseline gap-1 mt-1">
                                     <span className="text-base font-black text-slate-900 font-mono tracking-tighter">₹{data.fee}</span>
-                                    <span className="text-[0.65rem] text-slate-400 font-bold uppercase tracking-tight">Registration Fee</span>
+                                    <span className="text-[0.65rem] text-slate-400 font-bold uppercase tracking-tight">Registration Fee (Per Author)</span>
                                 </div>
                             </div>
                         ))}
@@ -718,10 +726,24 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                   <strong className="text-slate-700">Paper Title:</strong> 
                   <span className="text-slate-900 font-medium truncate ml-4 max-w-[200px]">{formData.paperTitle || 'Untitled'}</span>
                 </p>
-                <p className="flex justify-between mb-4">
-                  <strong className="text-slate-700">Registration Fee:</strong> 
-                  <span className="text-slate-900 font-black">₹{registrationCategories[formData.category]?.fee || 0}</span>
-                </p>
+                <div className="flex justify-between mb-4 flex-col gap-2">
+                  <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 mb-1">
+                    <span className="text-sm font-bold text-slate-600">Main Author ({formData.category})</span>
+                    <span className="text-sm font-bold text-slate-900">₹{registrationCategories[formData.category]?.fee || 0}</span>
+                  </div>
+                  
+                  {formData.teamMembers.map((m, idx) => (
+                    <div key={idx} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100 mb-1">
+                      <span className="text-sm font-bold text-slate-600">Co-author {idx + 1} ({m.category})</span>
+                      <span className="text-sm font-bold text-slate-900">₹{registrationCategories[m.category]?.fee || 0}</span>
+                    </div>
+                  ))}
+
+                  <div className="flex justify-between items-center p-3 mt-2 border-t-2 border-dashed border-slate-200">
+                    <strong className="text-slate-800 text-lg uppercase tracking-tight">Total Registration Fee:</strong> 
+                    <span className="text-2xl font-black text-indigo-600 font-mono tracking-tighter">₹{calculateTotalFee()}</span>
+                  </div>
+                </div>
                 <p className="text-xs text-slate-500 italic mt-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
                   Note: Final submission will lock your details for review. Please make sure all information is correct.
                 </p>

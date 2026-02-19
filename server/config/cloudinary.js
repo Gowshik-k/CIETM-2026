@@ -15,6 +15,7 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: async (req, file) => {
         const timestamp = Date.now();
+        const extension = file.originalname.split('.').pop();
         const originalName = file.originalname
             .split('.')
             .slice(0, -1)
@@ -24,8 +25,8 @@ const storage = new CloudinaryStorage({
 
         return {
             folder: 'conference_papers',
-            resource_type: 'image', // Explicitly treat PDFs as images for Cloudinary features
-            public_id: `paper_${originalName}_${timestamp}`,
+            resource_type: 'raw', // Use 'raw' for non-image files like Word docs
+            public_id: `paper_${originalName}_${timestamp}.${extension}`,
         };
     },
 });
@@ -34,10 +35,14 @@ const upload = multer({
     storage: storage,
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     fileFilter: (req, file, cb) => {
-        if (file.mimetype === 'application/pdf') {
+        const allowedMimeTypes = [
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        if (allowedMimeTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error('Only PDF files are allowed!'), false);
+            cb(new Error('Only Microsoft Word documents (.doc, .docx) are allowed!'), false);
         }
     }
 });

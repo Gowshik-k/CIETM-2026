@@ -317,6 +317,28 @@ const resetPassword = async (req, res) => {
     }
 };
 
+// @desc    Update Password
+// @route   PUT /api/auth/update-password
+// @access  Private
+const updatePassword = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('+password');
+        const { currentPassword, newPassword } = req.body;
+
+        if (!(await user.matchPassword(currentPassword))) {
+            return res.status(401).json({ message: 'Current password is incorrect' });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -324,5 +346,6 @@ module.exports = {
     verifyEmail,
     resendVerification,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    updatePassword
 };

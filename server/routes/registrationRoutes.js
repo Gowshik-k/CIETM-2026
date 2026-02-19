@@ -23,11 +23,15 @@ router.post('/update-paper', protect, updatePaper);
 // File upload route
 router.post('/upload', protect, upload.single('paper'), (req, res) => {
     if (req.file) {
+        const extension = req.file.originalname.split('.').pop().toLowerCase();
+        const isWordDoc = ['doc', 'docx'].includes(extension);
+        const resourceType = isWordDoc ? 'raw' : (req.file.resource_type || 'image');
+
         res.json({
             url: req.file.path,
             publicId: req.file.filename,
             originalName: req.file.originalname,
-            resourceType: req.file.resource_type || 'image' // Default to 'image' if not provided (standard for our config)
+            resourceType: resourceType
         });
     } else {
         res.status(400).json({ message: 'File upload failed' });

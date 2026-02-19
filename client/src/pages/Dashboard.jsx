@@ -18,6 +18,13 @@ const Dashboard = () => {
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [showIDCard, setShowIDCard] = useState(false);
 
   // Moved fetchRegistration outside useEffect to allow refreshing
   const fetchRegistration = useCallback(async () => {
@@ -35,9 +42,29 @@ const Dashboard = () => {
     }
   }, [user]);
 
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const { data } = await axios.get('/api/notifications', {
+        headers: { Authorization: `Bearer ${user?.token}` }
+      });
+      setNotifications(data);
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchRegistration();
-  }, [fetchRegistration]);
+    fetchNotifications();
+  }, [fetchRegistration, fetchNotifications]);
+
+  useEffect(() => {
+    if (registration && ['Accepted', 'Rejected'].includes(registration.status) && activeTab === 'drafts') {
+      setActiveTab('paper');
+    }
+  }, [registration, activeTab]);
 
   const handleDownload = () => {
     if (!registration) return;
@@ -49,8 +76,12 @@ const Dashboard = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.type !== 'application/pdf') {
-        return toast.error("Please upload a PDF file");
+    const allowedTypes = [
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    if (!allowedTypes.includes(file.type)) {
+        return toast.error("Please upload a Word document (.doc or .docx)");
     }
 
     const confirmUpload = window.confirm("Are you sure you want to upload this full paper?");
@@ -89,6 +120,102 @@ const Dashboard = () => {
     }
   };
 
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      return toast.error("Passwords do not match");
+    }
+    if (passwordData.newPassword.length < 6) {
+      return toast.error("Password must be at least 6 characters");
+    }
+
+    setChangingPassword(true);
+    try {
+      await axios.put('/api/auth/update-password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      }, {
+        headers: { Authorization: `Bearer ${user?.token}` }
+      });
+      toast.success("Password updated successfully!");
+      setShowPasswordModal(false);
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update password");
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const handleMarkAsRead = async (id) => {
+    try {
+      await axios.put(`/api/notifications/${id}/read`, {}, {
+        headers: { Authorization: `Bearer ${user?.token}` }
+      });
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+    } catch (error) {
+      console.error("Failed to mark as read", error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await axios.put('/api/notifications/read-all', {}, {
+        headers: { Authorization: `Bearer ${user?.token}` }
+      });
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      toast.success("All marked as read");
+    } catch (error) {
+      console.error("Failed to mark all as read", error);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!registration) return;
+    setPaymentLoading(true);
+    try {
+      const { data } = await axios.post('/api/payments/init', {
+        registrationId: registration._id
+      }, {
+        headers: { Authorization: `Bearer ${user?.token}` }
+      });
+
+      // Create a temporary form and submit it to PayU
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'https://test.payu.in/_payment'; // Use production URL for live
+
+      const fields = {
+        key: data.key,
+        txnid: data.txnid,
+        amount: data.amount,
+        productinfo: data.productinfo,
+        firstname: data.firstname,
+        email: data.email,
+        phone: registration.personalDetails.mobile || '',
+        surl: data.surl,
+        furl: data.furl,
+        hash: data.hash,
+        service_provider: 'payu_paisa'
+      };
+
+      for (const key in fields) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = fields[key];
+        form.appendChild(input);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Payment initialization failed");
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'Draft': return 'text-slate-500 bg-slate-100 border-slate-200';
@@ -106,7 +233,19 @@ const Dashboard = () => {
     'EXTERNAL / ONLINE PRESENTATION': 300,
     'INDUSTRY PERSONNEL': 900
   };
-  const currentFee = categoryAmounts[registration?.personalDetails?.category] || 1000;
+
+  const calculateCurrentFee = () => {
+    if (!registration) return 0;
+    let total = categoryAmounts[registration.personalDetails?.category] || 1000;
+    if (registration.teamMembers && registration.teamMembers.length > 0) {
+      registration.teamMembers.forEach(member => {
+        total += categoryAmounts[member.category] || 1000;
+      });
+    }
+    return total;
+  };
+
+  const currentFee = calculateCurrentFee();
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
@@ -129,12 +268,12 @@ const Dashboard = () => {
         </div>
         
         <div className="flex flex-wrap gap-3 relative z-10">
-          {!registration?.paperDetails?.fileUrl && registration?.status !== 'Draft' && registration?.status && (
+          {!registration?.paperDetails?.fileUrl && registration?.status !== 'Draft' && registration?.status && registration?.status !== 'Accepted' && registration?.status !== 'Rejected' && (
             <button 
               onClick={() => setActiveTab('paper')}
               className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-100 flex items-center gap-2 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all"
             >
-              <Upload size={18} /> Upload Full Paper
+              <Upload size={18} /> Upload Word Document
             </button>
           )}
           <button 
@@ -240,10 +379,16 @@ const Dashboard = () => {
                 </div>
               </div>
               <button 
-                onClick={() => toast.success('Digital ID available after full paper acceptance')}
+                onClick={() => {
+                  if (registration?.paperDetails?.reviewStatus === 'Accepted' && registration?.paymentStatus === 'Completed') {
+                    setShowIDCard(true);
+                  } else {
+                    toast.error('Digital ID available after full paper acceptance and payment confirmation');
+                  }
+                }}
                 className="w-full md:w-auto bg-white text-slate-900 px-8 py-3.5 rounded-xl font-bold text-sm hover:bg-slate-100 transition-all shadow-xl active:scale-95 shrink-0"
               >
-                Download Entry ID
+                View Entry ID
               </button>
             </div>
           </div>
@@ -280,7 +425,7 @@ const Dashboard = () => {
                 className="flex items-center justify-center gap-3 w-full py-4 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-xs hover:bg-indigo-100 transition-all border border-indigo-100/50 group"
               >
                 <Download size={16} className="transition-transform group-hover:translate-y-0.5" />
-                IEEE Template (DOCX/PDF)
+                IEEE Template (DOCX)
               </a>
             </div>
           </div>
@@ -342,6 +487,7 @@ const Dashboard = () => {
     }
     return renderMyPaper();
   };
+
 
   const renderMyPaper = () => (
     <div className="animate-[fadeIn_0.6s_ease-out]">
@@ -461,44 +607,60 @@ const Dashboard = () => {
             )}
           </div>
 
-          <div className="flex flex-col gap-3 pt-4">
-            {!registration?.paperDetails?.fileUrl ? (
-              <div className="relative">
-                  <input 
-                      type="file" 
-                      accept=".pdf" 
-                      onChange={handleFullPaperUpload}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
-                      disabled={uploading}
-                  />
-                  <button className="w-full flex items-center justify-center gap-3 bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
-                      {uploading ? (
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      ) : <Upload size={18} />}
-                      {uploading ? 'Uploading...' : 'Upload Manuscript (PDF)'}
+          {registration?.status !== 'Accepted' && registration?.status !== 'Rejected' && (
+            <div className="flex flex-col gap-3 pt-4">
+              {!registration?.paperDetails?.fileUrl ? (
+                <div className="relative">
+                    <input 
+                        type="file" 
+                        accept=".doc,.docx" 
+                        onChange={handleFullPaperUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
+                        disabled={uploading}
+                    />
+                    <button className="w-full flex items-center justify-center gap-3 bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
+                        {uploading ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        ) : <Upload size={18} />}
+                        {uploading ? 'Uploading...' : 'Upload Manuscript (Word)'}
+                    </button>
+                </div>
+              ) : (
+                <>
+                  <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
+                    <Download size={18} />
+                    Download Manuscript
                   </button>
-              </div>
-            ) : (
-              <>
-                <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
+                  <div className="relative">
+                    <input 
+                        type="file" 
+                        accept=".doc,.docx" 
+                        onChange={handleFullPaperUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
+                        disabled={uploading}
+                    />
+                    <button className="w-full flex items-center justify-center gap-2 bg-slate-50 text-slate-500 border border-slate-200 px-6 py-3 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all mt-2">
+                        {uploading ? 'Updating...' : 'Update Manuscript'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {(registration?.status === 'Accepted' || registration?.status === 'Rejected') && registration?.paperDetails?.fileUrl && (
+            <div className="flex flex-col gap-3 pt-4">
+               <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
                   <Download size={18} />
                   Download Manuscript
                 </button>
-                <div className="relative">
-                  <input 
-                      type="file" 
-                      accept=".pdf" 
-                      onChange={handleFullPaperUpload}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
-                      disabled={uploading}
-                  />
-                  <button className="w-full flex items-center justify-center gap-2 bg-slate-50 text-slate-500 border border-slate-200 px-6 py-3 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all mt-2">
-                      {uploading ? 'Updating...' : 'Update Manuscript'}
-                  </button>
+                <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
+                  <p className="text-xs font-bold text-amber-700 flex items-center gap-2">
+                    <ShieldCheck size={14} /> Editing locked after {registration.status.toLowerCase()}
+                  </p>
                 </div>
-              </>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -529,9 +691,15 @@ const Dashboard = () => {
           <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
             <h4 className="font-extrabold text-slate-800 mb-6 text-lg">Fee Breakdown</h4>
             <div className="flex justify-between py-3 border-b border-slate-50">
-              <span className="text-slate-500 font-medium text-sm">Conference Registration</span>
-              <span className="font-bold text-slate-700">₹ {currentFee}</span>
+              <span className="text-slate-500 font-medium text-sm">Main Author ({registration?.personalDetails?.category})</span>
+              <span className="font-bold text-slate-700">₹ {categoryAmounts[registration?.personalDetails?.category] || 1000}</span>
             </div>
+            {registration?.teamMembers?.map((member, idx) => (
+              <div key={idx} className="flex justify-between py-3 border-b border-slate-50">
+                <span className="text-slate-500 font-medium text-sm">Co-Author {idx + 1} ({member.category})</span>
+                <span className="font-bold text-slate-700">₹ {categoryAmounts[member.category] || 1000}</span>
+              </div>
+            ))}
             <div className="flex justify-between py-3 border-b border-slate-50">
               <span className="text-slate-500 font-medium text-sm">Processing Fee (0%)</span>
               <span className="font-bold text-slate-700">₹ 0</span>
@@ -558,7 +726,14 @@ const Dashboard = () => {
               <div className="relative z-10 w-full">
                 <h4 className="text-xl font-bold text-slate-800 mb-2">Checkout Ready</h4>
                 <p className="text-slate-500 mb-8 text-sm font-medium">Securely pay using UPI, Card or Internet Banking.</p>
-                <button className="w-full btn btn-primary py-3.5 rounded-xl shadow-lg shadow-indigo-200 font-bold">Continue to Payment</button>
+                <button 
+                  onClick={handlePayment}
+                  disabled={paymentLoading}
+                  className="w-full btn btn-primary py-3.5 rounded-xl shadow-lg shadow-indigo-200 font-bold flex items-center justify-center gap-2"
+                >
+                  {paymentLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <CreditCard size={18} />}
+                  {paymentLoading ? 'Processing...' : 'Continue to Payment'}
+                </button>
               </div>
             ) : registration?.status === 'Draft' ? (
               <div className="relative z-10">
@@ -631,7 +806,7 @@ const Dashboard = () => {
 
           {[
             { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
-            ...(registration?.paymentStatus !== 'Completed' ? [
+            ...(registration?.paymentStatus !== 'Completed' && registration?.status !== 'Accepted' && registration?.status !== 'Rejected' ? [
                 { id: 'drafts', icon: Layers, label: 'My Draft' }
             ] : []),
             { id: 'paper', icon: FileText, label: 'Submission' },
@@ -727,12 +902,53 @@ const Dashboard = () => {
             {activeTab === 'paper' && renderSubmissionTab()}
             {activeTab === 'payment' && renderPayment()}
             {activeTab === 'notifications' && (
-              <div className="animate-fade-in flex flex-col items-center justify-center min-h-[60vh]">
-                <div className="w-32 h-32 bg-indigo-50 text-indigo-500 rounded-[2.5rem] flex items-center justify-center mb-8 rotate-12 group hover:rotate-0 transition-transform duration-500">
-                  <Bell size={48} />
+              <div className="animate-fade-in max-w-4xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Recent Updates</h3>
+                  {notifications.some(n => !n.isRead) && (
+                    <button onClick={handleMarkAllAsRead} className="text-xs font-bold text-indigo-600 hover:text-indigo-700">Mark all as read</button>
+                  )}
                 </div>
-                <h3 className="text-2xl font-black mb-3 text-slate-800 uppercase tracking-tight">No notifications</h3>
-                <p className="text-slate-500 font-medium text-center max-w-sm">We'll keep you posted when there's an update on your submission status.</p>
+                
+                {notificationsLoading ? (
+                  <div className="flex justify-center p-12"><div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div></div>
+                ) : notifications.length > 0 ? (
+                  <div className="space-y-4">
+                    {notifications.map((n) => (
+                      <div 
+                        key={n._id} 
+                        className={`p-6 rounded-2xl border transition-all cursor-pointer ${n.isRead ? 'bg-white border-slate-100' : 'bg-indigo-50/50 border-indigo-100 shadow-sm'}`}
+                        onClick={() => !n.isRead && handleMarkAsRead(n._id)}
+                      >
+                        <div className="flex gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                            n.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 
+                            n.type === 'error' ? 'bg-red-100 text-red-600' : 
+                            n.type === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'
+                          }`}>
+                            <Bell size={20} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-bold text-slate-800">{n.title}</h4>
+                              {!n.isRead && <span className="w-2 h-2 bg-indigo-600 rounded-full"></span>}
+                            </div>
+                            <p className="text-sm text-slate-600 font-medium mb-2">{n.message}</p>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{new Date(n.createdAt).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center min-h-[50vh]">
+                    <div className="w-24 h-24 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center mb-6">
+                      <Bell size={40} />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">No notifications yet</h3>
+                    <p className="text-slate-500 text-center max-w-sm">We'll alert you here when there's an update on your paper or payment.</p>
+                  </div>
+                )}
               </div>
             )}
             {activeTab === 'settings' && (
@@ -757,7 +973,10 @@ const Dashboard = () => {
                     </div>
                     <div className="pt-8 border-t border-slate-100">
                       <h4 className="text-[0.65rem] font-black uppercase text-slate-400 mb-6 tracking-[0.2em]">Security</h4>
-                      <button className="px-8 py-4 rounded-xl border-2 border-slate-100 text-slate-600 font-bold hover:border-indigo-600 hover:text-indigo-600 transition-all active:scale-95 shadow-sm hover:shadow-md">
+                      <button 
+                        onClick={() => setShowPasswordModal(true)}
+                        className="px-8 py-4 rounded-xl border-2 border-slate-100 text-slate-600 font-bold hover:border-indigo-600 hover:text-indigo-600 transition-all active:scale-95 shadow-sm hover:shadow-md"
+                      >
                         Change Account Password
                       </button>
                     </div>
@@ -767,6 +986,167 @@ const Dashboard = () => {
             )}
           </div>
         </div>
+
+        {/* Change Password Modal */}
+        {showPasswordModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative animate-scale-in">
+              <button 
+                onClick={() => setShowPasswordModal(false)}
+                className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+              >
+                <X size={20} />
+              </button>
+              
+              <h3 className="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tight">Change Password</h3>
+              <p className="text-slate-500 text-sm font-medium mb-8">Secure your account by updating your credentials.</p>
+              
+              <form onSubmit={handlePasswordChange} className="space-y-5">
+                <div className="space-y-2">
+                  <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
+                  <input 
+                    type="password" 
+                    required
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
+                  <input 
+                    type="password" 
+                    required
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New Password</label>
+                  <input 
+                    type="password" 
+                    required
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 outline-none focus:border-indigo-500 transition-all"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                  />
+                </div>
+                
+                <button 
+                  disabled={changingPassword}
+                  className="w-full py-4 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all mt-4 flex items-center justify-center gap-2"
+                >
+                  {changingPassword ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <ShieldCheck size={16} />}
+                  {changingPassword ? 'Updating...' : 'Update Password'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Digital ID Card Modal */}
+        {showIDCard && registration && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in print:bg-white print:p-0">
+            <div className="flex flex-col gap-6 max-w-md w-full animate-scale-in print:hidden">
+              <div className="bg-white p-6 rounded-3xl shadow-2xl overflow-hidden relative" id="printable-id-card">
+                {/* ID Card Front */}
+                <div className="border-[3px] border-indigo-600 rounded-2xl p-6 bg-white relative overflow-hidden">
+                  {/* Card Header */}
+                  <div className="flex justify-between items-start mb-6 pb-4 border-b-2 border-slate-100">
+                    <div>
+                      <h4 className="text-xl font-black text-slate-800 leading-none">CIETM <span className="text-indigo-600">2026</span></h4>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Conclave on Innovation</p>
+                    </div>
+                    <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 font-bold">C</div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="flex gap-6 mb-6">
+                    <div className="w-24 h-24 bg-slate-50 border-2 border-slate-100 rounded-xl flex items-center justify-center text-slate-300 shrink-0 overflow-hidden">
+                      <User size={48} />
+                    </div>
+                    <div className="flex flex-col justify-center min-w-0">
+                      <h5 className="text-lg font-black text-slate-800 truncate leading-tight uppercase">{user.name}</h5>
+                      <span className="text-[10px] font-black text-indigo-600 uppercase tracking-tighter mb-2">{registration.personalDetails.category}</span>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin size={10} className="text-slate-400" />
+                          <span className="text-[10px] font-bold text-slate-500 truncate">{registration.personalDetails.institution}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Layers size={10} className="text-slate-400" />
+                          <span className="text-[10px] font-bold text-slate-500 truncate">{registration.paperDetails.track}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Footer */}
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Participant ID</p>
+                      <p className="text-sm font-black text-slate-800 tracking-wider">#CMP-26-{registration._id.slice(-6).toUpperCase()}</p>
+                    </div>
+                    <div className="text-right">
+                      <CheckCircle size={24} className="text-emerald-500 mb-1 inline-block" />
+                      <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Verified</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => window.print()}
+                  className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200"
+                >
+                  <Download size={18} /> Print / Save PDF
+                </button>
+                <button 
+                  onClick={() => setShowIDCard(false)}
+                  className="px-6 py-4 bg-white text-slate-600 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            {/* Print-only version (cleaner for PDF export) */}
+            <div className="hidden print:block bg-white p-10">
+               <div className="w-[85.6mm] h-[53.98mm] border-[1px] border-slate-300 rounded-[3mm] p-[5mm] bg-white flex flex-col justify-between shadow-none mx-auto mb-10">
+                  <div className="flex justify-between items-start border-b-[0.5mm] border-slate-100 pb-[2mm]">
+                    <div>
+                      <h4 className="text-[5mm] font-black text-slate-800 leading-none">CIETM <span className="text-indigo-600">2026</span></h4>
+                      <p className="text-[2.5mm] font-bold text-slate-400 uppercase tracking-widest mt-[0.5mm]">Conclave on Innovation</p>
+                    </div>
+                    <div className="w-[8mm] h-[8mm] bg-indigo-50 rounded-[1.5mm] flex items-center justify-center text-indigo-600 font-bold text-[3mm]">C</div>
+                  </div>
+
+                  <div className="flex gap-[4mm]">
+                    <div className="w-[18mm] h-[18mm] bg-slate-50 border-[0.3mm] border-slate-100 rounded-[2mm] flex items-center justify-center text-slate-300 overflow-hidden">
+                      <User size={32} />
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <h5 className="text-[4mm] font-black text-slate-800 truncate leading-tight uppercase">{user.name}</h5>
+                      <span className="text-[2.5mm] font-black text-indigo-600 uppercase tracking-tighter mb-[1mm]">{registration.personalDetails.category}</span>
+                      <p className="text-[2.5mm] font-bold text-slate-500">{registration.personalDetails.institution}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-[2mm] font-black text-slate-400 uppercase tracking-widest mb-[0.5mm]">Participant ID</p>
+                      <p className="text-[3mm] font-black text-slate-800 tracking-wider">#CMP-26-{registration._id.slice(-6).toUpperCase()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[2.5mm] font-black text-emerald-600 uppercase tracking-widest">Verified Delegate</p>
+                    </div>
+                  </div>
+               </div>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Sidebar Backdrop Mobile */}

@@ -26,7 +26,21 @@ const initPayment = async (req, res) => {
             'EXTERNAL / ONLINE PRESENTATION': 300,
             'INDUSTRY PERSONNEL': 900
         };
-        const amount = categoryAmounts[registration.personalDetails.category] || 1000;
+
+        let totalAmount = categoryAmounts[registration.personalDetails.category] || 1000;
+
+        if (registration.teamMembers && registration.teamMembers.length > 0) {
+            registration.teamMembers.forEach(member => {
+                totalAmount += categoryAmounts[member.category] || 1000;
+            });
+        }
+
+        const amount = totalAmount;
+
+        // Save amount and txnid to registration for tracking
+        registration.amount = amount;
+        registration.transactionId = txnid;
+        await registration.save();
 
         const paymentData = {
             txnid,
@@ -63,8 +77,20 @@ const paymentCallback = async (req, res) => {
     if (verifyPayUHash(data, process.env.PAYU_MERCHANT_SALT)) {
         if (data.status === 'success') {
             // Update registration status
-            // You'll need to find the registration by txnid or some other identifier passed in UDFs
-            // For this example, we'll assume we find it and update
+            const registration = await Registration.findOne({ transactionId: data.txnid });
+            if (registration) {
+                registration.paymentStatus = 'Completed';
+                await registration.save();
+
+                // Trigger notification
+                await require('./notificationController').createNotification(
+                    registration.userId,
+                    'Payment Successful',
+                    'Your conference registration payment has been successfully processed.',
+                    'success',
+                    '/dashboard'
+                );
+            }
             res.redirect(`${process.env.FRONTEND_URL}/dashboard?payment=success`);
         } else {
             res.redirect(`${process.env.FRONTEND_URL}/dashboard?payment=fail`);

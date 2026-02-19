@@ -1,6 +1,7 @@
 const Registration = require('../models/Registration');
 const sendEmail = require('../utils/sendEmail');
 const { cloudinary } = require('../config/cloudinary');
+const { createNotification } = require('./notificationController');
 
 // @desc    Create or Update a draft registration
 // @route   POST /api/registrations/draft
@@ -13,6 +14,11 @@ const saveDraft = async (req, res) => {
         let registration = await Registration.findOne({ userId });
 
         if (registration) {
+            // Prevent updates if already reviewed (Accepted/Rejected)
+            if (['Accepted', 'Rejected'].includes(registration.status)) {
+                return res.status(403).json({ message: `Cannot modify registration as it has already been ${registration.status.toLowerCase()}.` });
+            }
+
             // Update existing draft
             registration.personalDetails = personalDetails || registration.personalDetails;
             registration.teamMembers = teamMembers || registration.teamMembers;
@@ -65,6 +71,15 @@ const submitRegistration = async (req, res) => {
 
         await registration.save();
 
+        // Create notification
+        await createNotification(
+            req.user._id,
+            'Submission Received',
+            'Your conference registration and paper details have been successfully submitted.',
+            'success',
+            '/dashboard'
+        );
+
         res.status(200).json(registration);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -114,6 +129,15 @@ const reviewPaper = async (req, res) => {
 
         await registration.save();
 
+        // Create notification
+        await createNotification(
+            registration.userId._id,
+            `Paper ${status}`,
+            `Your paper titled "${registration.paperDetails.title}" has been ${status.toLowerCase()}.`,
+            status === 'Accepted' ? 'success' : status === 'Rejected' ? 'error' : 'info',
+            '/dashboard'
+        );
+
         // Send Notification Email
         try {
             await sendEmail({
@@ -162,19 +186,30 @@ const downloadPaper = async (req, res) => {
             return res.status(404).json({ message: 'Paper not found or unauthorized' });
         }
 
-        // Construct dynamic filename: AuthorName_PaperTitle (no extension)
+        // Construct dynamic filename
         const authorName = sanitizeFilename(registration.personalDetails.name || 'author');
         const paperTitle = sanitizeFilename(registration.paperDetails.title || '');
         const basename = paperTitle ? `${authorName}_${paperTitle}` : authorName;
 
-        // Generate a download URL using private_download_url
+        // Get extension from originalName or default to docx
+        const originalName = registration.paperDetails.originalName || '';
+        const extension = originalName.split('.').pop() || 'docx';
+
+        // Determine resource type - force 'raw' for word docs to be safe
+        // Cloudinary private_download_url uses 'image' by default if not specified
+        const isWordDoc = ['doc', 'docx'].includes(extension.toLowerCase());
+        const resourceType = isWordDoc ? 'raw' : (registration.paperDetails.resourceType || 'raw');
+
+        // For raw files, format should be empty if extension is in publicId
+        const format = (resourceType === 'raw' && registration.paperDetails.publicId.endsWith(`.${extension}`)) ? '' : extension;
+
         const downloadUrl = cloudinary.utils.private_download_url(
             registration.paperDetails.publicId,
-            'pdf',
+            format,
             {
-                resource_type: registration.paperDetails.resourceType || 'image',
+                resource_type: resourceType,
                 type: 'upload',
-                attachment: `${basename}.pdf`
+                attachment: `${basename}.${extension}`
             }
         );
 
@@ -194,6 +229,11 @@ const updatePaper = async (req, res) => {
         const registration = await Registration.findOne({ userId: req.user._id });
         if (!registration) {
             return res.status(404).json({ message: 'Registration not found' });
+        }
+
+        // Prevent updates if already reviewed (Accepted/Rejected)
+        if (['Accepted', 'Rejected'].includes(registration.status)) {
+            return res.status(403).json({ message: `Cannot update paper as it has already been ${registration.status.toLowerCase()}.` });
         }
 
         registration.paperDetails.fileUrl = fileUrl;
