@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   FileText, CheckCircle, Clock, AlertCircle, 
   CreditCard, User, Settings, Bell, Download,
@@ -14,6 +14,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [registration, setRegistration] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -58,6 +60,47 @@ const Dashboard = () => {
       setNotificationsLoading(false);
     }
   }, [user]);
+
+  // Payment Verification Logic
+  useEffect(() => {
+    const verifyPayment = async () => {
+      const query = new URLSearchParams(location.search);
+      const paymentId = query.get('payment_id'); // Cashfree sends order_id as payment_id in redirect
+      // or we might need to check order_id based on how we constructed return_url
+      // Our return_url: ...?payment_id={order_id}&payment_status={order_status}
+      
+      if (paymentId) {
+        setPaymentLoading(true);
+        try {
+          // Verify with backend
+          const { data } = await axios.post('/api/payments/verify', {
+             orderId: paymentId 
+          }, {
+              headers: { Authorization: `Bearer ${user?.token}` }
+          });
+
+          if (data.status === 'SUCCESS') {
+              toast.success("Payment verified successfully!");
+              fetchRegistration(); // Refresh status
+          } else {
+              toast.error("Payment verification failed or pending.");
+          }
+          // Clear URL params
+          navigate('/dashboard', { replace: true });
+        } catch (error) {
+          console.error("Payment verification error", error);
+          toast.error("Failed to verify payment.");
+          navigate('/dashboard', { replace: true });
+        } finally {
+          setPaymentLoading(false);
+        }
+      }
+    };
+
+    if (location.search) {
+        verifyPayment();
+    }
+  }, [location.search, user, navigate, fetchRegistration]);
 
   useEffect(() => {
     fetchRegistration();
@@ -184,36 +227,19 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${user?.token}` }
       });
 
-      // Create a temporary form and submit it to PayU
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = 'https://test.payu.in/_payment'; // Use production URL for live
+      const cashfree = window.Cashfree({
+        mode: "sandbox", // Change to "production" for live
+      });
 
-      const fields = {
-        key: data.key,
-        txnid: data.txnid,
-        amount: data.amount,
-        productinfo: data.productinfo,
-        firstname: data.firstname,
-        email: data.email,
-        phone: registration.personalDetails.mobile || '',
-        surl: data.surl,
-        furl: data.furl,
-        hash: data.hash,
-        service_provider: 'payu_paisa'
+      let checkoutOptions = {
+        paymentSessionId: data.payment_session_id,
+        redirectTarget: "_self", // Optional, defaults to _self
       };
 
-      for (const key in fields) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = fields[key];
-        form.appendChild(input);
-      }
+      cashfree.checkout(checkoutOptions);
 
-      document.body.appendChild(form);
-      form.submit();
     } catch (error) {
+      console.error(error);
       toast.error(error.response?.data?.message || "Payment initialization failed");
     } finally {
       setPaymentLoading(false);

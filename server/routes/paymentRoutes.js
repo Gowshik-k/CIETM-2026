@@ -4,6 +4,11 @@ const { initPayment, paymentCallback } = require('../controllers/paymentControll
 const { protect } = require('../middleware/authMiddleware');
 
 router.post('/init', protect, initPayment);
-router.post('/callback', paymentCallback);
+
+// Route for manual verification from frontend
+router.post('/verify', protect, paymentCallback);
+
+// Route for Cashfree webhook
+router.post('/webhook', paymentCallback);
 
 module.exports = router;

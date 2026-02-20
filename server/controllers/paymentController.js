@@ -1,7 +1,19 @@
 const Registration = require('../models/Registration');
-const { generatePayUHash, verifyPayUHash } = require('../utils/payu');
+const { Cashfree, CFEnvironment } = require('cashfree-pg');
+const notificationController = require('./notificationController');
 
-// @desc    Initialize payment (Generate Hash)
+
+// Initialize Cashfree SDK
+const cashfree = new Cashfree();
+cashfree.XClientId = process.env.CASHFREE_APP_ID;
+cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY;
+cashfree.XEnvironment = process.env.CASHFREE_ENV === 'PRODUCTION'
+    ? CFEnvironment.PRODUCTION
+    : CFEnvironment.SANDBOX;
+
+
+
+// @desc    Initialize payment (Create Order)
 // @route   POST /api/payments/init
 // @access  Private
 const initPayment = async (req, res) => {
@@ -19,7 +31,6 @@ const initPayment = async (req, res) => {
             return res.status(400).json({ message: 'Payment only allowed for accepted papers' });
         }
 
-        const txnid = `TXN_${Date.now()}`;
         const categoryAmounts = {
             'UG/PG STUDENTS': 500,
             'FACULTY/RESEARCH SCHOLARS': 750,
@@ -36,54 +47,64 @@ const initPayment = async (req, res) => {
         }
 
         const amount = totalAmount;
+        const txnid = `TXN_${Date.now()}`;
 
         // Save amount and txnid to registration for tracking
         registration.amount = amount;
         registration.transactionId = txnid;
         await registration.save();
 
-        const paymentData = {
-            txnid,
-            amount: amount.toFixed(2),
-            productinfo: 'Conference Registration Fee',
-            firstname: req.user.name.split(' ')[0],
-            email: req.user.email
+        const request = {
+            order_amount: amount,
+            order_currency: "INR",
+            order_id: txnid,
+            customer_details: {
+                customer_id: userId.toString(),
+                customer_phone: registration.personalDetails.mobile || '9999999999',
+                customer_name: req.user.name,
+                customer_email: req.user.email
+            },
+            order_meta: {
+                return_url: `${process.env.FRONTEND_URL}/dashboard?payment_id={order_id}&payment_status={order_status}`,
+                notify_url: `${process.env.FRONTEND_URL}/api/payments/webhook` // Optional
+            }
         };
 
-        const hash = generatePayUHash(
-            paymentData,
-            process.env.PAYU_MERCHANT_KEY,
-            process.env.PAYU_MERCHANT_SALT
-        );
+        const response = await cashfree.PGCreateOrder(request);
 
         res.json({
-            ...paymentData,
-            key: process.env.PAYU_MERCHANT_KEY,
-            hash,
-            surl: `${process.env.FRONTEND_URL}/payment-success`,
-            furl: `${process.env.FRONTEND_URL}/payment-failure`
+            payment_session_id: response.data.payment_session_id,
+            order_id: response.data.order_id
         });
+
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error("Error creating order:", error.response?.data?.message || error.message);
+        res.status(500).json({ message: error.response?.data?.message || error.message });
     }
 };
 
-// @desc    Payment Callback (Verify Success/Failure)
-// @route   POST /api/payments/callback
-// @access  Public (Called by PayU)
-const paymentCallback = async (req, res) => {
-    const data = req.body;
+// @desc    Payment Callback (Verify Payment Status)
+// @route   POST /api/payments/verify
+// @access  Private
+const verifyPayment = async (req, res) => {
+    const { orderId } = req.body;
 
-    if (verifyPayUHash(data, process.env.PAYU_MERCHANT_SALT)) {
-        if (data.status === 'success') {
-            // Update registration status
-            const registration = await Registration.findOne({ transactionId: data.txnid });
-            if (registration) {
+    try {
+        const response = await cashfree.PGOrderFetchPayments(orderId);
+
+        // Check if any transaction is successful
+        const successfulTransaction = response.data.find(txn => txn.payment_status === 'SUCCESS');
+
+        if (successfulTransaction) {
+            const registration = await Registration.findOne({ transactionId: orderId });
+
+            if (registration && registration.paymentStatus !== 'Completed') {
                 registration.paymentStatus = 'Completed';
+                registration.paymentDetails = successfulTransaction;
                 await registration.save();
 
                 // Trigger notification
-                await require('./notificationController').createNotification(
+                await notificationController.createNotification(
                     registration.userId,
                     'Payment Successful',
                     'Your conference registration payment has been successfully processed.',
@@ -91,16 +112,19 @@ const paymentCallback = async (req, res) => {
                     '/dashboard'
                 );
             }
-            res.redirect(`${process.env.FRONTEND_URL}/dashboard?payment=success`);
+
+            res.json({ status: 'SUCCESS', message: 'Payment verified successfully' });
         } else {
-            res.redirect(`${process.env.FRONTEND_URL}/dashboard?payment=fail`);
+            res.json({ status: 'FAILED', message: 'Payment verification failed' });
         }
-    } else {
-        res.status(400).send('Invalid Hash');
+
+    } catch (error) {
+        console.error("Error verifying payment:", error.message);
+        res.status(500).json({ message: error.message });
     }
 };
 
 module.exports = {
     initPayment,
-    paymentCallback
+    paymentCallback: verifyPayment // Renaming for route compatibility or update route file
 };
