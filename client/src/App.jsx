@@ -16,6 +16,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions'));
 
 const AppContent = () => {
+  console.log('AppContent: Rendering...');
   const location = useLocation();
   const hideNavbar = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin/dashboard');
   const hideFooter = hideNavbar || location.pathname === '/register' || location.pathname === '/login' || location.pathname === '/admin/login';
