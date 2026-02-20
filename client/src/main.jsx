@@ -13,4 +13,3 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <App />
   </React.StrictMode>,
 )
-console.log('Main.jsx: Render called');
