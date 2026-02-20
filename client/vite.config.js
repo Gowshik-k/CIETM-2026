@@ -3,19 +3,15 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 
-// https://vitejs.dev/config/
 export default defineConfig({
     base: '/',
     plugins: [tailwindcss(),
     react()],
+    build: {
+        outDir: 'dist'
+    },
     server: {
         host: true,
         port: 5173,
-        proxy: {
-            '/api': {
-                target: 'http://localhost:5000',
-                changeOrigin: true,
-            },
-        }
     }
 })
