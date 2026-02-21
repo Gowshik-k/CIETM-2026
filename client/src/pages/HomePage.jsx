@@ -181,7 +181,7 @@ const HomePage = () => {
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-6 tracking-tighter text-white drop-shadow-2xl max-w-4xl">
               CONTEMPORARY IMPROVEMENTS IN <br className="hidden md:block" />
               ENGINEERING TECHNOLOGY & <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">MANAGEMENT</span> - CIETM-2026
+              MANAGEMENT - <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-violet-600">CIETM-2026</span>
             </h1>
 
             <div className="flex flex-col md:flex-row gap-5 mb-10 justify-center w-full max-w-md md:max-w-none">
@@ -663,7 +663,7 @@ const HomePage = () => {
                 { name: "R. R. Yuganandhine", role: "Assistant Professor", dept: "ECE", img: "/organizing team/Yuganandhine.png" },
                 { name: "Dr. L. Venkatesh", role: "Associate Professor", dept: "Mechanical Engineering", img: null },
                 { name: "Mr. K. Senthilkumar", role: "Assistant Professor", dept: "Mechatronics Engineering", img: "/organizing team/Senthilkumar K.jpg.jpeg" },
-                { name: "Ms. K. Preetha", role: "Assistant Professor", dept: "Information Technology", img: null },
+                { name: "Mithra", role: "Assistant Professor", dept: "Information Technology", img: "/organizing team/mithra.jpeg" },
                 { name: "T. Malarvizhi", role: "Assistant Professor", dept: "AI & DS", img: "/organizing team/Malarvizhi.png" },
                 { name: "Dr. M. Arunmozhi", role: "Associate Professor", dept: "MBA/DoMS", img: "/organizing team/Arunmozhi.jpeg" },
                 { name: "S.R.Sarvada", role: "Assistant Professor", dept: "S&H - English", img: "/organizing team/S.R.Sarvada.jpeg" },
