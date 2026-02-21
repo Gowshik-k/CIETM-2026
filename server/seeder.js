@@ -12,9 +12,9 @@ const importData = async () => {
         await User.deleteMany();
 
         const adminUser = {
-            name: 'Admin User',
-            email: 'admin@example.com',
-            password: 'adminpassword123', // This will be hashed by the User model pre-save hook
+            name: process.env.ADMIN_NAME,
+            email: process.env.ADMIN_EMAIL,
+            password: process.env.ADMIN_PASSWORD, // This will be hashed by the User model pre-save hook
             role: 'admin',
             phone: '1234567890',
             isEmailVerified: true
@@ -23,8 +23,8 @@ const importData = async () => {
         await User.create(adminUser);
 
         console.log('Admin User Created Successfully!');
-        console.log('Email: admin@example.com');
-        console.log('Password: adminpassword123');
+        console.log(`Email: ${process.env.ADMIN_EMAIL}`);
+        console.log(`Password: ${process.env.ADMIN_PASSWORD}`);
         process.exit();
     } catch (error) {
         console.error(`Error: ${error.message}`);
