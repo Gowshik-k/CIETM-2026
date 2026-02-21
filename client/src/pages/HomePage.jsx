@@ -576,12 +576,12 @@ const HomePage = () => {
           </div>
 
           <div className="mt-16">
-            <h3 className="text-2xl font-bold text-slate-500 uppercase tracking-[0.2em] text-center mb-12 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[60px] before:bg-slate-300 after:content-[''] after:h-px after:w-[60px] after:bg-slate-300">Chief Patron</h3>
+            <h3 className="text-2xl font-bold text-slate-500 uppercase tracking-[0.2em] text-center mb-12 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[0px] before:bg-slate-300 after:content-[''] after:h-px after:w-[60px] after:bg-slate-300">Chief Patron</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto justify-center">
               {[
                 { name: "Dr. K. A. Chinnaraju", role: "Director", img: "/assets/Director.jpg" },
-                { name: "Thiru. M. Thangavelu", role: "Trustee", img: null },
-                { name: "Dr. P. Natarajan", role: "Academic Director", img: null }
+                { name: "Thiru. M. Thangavelu", role: "Trustee", img: "/assets/Thangavelu.png" },
+                { name: "Dr. P. Natarajan", role: "Academic Director", img: "/assets/Natarajan.jpeg" }
               ].map((p, i) => (
                 <motion.div 
                   key={i}
@@ -591,7 +591,7 @@ const HomePage = () => {
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="mb-7 inline-block relative">
                     {p.img ? (
-                      <img src={p.img} alt={p.name} className="w-[140px] h-[140px] rounded-[20px] object-cover bg-slate-100 shadow-sm transition-transform duration-300 group-hover:scale-105" />
+                      <img src={p.img} alt={p.name} className="w-[440px] h-[440px] rounded-[20px] object-cover bg-slate-100 shadow-sm transition-transform duration-300 group-hover:scale-105" />
                     ) : (
                       <div className="w-[140px] h-[140px] rounded-[20px] bg-slate-100 text-slate-500 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-105">
                         <User size={36} strokeWidth={2} />
@@ -617,7 +617,7 @@ const HomePage = () => {
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="mb-7 inline-block relative">
                     {p.img ? (
-                      <img src={p.img} alt={p.name} className="w-[140px] h-[140px] rounded-[20px] object-cover bg-green-50 text-green-600 shadow-sm transition-transform duration-300 group-hover:scale-105" />
+                      <img src={p.img} alt={p.name} className="w-[340px] h-[340px] rounded-[20px] object-cover bg-green-50 text-green-600 shadow-sm transition-transform duration-300 group-hover:scale-105" />
                     ) : (
                       <div className="w-[140px] h-[140px] rounded-[20px] bg-green-50 text-green-600 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-105">
                         <User size={36} strokeWidth={2} />
@@ -654,43 +654,44 @@ const HomePage = () => {
             </div>
 
             <h3 className="text-xl font-bold text-slate-400 uppercase tracking-[0.2em] text-center mb-12 mt-24 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[40px] before:bg-slate-200 after:content-[''] after:h-px after:w-[40px] after:bg-slate-200">Organizing Team</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto px-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8 max-w-6xl mx-auto px-4">
               {[
                 { name: "Mr. G. R. Seenivasan", role: "Assistant Professor", dept: "Civil Engineering", img: "/organizing team/G R Seenivasan.jpeg" },
                 { name: "R. Yoga", role: "Assistant Professor", dept: "CSE", img: "/organizing team/Yoga.png" },
-                { name: "M. ABIRAMI", role: "Assistant Professor", dept: "CSE", img: "/organizing team/ABIRAMI.png" },
+                { name: "M. Abirami", role: "Assistant Professor", dept: "CSE", img: "/organizing team/Abirami.png" },
                 { name: "P. Chandralakshmi", role: "Assistant Professor", dept: "EEE", img: "/organizing team/Chandralakshmi.jpeg" },
                 { name: "R. R. Yuganandhine", role: "Assistant Professor", dept: "ECE", img: "/organizing team/Yuganandhine.png" },
-                { name: "Dr. L. Venkatesh", role: "Associate Professor", dept: "Mechanical Engineering", img: null },
+                { name: "Dr. L. Venkatesh", role: "Associate Professor", dept: "Mechanical Engineering", img: "/organizing team/venkatesh.jpeg" },
                 { name: "Mr. K. Senthilkumar", role: "Assistant Professor", dept: "Mechatronics Engineering", img: "/organizing team/Senthilkumar K.jpg.jpeg" },
-                { name: "Mithra", role: "Assistant Professor", dept: "Information Technology", img: "/organizing team/mithra.jpeg" },
+                { name: "N.Mithra", role: "Assistant Professor", dept: "Information Technology", img: "/organizing team/Nmithra.jpeg" },
                 { name: "T. Malarvizhi", role: "Assistant Professor", dept: "AI & DS", img: "/organizing team/Malarvizhi.png" },
                 { name: "Dr. M. Arunmozhi", role: "Associate Professor", dept: "MBA/DoMS", img: "/organizing team/Arunmozhi.jpeg" },
                 { name: "S.R.Sarvada", role: "Assistant Professor", dept: "S&H - English", img: "/organizing team/S.R.Sarvada.jpeg" },
                 { name: "V.Mohana Priya", role: "Assistant Professor", dept: "Mathematics", img: "/organizing team/Mohana-Priya .jpeg" },
-                { name: "Sangavi", role: "Assistant Professor", dept: "S&H", img: "/organizing team/Sangavi.jpeg" }
-              ].map((m, idx) => (
+                { name: "Sangavi", role: "Assistant Professor", dept: "S&H", img: "/organizing team/Sangavi.jpeg" },
+                { name: "Mr. S.Arunkumar ", role: "Assistant Professor", dept: "Electronics Engineering", img: "/organizing team/Arunkumar .jpeg" }
+              ].map((m, idx, arr) => (
                 <motion.div 
                   key={idx}
-                  whileHover={{ y: -4 }}
-                  className={`bg-white p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300 flex flex-col items-center text-center group h-full ${idx === 12 ? 'lg:col-start-2' : ''}`}
+                  whileHover={{ y: -8 }}
+                  className={`bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-500 flex flex-col items-center text-center group h-full col-span-1 lg:col-span-2 ${arr.length % 3 === 2 && idx === arr.length - 2 ? 'lg:col-start-2' : arr.length % 3 === 1 && idx === arr.length - 1 ? 'lg:col-start-3' : ''}`}
                 >
-                  <div className="w-20 h-20 mb-4 relative">
+                  <div className="w-36 h-36 md:w-40 md:h-40 mb-6 relative">
                     {m.img ? (
                       <img 
                         src={m.img} 
                         alt={m.name} 
-                        className="w-full h-full rounded-full object-cover border-2 border-slate-100 group-hover:border-indigo-500 transition-colors"
+                        className="w-full h-full rounded-[1.5rem] object-cover border-4 border-slate-50 group-hover:border-indigo-100 shadow-md group-hover:shadow-xl transition-all duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="w-full h-full bg-slate-50 text-slate-400 rounded-full flex items-center justify-center border-2 border-slate-100 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                        <User size={32} />
+                      <div className="w-full h-full bg-slate-50 text-slate-400 rounded-[1.5rem] flex items-center justify-center border-4 border-slate-50 group-hover:bg-indigo-50 group-hover:text-indigo-500 shadow-md group-hover:shadow-xl transition-all duration-500 group-hover:scale-105">
+                        <User size={48} />
                       </div>
                     )}
                   </div>
-                  <h4 className="text-base font-bold text-slate-800 mb-1">{m.name}</h4>
-                  <span className="text-[0.7rem] font-bold text-indigo-500 uppercase tracking-wider mb-1">{m.role}</span>
-                  <span className="text-[0.6rem] font-medium text-slate-400 uppercase tracking-tighter">{m.dept}</span>
+                  <h4 className="text-lg font-bold text-slate-800 mb-2">{m.name}</h4>
+                  <span className="text-[0.75rem] font-bold text-indigo-600 uppercase tracking-wider mb-2">{m.role}</span>
+                  <span className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">{m.dept}</span>
                 </motion.div>
               ))}
             </div>

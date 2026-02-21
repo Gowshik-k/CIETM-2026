@@ -313,116 +313,139 @@ const Dashboard = () => {
   );
 
   const renderOverview = () => (
-    <div className="animate-fade-in space-y-6">
+    <div className="animate-fade-in space-y-6 relative">
+      {/* Decorative background blurs inside the overview area */}
+      <div className="absolute top-10 right-20 w-72 h-72 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none animate-float"></div>
+      <div className="absolute bottom-20 left-10 w-64 h-64 bg-purple-400/10 rounded-full blur-3xl pointer-events-none animate-float" style={{ animationDelay: '2s' }}></div>
+
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between relative z-10">
          <div>
-           <h1 className="text-2xl font-black text-slate-800 tracking-tight font-display">Overview</h1>
-           <p className="text-sm font-medium text-slate-500">Welcome back, {user.name}.</p>
+           <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight font-display">Overview</h1>
+           <p className="text-sm font-medium text-slate-500 mt-1">Welcome back, <span className="text-indigo-600 font-bold">{user.name}</span>.</p>
          </div>
          <div className="flex gap-2">
             {!registration?.paperDetails?.fileUrl && registration?.status !== 'Accepted' && (
-              <button onClick={() => setActiveTab('paper')} className="btn btn-primary px-5 py-2 text-xs shadow-indigo-200">
-                <Upload size={16} /> Upload Paper
+              <button onClick={() => setActiveTab('paper')} className="btn btn-primary px-5 py-2.5 text-xs shadow-indigo-200 hover:-translate-y-0.5 group">
+                <Upload size={16} className="group-hover:animate-bounce-slow" /> Upload Paper
               </button>
             )}
          </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
          {/* Main Status Column */}
          <div className="lg:col-span-2 space-y-6">
             
             {/* Gradient Status Card */}
-            <div className={`rounded-3xl p-8 relative overflow-hidden text-white shadow-xl transition-all ${
-               registration?.status === 'Accepted' ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-200' :
-               registration?.status === 'Rejected' ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-200' :
-               'bg-gradient-to-br from-indigo-600 to-violet-600 shadow-indigo-200'
-            }`}>
+            <div className={`rounded-3xl p-8 relative overflow-hidden text-white shadow-xl transition-all duration-500 hover:shadow-2xl ${
+               registration?.status === 'Accepted' ? 'bg-gradient-to-br from-emerald-500 via-teal-500 to-teal-700 shadow-emerald-500/30 hover:shadow-emerald-500/40' :
+               registration?.status === 'Rejected' ? 'bg-gradient-to-br from-red-500 via-rose-500 to-rose-700 shadow-red-500/30 hover:shadow-red-500/40' :
+               'bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-700 shadow-indigo-500/30 hover:shadow-indigo-500/40'
+            } group`}>
                {/* Background Patterns */}
-               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
-               <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
+               <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -mr-16 -mt-16 animate-float transition-transform group-hover:scale-110"></div>
+               <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/20 rounded-full blur-2xl -ml-16 -mb-16 animate-pulse transition-transform group-hover:scale-110"></div>
+               <div className="absolute right-10 bottom-10 opacity-10 rotate-12 group-hover:rotate-45 transition-all duration-700 scale-150 transform">
+                   {registration?.status === 'Accepted' ? <Award size={140} /> : <Layers size={140} />}
+               </div>
                
-               <div className="relative z-10">
-                  <div className="flex items-start justify-between mb-8">
+               <div className="relative z-10 flex flex-col h-full justify-between gap-8">
+                  <div className="flex items-start justify-between">
                      <div>
-                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/20 backdrop-blur-md border border-white/10 text-xs font-bold uppercase tracking-wider mb-2">
-                           {registration?.status === 'Accepted' ? <CheckCircle size={14} /> : <Clock size={14} />}
+                        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-md border border-white/20 text-xs font-bold uppercase tracking-wider mb-4 shadow-sm group-hover:bg-white/30 transition-colors">
+                           {registration?.status === 'Accepted' ? <CheckCircle size={14} className="animate-pulse" /> : <Clock size={14} className="animate-spin-slow" />}
                            {registration?.status || 'No Submission'}
                         </span>
-                        <h2 className="text-3xl font-black tracking-tight leading-tight">
-                           {registration?.status === 'Accepted' ? 'Paper Accepted' :
+                        <h2 className="text-3xl md:text-4xl font-black tracking-tight leading-tight drop-shadow-sm">
+                           {registration?.status === 'Accepted' ? 'Paper Accepted!' :
                             registration?.status === 'Under Review' ? 'Under Review' :
                             registration?.paperDetails?.fileUrl ? 'Submission Received' :
                             'Pending Submission'}
                         </h2>
                      </div>
-                     <div className="text-right hidden sm:block">
-                        <p className="text-xs font-bold opacity-70 uppercase tracking-widest mb-1">Paper ID</p>
-                        <p className="font-mono text-lg font-bold">#{registration?._id?.slice(-4).toUpperCase() || '----'}</p>
+                     <div className="flex flex-col items-end hidden sm:flex bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/10">
+                        <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest mb-1 shadow-sm">Tracking ID</p>
+                        <p className="font-mono text-xl font-black tracking-wider">#{registration?._id?.slice(-4).toUpperCase() || '----'}</p>
                      </div>
                   </div>
 
-                  {/* Visual Progress Bar */}
-                  <div className="bg-black/20 rounded-full h-1.5 w-full mb-4 overflow-hidden backdrop-blur-sm">
-                     <div 
-                        className="bg-white h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-                        style={{ width: `${
-                           registration?.status === 'Accepted' || registration?.status === 'Rejected' ? '100%' :
-                           registration?.paymentStatus === 'Completed' ? '100%' :
-                           ['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? '75%' :
-                           registration?.paperDetails?.fileUrl ? '50%' :
-                           registration?.paperDetails?.abstract ? '25%' : '5%'
-                        }`}}
-                     ></div>
-                  </div>
-                  
-                  <div className="flex justify-between text-xs font-medium text-white/80">
-                     <span>Draft</span>
-                     <span>Upload</span>
-                     <span>Review</span>
-                     <span>Decision</span>
+                  <div>
+                     {/* Visual Progress Bar */}
+                     <div className="bg-black/20 rounded-full h-2 w-full mb-4 overflow-hidden backdrop-blur-sm border border-white/10 relative">
+                        <div 
+                           className="absolute top-0 left-0 h-full bg-gradient-to-r from-white/80 to-white rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(255,255,255,0.8)]"
+                           style={{ width: `${
+                              registration?.status === 'Accepted' || registration?.status === 'Rejected' ? '100%' :
+                              registration?.paymentStatus === 'Completed' ? '100%' :
+                              ['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? '75%' :
+                              registration?.paperDetails?.fileUrl ? '50%' :
+                              registration?.paperDetails?.abstract ? '25%' : '5%'
+                           }`}}
+                        >
+                           <div className="absolute inset-0 bg-white/50 animate-[pulse_2s_infinite]"></div>
+                        </div>
+                     </div>
+                     
+                     <div className="flex justify-between text-xs font-bold text-white/80 px-1">
+                        <span className={registration?.paperDetails?.abstract ? 'text-white' : ''}>Draft</span>
+                        <span className={registration?.paperDetails?.fileUrl ? 'text-white' : ''}>Upload</span>
+                        <span className={['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? 'text-white' : ''}>Review</span>
+                        <span className={['Accepted', 'Rejected'].includes(registration?.status) ? 'text-white drop-shadow-md' : ''}>Decision</span>
+                     </div>
                   </div>
                </div>
             </div>
 
             {/* Quick Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between group hover:border-indigo-100 transition-all">
-                  <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><Layers size={20} /></div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+               <div className="bg-white/70 backdrop-blur-lg p-5 rounded-3xl border border-white shadow-sm flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300">
+                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-sm">
+                     <Layers size={22} className="group-hover:animate-bounce-slow" />
+                  </div>
                   <div>
-                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Track</span>
-                     <p className="text-sm font-bold text-slate-800 truncate" title={registration?.paperDetails?.track}>{registration?.paperDetails?.track?.split(' ')[0] || 'Not Set'}</p>
+                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Assigned Track</span>
+                     <p className="text-sm font-bold text-slate-800 truncate" title={registration?.paperDetails?.track}>{registration?.paperDetails?.track?.split(' ')[0] || 'Unassigned'}</p>
                   </div>
                </div>
-               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between group hover:border-indigo-100 transition-all">
-                  <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><CreditCard size={20} /></div>
+               
+               <div className="bg-white/70 backdrop-blur-lg p-5 rounded-3xl border border-white shadow-sm flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300">
+                  <div className={`w-12 h-12 bg-gradient-to-br rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-6 transition-transform shadow-sm ${
+                     registration?.paymentStatus === 'Completed' ? 'from-emerald-50 to-teal-50 text-emerald-600' : 'from-amber-50 to-orange-50 text-amber-600'
+                  }`}>
+                     <CreditCard size={22} className="group-hover:animate-bounce-slow" />
+                  </div>
                   <div>
-                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Payment</span>
-                     <p className="text-sm font-bold text-slate-800">{registration?.paymentStatus || 'Pending'}</p>
+                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Fee Status</span>
+                     <p className={`text-sm font-bold ${registration?.paymentStatus === 'Completed' ? 'text-emerald-700' : 'text-slate-800'}`}>
+                        {registration?.paymentStatus || 'Pending Payment'}
+                     </p>
                   </div>
                </div>
-               <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between group hover:border-indigo-100 transition-all col-span-2 md:col-span-1">
-                  <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><Calendar size={20} /></div>
+               
+               <div className="bg-white/70 backdrop-blur-lg p-5 rounded-3xl border border-white shadow-sm flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 col-span-2 md:col-span-1">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-50 to-fuchsia-50 text-purple-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-12 transition-transform shadow-sm">
+                     <Calendar size={22} className="group-hover:animate-bounce-slow" />
+                  </div>
                   <div>
-                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Next Deadline</span>
+                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Upcoming Deadline</span>
                      <p className="text-sm font-bold text-slate-800">16 Mar 2026</p>
                   </div>
                </div>
             </div>
 
             {/* Deadlines List */}
-            <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm relative overflow-hidden group/timeline">
-               <h3 className="text-sm font-bold text-slate-800 mb-6 flex items-center gap-2">
-                  <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
-                    <Clock size={16} />
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white p-7 shadow-glass relative overflow-hidden group/timeline">
+               <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
+                    <Clock size={18} />
                   </div>
-                  Timeline & Deadlines
+                  Conference Timeline
                </h3>
                
-               <div className="relative space-y-1">
+               <div className="relative space-y-2 mt-4">
                   {/* Vertical Connector Line */}
-                  <div className="absolute left-[27px] top-4 bottom-4 w-0.5 bg-slate-100 group-hover/timeline:bg-indigo-50 transition-colors"></div>
+                  <div className="absolute left-[31px] top-4 bottom-4 w-[2px] bg-gradient-to-b from-indigo-100 via-slate-100 to-transparent"></div>
 
                   {[
                      { label: 'Abstract Submission', date: '2026-03-08', done: true },
@@ -431,32 +454,36 @@ const Dashboard = () => {
                      { label: 'Registration Deadline', date: '2026-04-10' },
                      { label: 'Conference Date', date: '2026-04-29' }
                   ].map((item, i) => (
-                     <div key={i} className="relative flex items-center justify-between p-3 rounded-xl hover:bg-slate-50/80 transition-all duration-300 group/item">
-                        <div className="flex items-center gap-4 relative z-10">
+                     <div key={i} className="relative flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-all duration-300 group/item hover:shadow-md hover:shadow-slate-200/50 cursor-default">
+                        <div className="flex items-center gap-5 relative z-10">
                            {/* Status Icon Column */}
-                           <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                              item.done ? 'bg-emerald-500 border-emerald-400 text-white' : 
-                              item.active ? 'bg-white border-indigo-600 text-indigo-600 scale-110 shadow-lg shadow-indigo-100' : 
+                           <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-500 shadow-sm ${
+                              item.done ? 'bg-emerald-500 border-emerald-400 text-white shadow-emerald-500/30' : 
+                              item.active ? 'bg-white border-indigo-600 text-indigo-600 scale-110 shadow-indigo-600/30 ring-4 ring-indigo-50' : 
                               'bg-white border-slate-200 text-slate-300'
                            }`}>
-                              {item.done ? <CheckCircle size={14} /> : 
-                               item.active ? <Clock size={14} className="animate-spin-slow" /> : 
-                               <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>}
+                              {item.done ? <CheckCircle size={16} /> : 
+                               item.active ? <Clock size={16} className="animate-spin-slow" /> : 
+                               <div className="w-2 h-2 bg-slate-200 rounded-full group-hover/item:bg-slate-400 transition-colors"></div>}
                            </div>
 
                            <div className="flex flex-col">
                               <span className={`text-sm font-bold transition-colors ${
                                  item.active ? 'text-indigo-700' : 
-                                 item.done ? 'text-slate-400 line-through' : 'text-slate-600'
+                                 item.done ? 'text-slate-400 line-through' : 'text-slate-600 group-hover/item:text-slate-800'
                               }`}>
                                  {item.label}
                               </span>
-                              <span className="text-[10px] font-bold text-slate-400 md:hidden uppercase tracking-wider">
+                              <span className="text-[10px] font-bold text-slate-400 md:hidden uppercase tracking-widest mt-0.5">
                                  {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
                               </span>
                            </div>
                         </div>
-                        <span className="hidden md:block text-xs font-bold text-slate-400 font-mono bg-slate-50 px-2 py-1 rounded-md border border-slate-100 group-hover/item:border-indigo-100 group-hover/item:text-indigo-600 transition-all">
+                        <span className={`hidden md:flex items-center justify-center px-4 py-1.5 rounded-lg border text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                           item.active ? 'bg-indigo-50 border-indigo-200 text-indigo-600 shadow-sm shadow-indigo-100' :
+                           item.done ? 'bg-slate-50 border-transparent text-slate-400' :
+                           'bg-white border-slate-100 text-slate-400 group-hover/item:border-slate-300 group-hover/item:text-slate-600'
+                        }`}>
                            {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
                         </span>
                      </div>
@@ -468,37 +495,42 @@ const Dashboard = () => {
          {/* Sidebar */}
          <div className="space-y-6">
             {/* Next Action Card */}
-            <div className="bg-white rounded-2xl border-2 border-indigo-100 p-6 shadow-sm relative overflow-hidden">
-                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-4 text-center relative z-10">Action Required</h3>
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white p-7 shadow-glass relative overflow-hidden group">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 text-center relative z-10">Action Required</h3>
                 
                 {/* Background Pattern */}
-                <div className="absolute -right-4 -top-4 opacity-5 rotate-12 transition-transform group-hover:scale-110 pointer-events-none text-indigo-900">
-                  {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={100} /> :
-                   registration?.status === 'Accepted' ? <CreditCard size={100} /> :
-                   registration?.paperDetails?.fileUrl ? <Clock size={100} /> :
-                   <Upload size={100} />}
+                <div className="absolute -right-10 -top-10 opacity-[0.03] rotate-12 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-45 pointer-events-none text-indigo-900">
+                  {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={180} /> :
+                   registration?.status === 'Accepted' ? <CreditCard size={180} /> :
+                   registration?.paperDetails?.fileUrl ? <Clock size={180} /> :
+                   <Upload size={180} />}
                 </div>
                
-               <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-1 animate-bounce-slow">
-                     {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={24} /> :
-                      registration?.status === 'Accepted' ? <CreditCard size={24} /> :
-                      registration?.paperDetails?.fileUrl ? <Clock size={24} /> :
-                      <Upload size={24} />}
+               <div className="flex flex-col items-center text-center space-y-5 relative z-10">
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-1 shadow-inner group-hover:-translate-y-1 transition-transform ${
+                      registration?.paymentStatus === 'Completed' ? 'bg-gradient-to-br from-emerald-100 to-teal-50 text-emerald-600' :
+                      registration?.status === 'Accepted' ? 'bg-gradient-to-br from-indigo-100 to-blue-50 text-indigo-600 animate-bounce-slow' :
+                      registration?.paperDetails?.fileUrl ? 'bg-gradient-to-br from-slate-100 to-gray-50 text-slate-500' :
+                      'bg-gradient-to-br from-indigo-100 to-blue-50 text-indigo-600 animate-bounce-slow'
+                  }`}>
+                     {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={32} /> :
+                      registration?.status === 'Accepted' ? <CreditCard size={32} /> :
+                      registration?.paperDetails?.fileUrl ? <Clock size={32} /> :
+                      <Upload size={32} />}
                   </div>
                   
                   <div>
-                     <h4 className="font-bold text-slate-900 text-base mb-1">
-                        {registration?.paymentStatus === 'Completed' ? 'All Set!' :
-                         registration?.status === 'Accepted' ? 'Pay Registration' :
-                         registration?.paperDetails?.fileUrl ? 'Await Review' :
+                     <h4 className="font-extrabold text-slate-900 text-lg mb-1 drop-shadow-sm">
+                        {registration?.paymentStatus === 'Completed' ? 'You\'re All Set!' :
+                         registration?.status === 'Accepted' ? 'Complete Registration' :
+                         registration?.paperDetails?.fileUrl ? 'Awaiting Review' :
                          'Upload Full Paper'}
                      </h4>
-                     <p className="text-[10px] text-slate-500 leading-relaxed px-2">
-                        {registration?.paymentStatus === 'Completed' ? 'Access your ID below.' :
-                         registration?.status === 'Accepted' ? 'Secure your spot now.' :
-                         registration?.paperDetails?.fileUrl ? 'Paper under review.' :
-                         'Upload Word doc.'}
+                     <p className="text-xs text-slate-500 font-medium px-4">
+                        {registration?.paymentStatus === 'Completed' ? 'Access your digital ID below.' :
+                         registration?.status === 'Accepted' ? 'Secure your spot by paying the fee.' :
+                         registration?.paperDetails?.fileUrl ? 'Your paper is currently under evaluation.' :
+                         'Please upload your document.'}
                      </p>
                   </div>
 
@@ -509,7 +541,7 @@ const Dashboard = () => {
                            else setActiveTab('paper');
                         }}
                         disabled={registration?.status === 'Submitted' || registration?.status === 'Under Review'}
-                        className="w-full btn btn-primary py-2.5 text-xs shadow-indigo-200"
+                        className="w-full btn btn-primary py-3 text-xs shadow-indigo-500/30 hover:shadow-indigo-500/50 mt-2 hover:-translate-y-0.5"
                      >
                         {registration?.status === 'Accepted' ? 'Pay Now' : 
                          registration?.paperDetails?.fileUrl ? 'View Submission' : 'Upload Now'}
@@ -519,29 +551,35 @@ const Dashboard = () => {
             </div>
 
             {/* ID Card / Verification */}
-            <div className={`rounded-2xl p-6 border relative overflow-hidden ${registration?.paymentStatus === 'Completed' ? 'bg-slate-900 text-white border-slate-800' : 'bg-slate-50 border-slate-100 text-slate-400'} transition-all`}>
+            <div className={`rounded-3xl p-7 border relative overflow-hidden transition-all duration-500 ${registration?.paymentStatus === 'Completed' ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-slate-700 shadow-2xl shadow-slate-900/50 hover:shadow-slate-900/70' : 'bg-white/80 backdrop-blur-xl border-white text-slate-400 shadow-glass'} group hover:-translate-y-1`}>
                {/* Background Icon */}
-               <div className={`absolute -right-4 -bottom-4 opacity-10 rotate-12 transition-transform group-hover:scale-110 ${registration?.paymentStatus === 'Completed' ? 'text-white' : 'text-slate-500'}`}>
-                  {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={100} /> : <div className="text-slate-300"><ShieldCheck size={100} /></div>}
+               <div className={`absolute -right-6 -bottom-6 opacity-[0.04] rotate-12 transition-transform duration-700 group-hover:scale-125 ${registration?.paymentStatus === 'Completed' ? 'text-white' : 'text-slate-900'}`}>
+                  {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={140} /> : <ShieldCheck size={140} />}
                </div>
+               
+               {registration?.paymentStatus === 'Completed' && (
+                   <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-16 -mt-16 animate-pulse"></div>
+               )}
 
-               <div className="flex items-center justify-between mb-4 relative z-10">
-                  <span className="text-xs font-bold uppercase tracking-wider">Digital Pass</span>
-                  <ShieldCheck size={18} />
+               <div className="flex items-center justify-between mb-6 relative z-10">
+                  <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${registration?.paymentStatus === 'Completed' ? 'text-emerald-400' : 'text-slate-400'}`}>Digital Pass</span>
+                  <div className={`p-2 rounded-lg ${registration?.paymentStatus === 'Completed' ? 'bg-white/10' : 'bg-slate-50'}`}>
+                     <ShieldCheck size={18} className={registration?.paymentStatus === 'Completed' ? 'text-emerald-400' : 'text-slate-400'} />
+                  </div>
                </div>
-               <div className="mb-6 relative z-10">
-                  <p className="text-2xl font-black tracking-tight mb-1">
+               <div className="mb-8 relative z-10">
+                  <p className="text-3xl font-black tracking-tight mb-1 drop-shadow-sm">
                      {registration?.paymentStatus === 'Completed' ? 'ADMIT ONE' : 'LOCKED'}
                   </p>
-                  <p className="text-[10px] font-medium opacity-60">Authorize Entry</p>
+                  <p className={`text-xs font-semibold ${registration?.paymentStatus === 'Completed' ? 'text-slate-400' : 'text-slate-400'}`}>Authorize Entry</p>
                </div>
                <button 
                   onClick={() => setShowIDCard(true)}
                   disabled={registration?.paymentStatus !== 'Completed'}
-                  className={`w-full py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all relative z-10 ${
+                  className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300 relative z-10 ${
                      registration?.paymentStatus === 'Completed' 
-                     ? 'bg-white text-slate-900 hover:bg-slate-100 shadow-lg' 
-                     : 'bg-slate-200 cursor-not-allowed'
+                     ? 'bg-white text-slate-900 hover:bg-slate-100 shadow-lg hover:shadow-xl hover:-translate-y-0.5' 
+                     : 'bg-slate-100 cursor-not-allowed border border-slate-200'
                   }`}
                >
                   View ID Card
@@ -549,30 +587,30 @@ const Dashboard = () => {
             </div>
 
             {/* Author Guidelines Card (Full Content) */}
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm relative overflow-hidden group hover:border-indigo-200 transition-all">
-               <div className="absolute -top-6 -right-6 text-slate-50 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity rotate-12 pointer-events-none">
-                  <FileText size={180} />
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white p-7 shadow-glass relative overflow-hidden group hover:border-indigo-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+               <div className="absolute -top-10 -right-10 text-slate-900 opacity-[0.02] group-hover:opacity-[0.04] transition-all duration-700 rotate-12 group-hover:rotate-45 group-hover:scale-125 pointer-events-none">
+                  <FileText size={200} />
                </div>
                
-               <div className="flex items-center gap-3 mb-4 relative z-10">
-                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                     <FileText size={18} />
+               <div className="flex items-center gap-4 mb-6 relative z-10">
+                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                     <FileText size={20} />
                   </div>
-                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Author Guidelines</h3>
+                  <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em] leading-tight flex-1">Author<br/>Guidelines</h3>
                </div>
 
-               <div className="space-y-4 relative z-10">
-                  <ul className="space-y-3">
-                     <li className="flex gap-3 text-[10px] text-slate-500 font-medium leading-relaxed">
-                        <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={14} />
+               <div className="space-y-5 relative z-10">
+                  <ul className="space-y-4">
+                     <li className="flex gap-4 text-xs text-slate-600 font-medium leading-relaxed">
+                        <CheckCircle className="text-emerald-500 shrink-0 mt-0.5 shadow-sm rounded-full bg-emerald-50" size={16} />
                         <span>Original work not published elsewhere and must follow IEEE formatting.</span>
                      </li>
-                     <li className="flex gap-3 text-[10px] text-slate-500 font-medium leading-relaxed">
-                        <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={14} />
+                     <li className="flex gap-4 text-xs text-slate-600 font-medium leading-relaxed">
+                        <CheckCircle className="text-emerald-500 shrink-0 mt-0.5 shadow-sm rounded-full bg-emerald-50" size={16} />
                         <span>Max 6 pages allowed with strict double-blind peer review.</span>
                      </li>
-                     <li className="flex gap-3 text-[10px] text-slate-500 font-medium leading-relaxed">
-                        <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={14} />
+                     <li className="flex gap-4 text-xs text-slate-600 font-medium leading-relaxed">
+                        <CheckCircle className="text-emerald-500 shrink-0 mt-0.5 shadow-sm rounded-full bg-emerald-50" size={16} />
                         <span>Plagiarism must be under 15% for evaluation.</span>
                      </li>
                   </ul>
@@ -581,9 +619,9 @@ const Dashboard = () => {
                      href="https://www.ieee.org/content/dam/ieee-org/ieee/web/org/conferences/Conference-template-A4.doc" 
                      target="_blank" 
                      rel="noopener noreferrer"
-                     className="flex items-center justify-center gap-2 w-full py-2.5 bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 rounded-xl text-[10px] font-bold border border-slate-200 hover:border-indigo-200 transition-all"
+                     className="flex items-center justify-center gap-2 w-full py-3 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-700 rounded-xl text-xs font-bold border border-indigo-100 hover:border-indigo-200 transition-all duration-300 hover:shadow-sm"
                   >
-                     <Download size={14} /> Download IEEE Template
+                     <Download size={16} /> Download Template
                   </a>
                </div>
             </div>

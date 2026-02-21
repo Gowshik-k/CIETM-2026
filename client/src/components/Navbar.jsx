@@ -145,7 +145,7 @@ const Navbar = () => {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
           <div className="flex items-center gap-1">
-            {navLinks.map((item) => (
+            {navLinks.filter(item => isHome || item.name === 'Home').map((item) => (
               <a 
                 key={item.name} 
                 href={item.href} 
@@ -230,7 +230,7 @@ const Navbar = () => {
             <div className="p-6 flex flex-col gap-2 bg-white">
               <div className="flex flex-col gap-1 mb-6">
                 <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-slate-400 mb-2 px-2">Menu</span>
-                {navLinks.map((item) => (
+                {navLinks.filter(item => isHome || item.name === 'Home').map((item) => (
                   <a 
                     key={item.name} 
                     href={item.href} 
