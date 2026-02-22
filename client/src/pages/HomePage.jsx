@@ -178,10 +178,10 @@ const HomePage = () => {
               Innovating the Future of Technology & Management
             </p>
             
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-6 tracking-tighter text-white drop-shadow-2xl max-w-4xl">
-              CONTEMPORARY IMPROVEMENTS IN <br className="hidden md:block" />
-              ENGINEERING TECHNOLOGY & <br className="hidden md:block" />
-              MANAGEMENT - <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-violet-600">CIETM-2026</span>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight mb-6 tracking-normal text-white drop-shadow-2xl max-w-4xl">
+              Contemporary Improvements in <br className="hidden md:block" />
+              Engineering Technology & <br className="hidden md:block" />
+              Management - <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-fuchsia-500 to-violet-600 font-black">CIETM-2026</span>
             </h1>
 
             <div className="flex flex-col md:flex-row gap-5 mb-10 justify-center w-full max-w-md md:max-w-none">

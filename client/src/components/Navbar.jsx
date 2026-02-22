@@ -145,28 +145,30 @@ const Navbar = () => {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
           <div className="flex items-center gap-1">
-            {navLinks.filter(item => isHome || item.name === 'Home').map((item) => (
+            {navLinks.filter(item => isHome || item.name === 'Home').map((item) => {
+              const isActive = isHome ? activeSection === item.href : false;
+              return (
               <a 
                 key={item.name} 
                 href={item.href} 
                 onClick={(e) => { e.preventDefault(); scrollToSection(item.href); }}
                 className={`relative px-4 py-2 text-sm font-bold tracking-wide transition-all duration-300 group ${
-                  activeSection === item.href 
+                  isActive 
                     ? 'text-indigo-600' 
                     : `${textColorClass} hover:text-indigo-500`
                 }`}
               >
                 {item.name}
-                {activeSection === item.href && (
+                {isActive && (
                   <motion.span 
                     layoutId="activeNav"
                     className="absolute bottom-0 left-4 right-4 h-0.5 bg-indigo-600 rounded-full"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
-                <span className={`absolute bottom-0 left-4 right-4 h-0.5 bg-indigo-600/30 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ${activeSection === item.href ? 'hidden' : ''}`} />
+                <span className={`absolute bottom-0 left-4 right-4 h-0.5 bg-indigo-600/30 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ${isActive ? 'hidden' : ''}`} />
               </a>
-            ))}
+            )})}
           </div>
           
           <div className="flex items-center gap-4 pl-6 border-l border-slate-200 transition-colors duration-500">
@@ -230,21 +232,23 @@ const Navbar = () => {
             <div className="p-6 flex flex-col gap-2 bg-white">
               <div className="flex flex-col gap-1 mb-6">
                 <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-slate-400 mb-2 px-2">Menu</span>
-                {navLinks.filter(item => isHome || item.name === 'Home').map((item) => (
+                {navLinks.filter(item => isHome || item.name === 'Home').map((item) => {
+                  const isActive = isHome ? activeSection === item.href : false;
+                  return (
                   <a 
                     key={item.name} 
                     href={item.href} 
                     onClick={(e) => { e.preventDefault(); scrollToSection(item.href); }}
                     className={`flex items-center justify-between p-4 rounded-xl text-base font-bold transition-all ${
-                      activeSection === item.href 
+                      isActive 
                         ? 'text-indigo-600 bg-indigo-50 border-l-4 border-indigo-600 pl-3' 
                         : 'text-slate-800 hover:bg-slate-50'
                     }`}
                   >
                     {item.name}
-                    <ChevronRight size={16} className={activeSection === item.href ? 'opacity-100' : 'opacity-20'} />
+                    <ChevronRight size={16} className={isActive ? 'opacity-100' : 'opacity-20'} />
                   </a>
-                ))}
+                )})}
               </div>
 
               <div className="pt-6 border-t border-slate-100 flex flex-col gap-3">

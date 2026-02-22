@@ -13,6 +13,7 @@ const registrationSchema = new mongoose.Schema({
         institution: String,
         department: String,
         designation: String,
+        areaOfSpecialization: String,
         yearOfStudy: String,
         category: {
             type: String,
@@ -25,6 +26,7 @@ const registrationSchema = new mongoose.Schema({
         affiliation: String,
         department: String,
         designation: String,
+        areaOfSpecialization: String,
         yearOfStudy: String,
         mobile: String,
         category: {

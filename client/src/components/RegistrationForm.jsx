@@ -22,6 +22,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
     institution: 'Coimbatore Institute of Engineering and Technology',
     department: '',
     designation: '',
+    areaOfSpecialization: '',
     yearOfStudy: '',
     category: 'UG/PG STUDENTS',
     teamMembers: [],
@@ -51,6 +52,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
               institution: data.personalDetails?.institution || '',
               department: data.personalDetails?.department || '',
               designation: data.personalDetails?.designation || '',
+              areaOfSpecialization: data.personalDetails?.areaOfSpecialization || '',
               yearOfStudy: data.personalDetails?.yearOfStudy || '',
               category: data.personalDetails?.category || 'External Student',
               teamMembers: data.teamMembers || [],
@@ -201,7 +203,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
 
     setFormData({
       ...formData,
-      teamMembers: [...formData.teamMembers, { name: '', email: '', mobile: '', affiliation: '', department: '', designation: '', yearOfStudy: '', category: 'UG/PG STUDENTS' }]
+      teamMembers: [...formData.teamMembers, { name: '', email: '', mobile: '', affiliation: '', department: '', designation: '', areaOfSpecialization: '', yearOfStudy: '', category: 'UG/PG STUDENTS' }]
     });
   };
 
@@ -226,6 +228,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
           institution: formData.institution,
           department: formData.department,
           designation: formData.designation,
+          areaOfSpecialization: formData.areaOfSpecialization,
           yearOfStudy: formData.yearOfStudy,
           category: formData.category
         },
@@ -600,16 +603,28 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                     </div>
                   )}
 
-                  {(formData.category === 'FACULTY/RESEARCH SCHOLARS' || formData.category === 'INDUSTRY PERSONNEL') && (
-                    <div className={`${groupClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200`}>
-                        <label className={labelClass}>Designation <span className="text-red-500">*</span></label>
-                        <input 
-                            name="designation" 
-                            value={formData.designation} 
-                            onChange={handleChange} 
-                            placeholder="e.g. Assistant Professor" 
-                            className={`${inputClass} ${errors.designation ? errorInputClass : ''}`}
-                        />
+                   {(formData.category === 'FACULTY/RESEARCH SCHOLARS' || formData.category === 'INDUSTRY PERSONNEL') && (
+                    <div className={`${groupClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4`}>
+                        <div>
+                            <label className={labelClass}>Designation <span className="text-red-500">*</span></label>
+                            <input 
+                                name="designation" 
+                                value={formData.designation} 
+                                onChange={handleChange} 
+                                placeholder="e.g. Assistant Professor" 
+                                className={`${inputClass} ${errors.designation ? errorInputClass : ''}`}
+                            />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Area of Specialization</label>
+                            <input 
+                                name="areaOfSpecialization" 
+                                value={formData.areaOfSpecialization} 
+                                onChange={handleChange} 
+                                placeholder="e.g. Machine Learning, Cloud Computing" 
+                                className={inputClass}
+                            />
+                        </div>
                     </div>
                   )}
                </div>
@@ -676,9 +691,15 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                           </div>
                         )}
                         {(m.category === 'FACULTY/RESEARCH SCHOLARS' || m.category === 'INDUSTRY PERSONNEL') && (
-                          <div className="md:col-span-2">
-                             <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Designation</label>
-                             <input placeholder="e.g. Professor / Project Manager" value={m.designation} onChange={(e) => updateTeamMember(i, 'designation', e.target.value)} className={inputClass} />
+                          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Designation</label>
+                                <input placeholder="e.g. Professor" value={m.designation} onChange={(e) => updateTeamMember(i, 'designation', e.target.value)} className={inputClass} />
+                             </div>
+                             <div>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Area of Specialization</label>
+                                <input placeholder="e.g. Machine Learning" value={m.areaOfSpecialization} onChange={(e) => updateTeamMember(i, 'areaOfSpecialization', e.target.value)} className={inputClass} />
+                             </div>
                           </div>
                         )}
                       </div>

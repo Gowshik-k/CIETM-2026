@@ -6,7 +6,7 @@ import {
   FileText, CheckCircle, Clock, AlertCircle, 
   CreditCard, User, Settings, Bell, Download,
   Menu, X, Search, ChevronRight, LogOut, LayoutDashboard,
-  Calendar, MapPin, ShieldCheck, Award, Layers, Upload, Home
+  Calendar, MapPin, ShieldCheck, Award, Layers, Upload, Home, Edit2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import RegistrationForm from '../components/RegistrationForm';
@@ -21,6 +21,8 @@ const Dashboard = () => {
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notificationsLoading, setNotificationsLoading] = useState(true);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -312,14 +314,24 @@ const Dashboard = () => {
     </div>
   );
 
+  const overviewContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.1 } }
+  };
+
+  const overviewItemVariants = {
+    hidden: { y: 25, opacity: 0, scale: 0.98 },
+    visible: { y: 0, opacity: 1, scale: 1, transition: { type: "spring", stiffness: 120, damping: 14 } }
+  };
+
   const renderOverview = () => (
-    <div className="animate-fade-in space-y-6 relative">
+    <motion.div variants={overviewContainerVariants} initial="hidden" animate="visible" className="space-y-6 relative">
       {/* Decorative background blurs inside the overview area */}
       <div className="absolute top-10 right-20 w-72 h-72 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none animate-float"></div>
       <div className="absolute bottom-20 left-10 w-64 h-64 bg-purple-400/10 rounded-full blur-3xl pointer-events-none animate-float" style={{ animationDelay: '2s' }}></div>
 
       {/* Header */}
-      <div className="flex items-center justify-between relative z-10">
+      <motion.div variants={overviewItemVariants} className="flex items-center justify-between relative z-10">
          <div>
            <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight font-display">Overview</h1>
            <p className="text-sm font-medium text-slate-500 mt-1">Welcome back, <span className="text-indigo-600 font-bold">{user.name}</span>.</p>
@@ -331,14 +343,14 @@ const Dashboard = () => {
               </button>
             )}
          </div>
-      </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
          {/* Main Status Column */}
          <div className="lg:col-span-2 space-y-6">
             
             {/* Gradient Status Card */}
-            <div className={`rounded-3xl p-8 relative overflow-hidden text-white shadow-xl transition-all duration-500 hover:shadow-2xl ${
+            <motion.div variants={overviewItemVariants} className={`rounded-3xl p-8 relative overflow-hidden text-white shadow-xl transition-all duration-500 hover:shadow-2xl ${
                registration?.status === 'Accepted' ? 'bg-gradient-to-br from-emerald-500 via-teal-500 to-teal-700 shadow-emerald-500/30 hover:shadow-emerald-500/40' :
                registration?.status === 'Rejected' ? 'bg-gradient-to-br from-red-500 via-rose-500 to-rose-700 shadow-red-500/30 hover:shadow-red-500/40' :
                'bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-700 shadow-indigo-500/30 hover:shadow-indigo-500/40'
@@ -395,11 +407,11 @@ const Dashboard = () => {
                      </div>
                   </div>
                </div>
-            </div>
+            </motion.div>
 
             {/* Quick Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-               <div className="bg-white/70 backdrop-blur-lg p-5 rounded-3xl border border-white shadow-sm flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300">
+            <motion.div variants={overviewItemVariants} className="grid grid-cols-2 md:grid-cols-3 gap-5">
+               <motion.div whileHover={{ y: -5, scale: 1.02 }} className="bg-white/70 backdrop-blur-lg p-5 rounded-3xl border border-white shadow-sm flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300">
                   <div className="w-12 h-12 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-sm">
                      <Layers size={22} className="group-hover:animate-bounce-slow" />
                   </div>
@@ -407,9 +419,9 @@ const Dashboard = () => {
                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Assigned Track</span>
                      <p className="text-sm font-bold text-slate-800 truncate" title={registration?.paperDetails?.track}>{registration?.paperDetails?.track?.split(' ')[0] || 'Unassigned'}</p>
                   </div>
-               </div>
+               </motion.div>
                
-               <div className="bg-white/70 backdrop-blur-lg p-5 rounded-3xl border border-white shadow-sm flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300">
+               <motion.div whileHover={{ y: -5, scale: 1.02 }} className="bg-white/70 backdrop-blur-lg p-5 rounded-3xl border border-white shadow-sm flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300">
                   <div className={`w-12 h-12 bg-gradient-to-br rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-6 transition-transform shadow-sm ${
                      registration?.paymentStatus === 'Completed' ? 'from-emerald-50 to-teal-50 text-emerald-600' : 'from-amber-50 to-orange-50 text-amber-600'
                   }`}>
@@ -421,9 +433,9 @@ const Dashboard = () => {
                         {registration?.paymentStatus || 'Pending Payment'}
                      </p>
                   </div>
-               </div>
+               </motion.div>
                
-               <div className="bg-white/70 backdrop-blur-lg p-5 rounded-3xl border border-white shadow-sm flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 col-span-2 md:col-span-1">
+               <motion.div whileHover={{ y: -5, scale: 1.02 }} className="bg-white/70 backdrop-blur-lg p-5 rounded-3xl border border-white shadow-sm flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 col-span-2 md:col-span-1">
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-50 to-fuchsia-50 text-purple-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-12 transition-transform shadow-sm">
                      <Calendar size={22} className="group-hover:animate-bounce-slow" />
                   </div>
@@ -431,11 +443,11 @@ const Dashboard = () => {
                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Upcoming Deadline</span>
                      <p className="text-sm font-bold text-slate-800">16 Mar 2026</p>
                   </div>
-               </div>
-            </div>
+               </motion.div>
+            </motion.div>
 
             {/* Deadlines List */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white p-7 shadow-glass relative overflow-hidden group/timeline">
+            <motion.div variants={overviewItemVariants} className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white p-7 shadow-glass relative overflow-hidden group/timeline">
                <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-3">
                   <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
                     <Clock size={18} />
@@ -454,7 +466,14 @@ const Dashboard = () => {
                      { label: 'Registration Deadline', date: '2026-04-10' },
                      { label: 'Conference Date', date: '2026-04-29' }
                   ].map((item, i) => (
-                     <div key={i} className="relative flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-all duration-300 group/item hover:shadow-md hover:shadow-slate-200/50 cursor-default">
+                     <motion.div 
+                        key={i} 
+                        initial={{ opacity: 0, x: -10 }} 
+                        whileInView={{ opacity: 1, x: 0 }} 
+                        transition={{ delay: i * 0.1 + 0.3 }}
+                        viewport={{ once: true }}
+                        className="relative flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-all duration-300 group/item hover:shadow-md hover:shadow-slate-200/50 cursor-default"
+                     >
                         <div className="flex items-center gap-5 relative z-10">
                            {/* Status Icon Column */}
                            <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-500 shadow-sm ${
@@ -486,16 +505,16 @@ const Dashboard = () => {
                         }`}>
                            {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
                         </span>
-                     </div>
+                     </motion.div>
                   ))}
                </div>
-            </div>
+            </motion.div>
          </div>
 
          {/* Sidebar */}
          <div className="space-y-6">
             {/* Next Action Card */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white p-7 shadow-glass relative overflow-hidden group">
+            <motion.div variants={overviewItemVariants} whileHover={{ y: -5 }} className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white p-7 shadow-glass relative overflow-hidden group">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 text-center relative z-10">Action Required</h3>
                 
                 {/* Background Pattern */}
@@ -537,10 +556,15 @@ const Dashboard = () => {
                   {registration?.paymentStatus !== 'Completed' && (
                      <button 
                         onClick={() => {
-                           if (registration?.status === 'Accepted') handlePayment();
-                           else setActiveTab('paper');
+                           if (registration?.status === 'Accepted') {
+                              handlePayment();
+                           } else {
+                              setActiveTab('paper');
+                              const scrollTarget = document.querySelector('.overflow-y-auto') || window;
+                              scrollTarget.scrollTo({ top: 0, behavior: 'smooth' });
+                           }
                         }}
-                        disabled={registration?.status === 'Submitted' || registration?.status === 'Under Review'}
+
                         className="w-full btn btn-primary py-3 text-xs shadow-indigo-500/30 hover:shadow-indigo-500/50 mt-2 hover:-translate-y-0.5"
                      >
                         {registration?.status === 'Accepted' ? 'Pay Now' : 
@@ -548,10 +572,10 @@ const Dashboard = () => {
                      </button>
                   )}
                </div>
-            </div>
+            </motion.div>
 
             {/* ID Card / Verification */}
-            <div className={`rounded-3xl p-7 border relative overflow-hidden transition-all duration-500 ${registration?.paymentStatus === 'Completed' ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-slate-700 shadow-2xl shadow-slate-900/50 hover:shadow-slate-900/70' : 'bg-white/80 backdrop-blur-xl border-white text-slate-400 shadow-glass'} group hover:-translate-y-1`}>
+            <motion.div variants={overviewItemVariants} className={`rounded-3xl p-7 border relative overflow-hidden transition-all duration-500 ${registration?.paymentStatus === 'Completed' ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-slate-700 shadow-2xl shadow-slate-900/50 hover:shadow-slate-900/70' : 'bg-white/80 backdrop-blur-xl border-white text-slate-400 shadow-glass'} group hover:-translate-y-1`}>
                {/* Background Icon */}
                <div className={`absolute -right-6 -bottom-6 opacity-[0.04] rotate-12 transition-transform duration-700 group-hover:scale-125 ${registration?.paymentStatus === 'Completed' ? 'text-white' : 'text-slate-900'}`}>
                   {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={140} /> : <ShieldCheck size={140} />}
@@ -584,10 +608,10 @@ const Dashboard = () => {
                >
                   View ID Card
                </button>
-            </div>
+            </motion.div>
 
             {/* Author Guidelines Card (Full Content) */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white p-7 shadow-glass relative overflow-hidden group hover:border-indigo-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+            <motion.div variants={overviewItemVariants} whileHover={{ y: -5 }} className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white p-7 shadow-glass relative overflow-hidden group hover:border-indigo-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                <div className="absolute -top-10 -right-10 text-slate-900 opacity-[0.02] group-hover:opacity-[0.04] transition-all duration-700 rotate-12 group-hover:rotate-45 group-hover:scale-125 pointer-events-none">
                   <FileText size={200} />
                </div>
@@ -624,10 +648,10 @@ const Dashboard = () => {
                      <Download size={16} /> Download Template
                   </a>
                </div>
-            </div>
+            </motion.div>
          </div>
       </div>
-    </div>
+    </motion.div>
   );
 
   const getInitialStep = () => {
@@ -640,208 +664,322 @@ const Dashboard = () => {
     return 5;
   };
 
-  const renderDraftsTab = () => {
-    return (
-        <div className="animate-[fadeIn_0.6s_ease-out]">
-             <div className="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-slate-100 max-w-5xl mx-auto">
-                <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
-                    <h2 className="text-3xl font-bold text-slate-800">
-                        {registration && registration.status === 'Draft' ? 'Continue Submission' : 'Start Submission'}
-                    </h2>
-                </div>
-                <RegistrationForm 
-                    startStep={getInitialStep()} 
-                    showAccountCreation={false} 
-                    onSuccess={() => {
-                        fetchRegistration();
-                        setActiveTab('paper');
-                        toast.success("Submission Completed!");
-                    }} 
-                />
-             </div>
-        </div>
-    );
-  };
-
   const renderSubmissionTab = () => {
     if (!registration || registration.status === 'Draft' || !registration.status) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-                <div className="w-20 h-20 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center mb-6">
-                    <FileText size={40} />
-                </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2">No Official Submission Yet</h3>
-                <p className="text-slate-500 mb-8 max-w-sm">Complete your draft to view your official conference submission details here.</p>
-                <button 
-                    onClick={() => setActiveTab('drafts')}
-                    className="btn btn-primary"
-                >
-                    Go to Drafts
-                </button>
-            </div>
+            <motion.div variants={overviewContainerVariants} initial="hidden" animate="visible">
+                 <motion.div variants={overviewItemVariants} className="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-slate-100 max-w-5xl mx-auto relative cursor-default">
+                    <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
+                        <h2 className="text-3xl font-bold text-slate-800">
+                            {registration && registration.status === 'Draft' ? 'Continue Submission' : 'Start Submission'}
+                        </h2>
+                    </div>
+                    <RegistrationForm 
+                        startStep={getInitialStep()} 
+                        showAccountCreation={false} 
+                        onSuccess={() => {
+                            fetchRegistration();
+                            toast.success("Submission Completed!");
+                        }} 
+                    />
+                 </motion.div>
+            </motion.div>
         );
     }
     return renderMyPaper();
   };
 
 
-  const renderMyPaper = () => (
-    <div className="animate-[fadeIn_0.6s_ease-out]">
-      <div className="grid grid-cols-1 xl:grid-cols-[1.8fr_1.2fr] gap-8">
-        {/* Left Column: Paper Details */}
-        <div className="flex flex-col gap-6">
-          {/* Main Paper Overview */}
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-8 border-b border-slate-50">
-               <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 leading-tight mb-4">{registration?.paperDetails?.title || 'Untitled Research Submission'}</h2>
-               <div className="flex flex-wrap gap-2">
-                 <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold uppercase tracking-wider">{registration?.paperDetails?.track || 'General track'}</span>
-                 <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wider">{registration?.personalDetails?.category || 'Student'}</span>
-               </div>
-            </div>
-            <div className="p-8 bg-slate-50/30">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Abstract Overview</h3>
-              <div className="text-slate-600 text-base leading-relaxed font-serif italic text-justify">
-                <p>{registration?.paperDetails?.abstract || 'No abstract content available at this moment.'}</p>
-              </div>
-            </div>
-          </div>
+  const renderMyPaper = () => {
+    const handleEditDetails = () => {
+        setEditData({
+            title: registration?.paperDetails?.title || '',
+            abstract: registration?.paperDetails?.abstract || '',
+            mobile: registration?.personalDetails?.mobile || user?.phone || '',
+            institution: registration?.personalDetails?.institution || '',
+            department: registration?.personalDetails?.department || '',
+            areaOfSpecialization: registration?.personalDetails?.areaOfSpecialization || '',
+            teamMembers: registration?.teamMembers ? JSON.parse(JSON.stringify(registration.teamMembers)) : [],
+            keywords: registration?.paperDetails?.keywords?.join(', ') || ''
+        });
+    };
 
-          {/* Submission Metadata Group */}
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-             <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-6">Submission Context \u0026 Team</h3>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Keywords/Metadata */}
-                <div className="flex flex-col gap-4">
-                   <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Keywords</span>
-                      <p className="text-sm font-semibold text-slate-700">{registration?.paperDetails?.keywords?.join(', ') || 'N/A'}</p>
-                   </div>
-                   <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Submitted On</span>
-                      <p className="text-sm font-semibold text-slate-700">{registration?.createdAt ? new Date(registration.createdAt).toLocaleDateString() : 'Pending'}</p>
-                   </div>
-                </div>
+    const handleSaveDetails = async () => {
+        try {
+            setIsSavingDetails(true);
+            const submitPayload = {
+                personalDetails: { ...registration.personalDetails, mobile: editData.mobile, institution: editData.institution, department: editData.department, areaOfSpecialization: editData.areaOfSpecialization },
+                teamMembers: editData.teamMembers,
+                paperDetails: { ...registration.paperDetails, title: editData.title, abstract: editData.abstract, keywords: editData.keywords.split(',').map(k => k.trim()).filter(k => k) }
+            };
+            await axios.post('/api/registrations/draft', submitPayload, { headers: { Authorization: `Bearer ${user.token}` } });
+            await fetchRegistration();
+            setEditData(null);
+            toast.success("Details updated successfully!");
+        } catch (error) {
+            toast.error("Failed to update details");
+        } finally {
+            setIsSavingDetails(false);
+        }
+    };
 
-                {/* Team Members */}
-                <div className="flex flex-col gap-4 border-l border-slate-100 pl-8">
+    const updateEditTeamMember = (index, field, value) => {
+        const newMembers = [...editData.teamMembers];
+        newMembers[index][field] = value;
+        setEditData({ ...editData, teamMembers: newMembers });
+    };
+
+    const paperDetailsSection = (
+      <>
+        {/* Registration Details Group */}
+        {editData ? (
+            <motion.div variants={overviewItemVariants} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-lg transition-all duration-300">
+               <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-slate-50 pb-6">
+                   <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em]">Edit Registration Details</h3>
                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-sm shrink-0">{user.name?.charAt(0)}</div>
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-800 text-sm leading-none">{user.name}</span>
-                        <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-tight">Principal Author</span>
+                       <button onClick={() => setEditData(null)} disabled={isSavingDetails} className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200">Cancel</button>
+                       <button onClick={handleSaveDetails} disabled={isSavingDetails} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50">
+                           {isSavingDetails ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <CheckCircle size={14}/>} 
+                           {isSavingDetails ? 'Saving...' : 'Save Changes'}
+                       </button>
+                   </div>
+               </div>
+               
+               <div className="space-y-6">
+                   <div>
+                      <h4 className="text-sm font-bold text-slate-800 mb-3">Paper Details</h4>
+                      <div className="grid grid-cols-1 gap-4 mb-6">
+                         <div>
+                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Title</label>
+                             <input value={editData.title} onChange={e => setEditData({...editData, title: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Paper Title" />
+                         </div>
+                         <div>
+                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Abstract</label>
+                             <textarea rows="4" value={editData.abstract} onChange={e => setEditData({...editData, abstract: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Paper Abstract" />
+                         </div>
+                      </div>
+                      
+                      <h4 className="text-sm font-bold text-slate-800 mb-3">Principal Author Details</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                         <div>
+                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Mobile</label>
+                             <input value={editData.mobile} onChange={e => setEditData({...editData, mobile: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Mobile number" />
+                         </div>
+                         <div>
+                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Institution</label>
+                             <input value={editData.institution} onChange={e => setEditData({...editData, institution: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Institution" />
+                         </div>
+                         <div>
+                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Department</label>
+                             <input value={editData.department} onChange={e => setEditData({...editData, department: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Department" />
+                         </div>
+                         {(registration?.personalDetails?.category === 'FACULTY/RESEARCH SCHOLARS' || registration?.personalDetails?.category === 'INDUSTRY PERSONNEL') && (
+                            <div>
+                                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Area of Specialization</label>
+                                <input value={editData.areaOfSpecialization} onChange={e => setEditData({...editData, areaOfSpecialization: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Area of Specialization" />
+                            </div>
+                         )}
                       </div>
                    </div>
-                   {registration?.teamMembers?.map((member, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg flex items-center justify-center font-bold text-sm shrink-0">{member.name?.charAt(0)}</div>
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-700 text-sm leading-none">{member.name}</span>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Co-Author</span>
+
+                   <div className="pt-6 border-t border-slate-50">
+                      <div className="flex items-center justify-between mb-4">
+                         <h4 className="text-sm font-bold text-slate-800">Co-Authors</h4>
+                         {editData.teamMembers.length < 3 && (
+                             <button onClick={() => setEditData({...editData, teamMembers: [...editData.teamMembers, {name: '', email: '', mobile: '', affiliation: '', category: 'UG/PG STUDENTS'}]})} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 px-3 py-1.5 bg-indigo-50 rounded-lg transition-colors border border-indigo-100">+ Add Co-author</button>
+                         )}
                       </div>
+                      <div className="space-y-4">
+                          {editData.teamMembers.length === 0 && <p className="text-xs text-slate-400 italic">No co-authors added yet.</p>}
+                          {editData.teamMembers.map((m, idx) => (
+                              <div key={idx} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative group">
+                                  <button onClick={() => {
+                                      const newM = [...editData.teamMembers]; newM.splice(idx, 1); setEditData({...editData, teamMembers: newM})
+                                  }} className="absolute top-4 right-4 text-red-400 hover:text-red-600 text-[10px] font-bold uppercase tracking-widest transition-colors">Remove</button>
+                                  <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Co-author {idx + 1}</h5>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                      <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Full Name *</label><input value={m.name} onChange={e => updateEditTeamMember(idx, 'name', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Name"/></div>
+                                      <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Email *</label><input value={m.email} onChange={e => updateEditTeamMember(idx, 'email', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Email"/></div>
+                                      <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Mobile *</label><input value={m.mobile} onChange={e => updateEditTeamMember(idx, 'mobile', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Mobile"/></div>
+                                      <div>
+                                          <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Category *</label>
+                                          <select value={m.category} onChange={e => updateEditTeamMember(idx, 'category', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-[10px] font-semibold text-slate-700 bg-white focus:border-indigo-500 outline-none">
+                                             <option value="UG/PG STUDENTS">UG/PG STUDENTS</option>
+                                             <option value="FACULTY/RESEARCH SCHOLARS">FACULTY/RESEARCH SCHOLARS</option>
+                                             <option value="EXTERNAL / ONLINE PRESENTATION">EXTERNAL / ONLINE PRESENTATION</option>
+                                             <option value="INDUSTRY PERSONNEL">INDUSTRY PERSONNEL</option>
+                                          </select>
+                                      </div>
+                                      <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Institution</label><input value={m.affiliation || m.institution} onChange={e => updateEditTeamMember(idx, 'affiliation', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Institution Name"/></div>
+                                        {(m.category === 'FACULTY/RESEARCH SCHOLARS' || m.category === 'INDUSTRY PERSONNEL') && (
+                                            <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Area of Specialization</label><input value={m.areaOfSpecialization} onChange={e => updateEditTeamMember(idx, 'areaOfSpecialization', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Specialization"/></div>
+                                        )}
+                                      </div>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                   </div>
+
+                   <div className="pt-6 border-t border-slate-50">
+                      <h4 className="text-sm font-bold text-slate-800 mb-2">Paper Keywords</h4>
+                      <p className="text-[10px] text-slate-400 font-medium mb-3">Comma separated keywords relevant to your paper.</p>
+                      <input value={editData.keywords} onChange={e => setEditData({...editData, keywords: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="e.g. AI, Machine Learning, Robotics" />
+                   </div>
+               </div>
+            </motion.div>
+        ) : (
+        <motion.div variants={overviewItemVariants} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-lg transition-all duration-300">
+           <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-slate-50 pb-6">
+               <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em]">Registration Details</h3>
+               <div className="flex items-center gap-3">
+                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 flex items-center gap-2">
+                     <Clock size={12} className="text-slate-400" /> Submitted: {registration?.createdAt ? new Date(registration.createdAt).toLocaleDateString() : 'N/A'}
+                 </span>
+                 {registration?.status !== 'Accepted' && registration?.status !== 'Rejected' && (
+                     <button
+                         onClick={handleEditDetails}
+                         className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors border border-indigo-100/50 hover:border-indigo-200"
+                     >
+                         <Edit2 size={12} /> Edit Details
+                     </button>
+                 )}
+               </div>
+           </div>
+           
+            <div className="space-y-8">
+              {/* Paper Details Display */}
+              <div className="bg-white rounded-3xl overflow-hidden px-2 sm:px-4">
+                <div className="pb-4 border-b border-slate-50 pt-2">
+                    <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 leading-tight mb-4">{registration?.paperDetails?.title || 'Untitled Research Submission'}</h2>
+                    <div className="flex flex-wrap gap-2">
+                        <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold uppercase tracking-wider">{registration?.paperDetails?.track || 'General track'}</span>
+                        <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wider">{registration?.personalDetails?.category || 'Student'}</span>
                     </div>
-                  ))}
                 </div>
-             </div>
-          </div>
-        </div>
-
-        {/* Right Column: Status & Actions */}
-        <div className="flex flex-col gap-6">
-          <div className="bg-gradient-to-br from-[#0f172a] via-[#0f172a] to-[#1e1b4b] p-8 rounded-3xl shadow-2xl shadow-indigo-950/40 border border-white/5 text-white relative overflow-hidden group">
-            {/* Ambient Background Glow */}
-            <div className="absolute -right-24 -top-24 w-48 h-48 bg-indigo-500/10 blur-[80px] rounded-full group-hover:bg-indigo-500/20 transition-all duration-700"></div>
-            
-            <h3 className="text-[10px] font-black text-indigo-300/60 uppercase tracking-[0.3em] mb-10 relative z-10">Status Timeline</h3>
-            <div className="flex flex-col gap-0 relative z-10">
-               {/* Vertical Line with Motion */}
-               <motion.div 
-                 initial={{ height: 0 }}
-                 animate={{ height: 'calc(100% - 48px)' }}
-                 transition={{ duration: 1.5, ease: "easeInOut" }}
-                 className="absolute left-[13.5px] top-6 w-px bg-indigo-500/30"
-               ></motion.div>
-              
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="relative flex gap-6 pb-10"
-              >
-                <div className="w-7 h-7 bg-emerald-500 border-2 border-emerald-400 rounded-full flex items-center justify-center text-white z-10 shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.4)]">
-                    <CheckCircle size={14} />
+                <div className="py-6">
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Abstract Overview</h3>
+                    <div className="text-slate-600 text-base leading-relaxed font-serif italic text-justify">
+                        <p>{registration?.paperDetails?.abstract || 'No abstract content available at this moment.'}</p>
+                    </div>
                 </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-sm font-bold text-white tracking-wide">Paper Submitted</span>
-                  <span className="text-[10px] font-semibold text-slate-400 mt-0.5">{registration?.createdAt ? new Date(registration.createdAt).toLocaleDateString() : 'N/A'}</span>
-                </div>
-              </motion.div>
-              
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-                className="relative flex gap-6 pb-10"
-              >
-                <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 shrink-0 transition-all duration-500 ${['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-[#0f172a] border-indigo-500/50 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]'}`}>
-                     {['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? <CheckCircle size={14} /> : <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse transition-all"></div>}
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className={`text-sm font-bold tracking-wide ${['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? 'text-white' : 'text-indigo-200'}`}>Review Process</span>
-                  <span className="text-[10px] font-semibold text-slate-400 mt-0.5 uppercase tracking-tighter">Technical Committee</span>
-                </div>
-              </motion.div>
-
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-                className="relative flex gap-6"
-              >
-                <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center z-10 shrink-0 transition-all duration-500 ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'bg-emerald-500 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-[#0f172a] border-slate-700 text-slate-500'}`}>
-                    {registration?.paperDetails?.reviewStatus === 'Accepted' ? <CheckCircle size={14} /> : <div className="w-1.5 h-1.5 bg-slate-700 rounded-full"></div>}
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className={`text-sm font-bold tracking-wide ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'text-white' : 'text-slate-500'}`}>Registration Confirmation</span>
-                  <span className="text-[10px] font-semibold text-slate-600 mt-0.5">Awaiting Official Decision</span>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-6">Reviewer Comments</h3>
-            {registration?.paperDetails?.reviewerComments ? (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 relative overflow-hidden group"
-              >
-                <div className="absolute top-0 right-0 p-3 text-indigo-200 group-hover:text-indigo-400 transition-colors">
-                  <AlertCircle size={40} />
-                </div>
-                <p className="text-indigo-900 leading-relaxed text-sm font-medium relative z-10 pr-12">{registration.paperDetails.reviewerComments}</p>
-              </motion.div>
-            ) : (
-              <div className="flex items-center gap-3 text-slate-400 py-2">
-                <Clock size={18} className="opacity-50" />
-                <p className="font-semibold text-sm italic">Review in progress...</p>
               </div>
-            )}
-          </div>
 
-          {registration?.status !== 'Accepted' && registration?.status !== 'Rejected' && (
-            <div className="flex flex-col gap-3 pt-4">
-              {!registration?.paperDetails?.fileUrl ? (
-                <div className="relative">
+              {/* Principal Author Details */}
+              <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 relative overflow-hidden group/author">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-bl-[100px] -z-10 group-hover/author:scale-110 transition-transform duration-500"></div>
+                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
+                    <div className="flex items-center gap-4">
+                       <div className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-200 shrink-0">{registration?.personalDetails?.name?.charAt(0) || user?.name?.charAt(0)}</div>
+                       <div>
+                         <span className="font-extrabold text-slate-800 text-lg block">{registration?.personalDetails?.name || user?.name}</span>
+                         <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest rounded-md mt-0.5 inline-block bg-indigo-50 px-2 py-0.5">Principal Author</span>
+                       </div>
+                    </div>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Email</span>
+                       <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.email || user?.email}>{registration?.personalDetails?.email || user?.email}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Mobile</span>
+                       <p className="text-xs font-semibold text-slate-700 truncate">{registration?.personalDetails?.mobile || user?.phone || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Institution</span>
+                       <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.institution}>{registration?.personalDetails?.institution || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Department</span>
+                       <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.department}>{registration?.personalDetails?.department || 'N/A'}</p>
+                    </div>
+                    {(registration?.personalDetails?.category === 'FACULTY/RESEARCH SCHOLARS' || registration?.personalDetails?.category === 'INDUSTRY PERSONNEL') && (
+                        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Specialization</span>
+                           <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.areaOfSpecialization}>{registration?.personalDetails?.areaOfSpecialization || 'N/A'}</p>
+                        </div>
+                    )}
+                 </div>
+              </div>
+
+              {/* Co-Authors Details */}
+              {registration?.teamMembers && registration.teamMembers.length > 0 && (
+                 <div className="space-y-4 pt-2">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-2 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div> Co-Authors
+                    </h4>
+                    <div className="grid grid-cols-1 gap-4">
+                        {registration.teamMembers.map((member, idx) => (
+                           <div key={idx} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col xl:flex-row gap-5 items-start xl:items-center justify-between hover:shadow-md transition-shadow">
+                              <div className="flex items-center gap-3.5 min-w-[220px]">
+                                 <div className="w-10 h-10 bg-slate-50 text-slate-500 border border-slate-100 rounded-xl flex items-center justify-center font-bold text-base shrink-0">{member.name?.charAt(0)}</div>
+                                 <div>
+                                   <span className="font-extrabold text-slate-700 text-sm block">{member.name}</span>
+                                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{member.category}</span>
+                                 </div>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 flex-1 w-full border-t border-slate-50 xl:border-t-0 pt-4 xl:pt-0">
+                                 <div>
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Email</span>
+                                    <p className="text-xs font-semibold text-slate-600 truncate" title={member.email}>{member.email}</p>
+                                 </div>
+                                 <div>
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Mobile</span>
+                                    <p className="text-xs font-semibold text-slate-600">{member.mobile}</p>
+                                 </div>
+                                 <div>
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Institution</span>
+                                    <p className="text-xs font-semibold text-slate-600 truncate" title={member.affiliation || member.institution}>{member.affiliation || member.institution || 'N/A'}</p>
+                                 </div>
+                                 {(member.category === 'FACULTY/RESEARCH SCHOLARS' || member.category === 'INDUSTRY PERSONNEL') && (
+                                     <div>
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Specialization</span>
+                                        <p className="text-xs font-semibold text-slate-600 truncate" title={member.areaOfSpecialization}>{member.areaOfSpecialization || 'N/A'}</p>
+                                     </div>
+                                 )}
+                              </div>
+                           </div>
+                        ))}
+                    </div>
+                 </div>
+              )}
+              
+              {/* Keywords Metadata */}
+              <div className="pt-6 border-t border-slate-50">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] block mb-3 pl-2">Paper Keywords</span>
+                  <div className="flex flex-wrap gap-2 px-2">
+                     {registration?.paperDetails?.keywords?.map((keyword, i) => (
+                         <span key={i} className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-lg text-xs font-semibold border border-slate-100">{keyword}</span>
+                     )) || <span className="text-sm font-medium text-slate-400 italic">No keywords specified</span>}
+                  </div>
+              </div>
+           </div>
+        </motion.div>
+        )}
+      </>
+    );
+
+    const actionSection = (
+      <motion.div variants={overviewItemVariants} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-lg transition-all duration-300">
+         <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-6 flex items-center gap-2">
+            <Layers size={14} className="text-slate-400" /> Manuscript Actions
+         </h3>
+         
+         {registration?.status !== 'Accepted' && registration?.status !== 'Rejected' && (
+            <div className="flex flex-col gap-4">
+               {!registration?.paperDetails?.fileUrl ? (
+                 <div className="relative">
                     <input 
                         type="file" 
                         accept=".doc,.docx" 
                         onChange={handleFullPaperUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait z-10"
                         disabled={uploading}
                     />
-                    <button className="w-full flex items-center justify-center gap-3 bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
+                    <button className="w-full relative z-0 flex items-center justify-center gap-3 bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 pointer-events-none">
                         {uploading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         ) : <Upload size={18} />}
@@ -849,7 +987,7 @@ const Dashboard = () => {
                     </button>
                 </div>
               ) : (
-                <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
                     <Download size={18} />
                     Download Manuscript
@@ -859,42 +997,51 @@ const Dashboard = () => {
                         type="file" 
                         accept=".doc,.docx" 
                         onChange={handleFullPaperUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait z-10"
                         disabled={uploading}
                     />
-                    <button className="w-full flex items-center justify-center gap-2 bg-slate-50 text-slate-500 border border-slate-200 px-6 py-3 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all mt-2">
+                    <button className="w-full h-full flex items-center justify-center gap-2 bg-slate-50 text-slate-500 border border-slate-200 px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-100 transition-all pointer-events-none">
                         {uploading ? 'Updating...' : 'Update Manuscript'}
                     </button>
                   </div>
-                </>
+                 </div>
               )}
             </div>
           )}
 
           {(registration?.status === 'Accepted' || registration?.status === 'Rejected') && registration?.paperDetails?.fileUrl && (
-            <div className="flex flex-col gap-3 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
                   <Download size={18} />
                   Download Manuscript
                 </button>
-                <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
+                <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-center justify-center">
                   <p className="text-xs font-bold text-amber-700 flex items-center gap-2">
                     <ShieldCheck size={14} /> Editing locked after {registration.status.toLowerCase()}
                   </p>
                 </div>
             </div>
           )}
-        </div>
-      </div>
-    </div>
-  );
+      </motion.div>
+    );
+
+    const hasFileUrl = !!registration?.paperDetails?.fileUrl;
+
+    return (
+      <motion.div variants={overviewContainerVariants} initial="hidden" animate="visible" className="max-w-4xl mx-auto space-y-6 pb-12">
+        {!hasFileUrl && actionSection}
+        {paperDetailsSection}
+        {hasFileUrl && actionSection}
+      </motion.div>
+    );
+  };
 
   const renderPayment = () => (
-    <div className="animate-[fadeIn_0.6s_ease-out]">
-      <div className="mb-8 flex items-center gap-3">
+    <motion.div variants={overviewContainerVariants} initial="hidden" animate="visible">
+      <motion.div variants={overviewItemVariants} className="mb-8 flex items-center gap-3">
          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"><CreditCard size={24} /></div>
          <h3 className="text-2xl font-bold text-slate-800">Billing Dashboard</h3>
-      </div>
+      </motion.div>
       
       <div className="flex flex-col gap-6">
         <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex justify-between items-center">
@@ -979,7 +1126,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 
   return (
@@ -1029,9 +1176,6 @@ const Dashboard = () => {
 
           {[
             { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
-            ...(registration?.paymentStatus !== 'Completed' && registration?.status !== 'Accepted' && registration?.status !== 'Rejected' ? [
-                { id: 'drafts', icon: Layers, label: 'My Draft' }
-            ] : []),
             { id: 'paper', icon: FileText, label: 'Submission' },
             { id: 'payment', icon: CreditCard, label: 'Payments' },
             { id: 'notifications', icon: Bell, label: 'Updates' },
@@ -1127,7 +1271,6 @@ const Dashboard = () => {
         <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
           <div className="max-w-7xl mx-auto pb-10">
             {activeTab === 'overview' && renderOverview()}
-            {activeTab === 'drafts' && renderDraftsTab()}
             {activeTab === 'paper' && renderSubmissionTab()}
             {activeTab === 'payment' && renderPayment()}
             {activeTab === 'notifications' && (
