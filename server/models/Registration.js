@@ -62,6 +62,11 @@ const registrationSchema = new mongoose.Schema({
     },
     transactionId: String,
     amount: Number,
+    attended: {
+        type: Boolean,
+        default: false
+    },
+    attendedAt: Date,
     submittedAt: Date,
     updatedAt: {
         type: Date,

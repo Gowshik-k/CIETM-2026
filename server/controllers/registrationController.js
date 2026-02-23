@@ -2,6 +2,8 @@ const Registration = require('../models/Registration');
 const sendEmail = require('../utils/sendEmail');
 const { cloudinary } = require('../config/cloudinary');
 const { createNotification } = require('./notificationController');
+const archiver = require('archiver');
+const axios = require('axios');
 
 // @desc    Create or Update a draft registration
 // @route   POST /api/registrations/draft
@@ -12,6 +14,11 @@ const saveDraft = async (req, res) => {
 
     try {
         let registration = await Registration.findOne({ userId });
+
+        // Ensure mobile is synced from User if not provided in personalDetails
+        if (personalDetails && !personalDetails.mobile && req.user.phone) {
+            personalDetails.mobile = req.user.phone;
+        }
 
         if (registration) {
             // Prevent updates if already reviewed (Accepted/Rejected)
@@ -255,6 +262,144 @@ const updatePaper = async (req, res) => {
     }
 };
 
+const getAdminAnalytics = async (req, res) => {
+    try {
+        const stats = await Registration.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    totalRegistrations: { $sum: 1 },
+                    totalAccepted: { $sum: { $cond: [{ $eq: ["$status", "Accepted"] }, 1, 0] } },
+                    totalRejected: { $sum: { $cond: [{ $eq: ["$status", "Rejected"] }, 1, 0] } },
+                    totalPending: { $sum: { $cond: [{ $in: ["$status", ["Submitted", "Under Review"]] }, 1, 0] } },
+                    totalPayments: { $sum: { $cond: [{ $eq: ["$paymentStatus", "Completed"] }, "$amount", 0] } },
+                    completedPaymentsCount: { $sum: { $cond: [{ $eq: ["$paymentStatus", "Completed"] }, 1, 0] } }
+                }
+            }
+        ]);
+
+        const trackStats = await Registration.aggregate([
+            { $group: { _id: "$paperDetails.track", count: { $sum: 1 } } }
+        ]);
+
+        const recentSubmissions = await Registration.find({})
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .populate('userId', 'name email');
+
+        res.json({
+            overview: stats[0] || {},
+            tracks: trackStats,
+            recent: recentSubmissions
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const updateRegistrationStatus = async (req, res) => {
+    const { status, paymentStatus, transactionId, amount, attended } = req.body;
+    try {
+        const registration = await Registration.findById(req.params.id);
+        if (!registration) return res.status(404).json({ message: 'Registration not found' });
+
+        if (status) {
+            registration.status = status;
+            registration.paperDetails.reviewStatus = status;
+        }
+        if (paymentStatus) registration.paymentStatus = paymentStatus;
+        if (transactionId) registration.transactionId = transactionId;
+        if (amount) registration.amount = amount;
+        if (attended !== undefined) {
+            registration.attended = attended;
+            if (attended && !registration.attendedAt) {
+                registration.attendedAt = Date.now();
+            }
+        }
+
+        await registration.save();
+        res.json(registration);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// @desc    Download all papers as ZIP (Admin)
+// @route   GET /api/registrations/download-all
+// @access  Admin
+const downloadAllPapersZip = async (req, res) => {
+    try {
+        const registrations = await Registration.find({
+            'paperDetails.fileUrl': { $exists: true, $ne: '' },
+            'status': { $in: ['Submitted', 'Under Review', 'Accepted'] }
+        });
+
+        if (!registrations || registrations.length === 0) {
+            return res.status(404).send('No papers found to download');
+        }
+
+        const archive = archiver('zip', { zlib: { level: 9 } });
+
+        // Error handling for the archive
+        archive.on('error', (err) => {
+            throw err;
+        });
+
+        res.attachment(`CIETM_All_Manuscripts_${new Date().toISOString().split('T')[0]}.zip`);
+        archive.pipe(res);
+
+        for (const reg of registrations) {
+            const authorName = sanitizeFilename(reg.personalDetails?.name || 'author');
+            const paperTitle = sanitizeFilename(reg.paperDetails?.title || 'title');
+            const originalName = reg.paperDetails?.originalName || '';
+            const extension = originalName.split('.').pop() || 'docx';
+            const fileName = `${authorName}_${paperTitle.substring(0, 50)}.${extension}`;
+
+            try {
+                const response = await axios({
+                    method: 'get',
+                    url: reg.paperDetails.fileUrl,
+                    responseType: 'stream'
+                });
+                archive.append(response.data, { name: fileName });
+            } catch (err) {
+                console.error(`Skipping file due to error: ${fileName}`, err.message);
+            }
+        }
+
+        await archive.finalize();
+    } catch (error) {
+        console.error('ZIP Error:', error);
+        if (!res.headersSent) {
+            res.status(500).send('Error creating workspace archive');
+        }
+    }
+};
+
+// @desc    Verify entry for participant at venue (Admin)
+// @route   GET /api/registrations/verify/:id
+// @access  Admin
+const verifyEntry = async (req, res) => {
+    try {
+        const registration = await Registration.findByIdAndUpdate(
+            req.params.id,
+            {
+                attended: true,
+                attendedAt: Date.now()
+            },
+            { new: true }
+        ).populate('userId', 'name email phone');
+
+        if (!registration) {
+            return res.status(404).json({ message: 'Invalid ID Card or Registration not found' });
+        }
+
+        res.json(registration);
+    } catch (error) {
+        res.status(400).json({ message: 'Invalid QR Code data' });
+    }
+};
+
 module.exports = {
     saveDraft,
     submitRegistration,
@@ -262,5 +407,9 @@ module.exports = {
     getAllRegistrations,
     reviewPaper,
     downloadPaper,
-    updatePaper
+    updatePaper,
+    getAdminAnalytics,
+    updateRegistrationStatus,
+    downloadAllPapersZip,
+    verifyEntry
 };

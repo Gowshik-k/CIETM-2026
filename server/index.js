@@ -14,7 +14,9 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(helmet());
+// app.use(helmet({
+//     contentSecurityPolicy: false,
+// }));
 app.use(compression());
 app.use(cors());
 app.use(express.json());
@@ -30,11 +32,13 @@ const authRoutes = require('./routes/authRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

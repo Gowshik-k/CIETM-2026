@@ -11,6 +11,7 @@ import {
 import toast from 'react-hot-toast';
 import RegistrationForm from '../components/RegistrationForm';
 import { motion, AnimatePresence } from 'framer-motion';
+import QRCode from 'react-qr-code';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -1179,6 +1180,7 @@ const Dashboard = () => {
             { id: 'paper', icon: FileText, label: 'Submission' },
             { id: 'payment', icon: CreditCard, label: 'Payments' },
             { id: 'notifications', icon: Bell, label: 'Updates' },
+            { id: 'idcard', icon: Award, label: 'ID Card' },
             { id: 'settings', icon: Settings, label: 'Settings' }
           ].map((item) => (
             <button 
@@ -1188,7 +1190,18 @@ const Dashboard = () => {
                 ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-100' 
                 : 'text-slate-500 font-bold hover:bg-slate-50 hover:text-slate-800'
               }`}
-              onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }}
+              onClick={() => { 
+                if (item.id === 'idcard') {
+                  if (registration) {
+                    setShowIDCard(true);
+                  } else {
+                    toast.error("Please complete your registration first");
+                  }
+                } else {
+                  setActiveTab(item.id); 
+                }
+                setIsSidebarOpen(false); 
+              }}
             >
               <item.icon size={20} className={`transition-transform duration-300 ${activeTab === item.id ? 'scale-110' : 'group-hover:scale-110'}`} />
               <span className="text-sm tracking-tight">{item.label}</span>
@@ -1471,13 +1484,18 @@ const Dashboard = () => {
 
                   {/* Card Footer */}
                   <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Participant ID</p>
-                      <p className="text-sm font-black text-slate-800 tracking-wider">#CMP-26-{registration._id.slice(-6).toUpperCase()}</p>
+                    <div className="flex bg-slate-50 p-3 rounded-2xl border border-slate-100 items-center gap-4">
+                      <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-100">
+                        <QRCode value={registration._id} size={80} viewBox={`0 0 256 256`} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Scan to Verify</p>
+                        <p className="text-xs font-black text-indigo-600 tracking-wider">#CMP-26-{registration._id.slice(-6).toUpperCase()}</p>
+                      </div>
                     </div>
                     <div className="text-right">
                       <CheckCircle size={24} className="text-emerald-500 mb-1 inline-block" />
-                      <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Verified</p>
+                      <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Official Entry</p>
                     </div>
                   </div>
                 </div>
@@ -1522,11 +1540,16 @@ const Dashboard = () => {
                   </div>
 
                   <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-[2mm] font-black text-slate-400 uppercase tracking-widest mb-[0.5mm]">Participant ID</p>
-                      <p className="text-[3mm] font-black text-slate-800 tracking-wider">#CMP-26-{registration._id.slice(-6).toUpperCase()}</p>
+                    <div className="flex items-center gap-[3mm]">
+                      <div className="bg-white p-[1mm] border-[0.2mm] border-slate-100 rounded-[1.5mm]">
+                         <QRCode value={registration._id} size={45} style={{ height: "12mm", width: "12mm" }} />
+                      </div>
+                      <div>
+                        <p className="text-[2mm] font-black text-slate-400 uppercase tracking-widest mb-[0.5mm]">Participant ID</p>
+                        <p className="text-[3mm] font-black text-slate-800 tracking-wider">#CMP-26-{registration._id.slice(-6).toUpperCase()}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right pb-[1mm]">
                       <p className="text-[2.5mm] font-black text-emerald-600 uppercase tracking-widest">Verified Delegate</p>
                     </div>
                   </div>

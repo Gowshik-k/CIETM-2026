@@ -90,6 +90,7 @@ const loginUser = async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
+            phone: user.phone,
             token: generateToken(user._id),
         });
     } else {
@@ -163,6 +164,7 @@ const verifyEmail = async (req, res) => {
             name: createdUser.name,
             email: createdUser.email,
             role: createdUser.role,
+            phone: createdUser.phone,
             isEmailVerified: createdUser.isEmailVerified,
             token: generateToken(createdUser._id),
             message: 'Email verified successfully'
@@ -239,9 +241,10 @@ const forgotPassword = async (req, res) => {
         await user.save({ validateBeforeSave: false });
 
         // Create reset url
-        const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
-        // For local development with frontend on different port/domain
-        const frontendResetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+        // Detect the frontend URL from the request origin (automatic IP detection)
+        const origin = req.get('origin') || req.get('referer');
+        const frontendBaseUrl = origin ? origin.replace(/\/$/, '') : (process.env.CLIENT_URL || 'http://localhost:5173');
+        const frontendResetUrl = `${frontendBaseUrl}/reset-password/${resetToken}`;
 
 
         const message = `
@@ -339,10 +342,20 @@ const updatePassword = async (req, res) => {
     }
 };
 
+const getUsers = async (req, res) => {
+    try {
+        const users = await User.find({}).select('-password');
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
     getUserProfile,
+    getUsers,
     verifyEmail,
     resendVerification,
     forgotPassword,

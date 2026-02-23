@@ -4,13 +4,14 @@ const {
     registerUser,
     loginUser,
     getUserProfile,
+    getUsers,
     verifyEmail,
     resendVerification,
     forgotPassword,
     resetPassword,
     updatePassword
 } = require('../controllers/authController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, admin } = require('../middleware/authMiddleware');
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
@@ -19,6 +20,7 @@ router.post('/resend-verification', resendVerification);
 router.post('/forgot-password', forgotPassword);
 router.put('/reset-password/:resetToken', resetPassword);
 router.get('/profile', protect, getUserProfile);
+router.get('/users', protect, admin, getUsers);
 router.put('/update-password', protect, updatePassword);
 
 module.exports = router;

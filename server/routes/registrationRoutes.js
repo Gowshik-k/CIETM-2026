@@ -7,17 +7,25 @@ const {
     getAllRegistrations,
     reviewPaper,
     downloadPaper,
-    updatePaper
+    updatePaper,
+    getAdminAnalytics,
+    updateRegistrationStatus,
+    downloadAllPapersZip,
+    verifyEntry
 } = require('../controllers/registrationController');
 const { protect, admin } = require('../middleware/authMiddleware');
 const { upload } = require('../config/cloudinary');
 
 router.get('/download/:id', protect, downloadPaper);
+router.get('/download-all', protect, admin, downloadAllPapersZip);
+router.get('/verify/:id', protect, admin, verifyEntry);
 router.post('/draft', protect, saveDraft);
 router.post('/submit', protect, submitRegistration);
 router.get('/my', protect, getMyRegistration);
 router.get('/', protect, admin, getAllRegistrations);
+router.get('/analytics', protect, admin, getAdminAnalytics);
 router.put('/:id/review', protect, admin, reviewPaper);
+router.put('/:id/status', protect, admin, updateRegistrationStatus);
 router.post('/update-paper', protect, updatePaper);
 
 // File upload route
