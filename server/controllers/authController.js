@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const User = require('../models/User');
 const PendingUser = require('../models/PendingUser');
 const generateToken = require('../utils/generateToken');
@@ -241,10 +242,8 @@ const forgotPassword = async (req, res) => {
         await user.save({ validateBeforeSave: false });
 
         // Create reset url
-        // Detect the frontend URL from the request origin (automatic IP detection)
-        const origin = req.get('origin') || req.get('referer');
-        const frontendBaseUrl = origin ? origin.replace(/\/$/, '') : (process.env.CLIENT_URL || 'http://localhost:5173');
-        const frontendResetUrl = `${frontendBaseUrl}/reset-password/${resetToken}`;
+        const frontendBaseUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+        const frontendResetUrl = `${frontendBaseUrl.replace(/\/$/, '')}/reset-password/${resetToken}`;
 
 
         const message = `
@@ -288,7 +287,7 @@ const forgotPassword = async (req, res) => {
 // @access  Public
 const resetPassword = async (req, res) => {
     // Get hashed token
-    const resetPasswordToken = require('crypto')
+    const resetPasswordToken = crypto
         .createHash('sha256')
         .update(req.params.resetToken)
         .digest('hex');

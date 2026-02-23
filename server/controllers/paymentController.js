@@ -66,7 +66,7 @@ const initPayment = async (req, res) => {
             },
             order_meta: {
                 return_url: `${process.env.FRONTEND_URL}/dashboard?payment_id={order_id}&payment_status={order_status}`,
-                notify_url: `${process.env.FRONTEND_URL}/api/payments/webhook` // Optional
+                notify_url: `${process.env.BACKEND_URL || (req.protocol + '://' + req.get('host'))}/api/payments/webhook`
             }
         };
 

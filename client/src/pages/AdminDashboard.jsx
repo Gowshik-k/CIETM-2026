@@ -1063,7 +1063,7 @@ const AdminDashboard = () => {
               initial={{ scale: 0.9, opacity: 0, y: 50 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 50 }}
-              className="relative w-full max-w-5xl bg-white rounded-[3rem] shadow-2xl flex flex-col md:flex-row max-h-full overflow-hidden"
+              className="relative w-[95vw] md:w-full max-w-6xl bg-white rounded-[3rem] shadow-2xl flex flex-col md:flex-row h-[90vh] md:h-[85vh] overflow-hidden"
             >
                {/* Modal Sidebar - Summary */}
                <div className="w-full md:w-80 bg-slate-50 border-r border-slate-100 p-10 flex flex-col">
@@ -1114,19 +1114,20 @@ const AdminDashboard = () => {
                   </div>
                </div>
 
-               {/* Modal Main Content */}
-               <div className="flex-1 overflow-y-auto p-12 custom-scrollbar">
-                  <div className="flex justify-between items-start mb-10">
-                     <div className="max-w-[80%]">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Research Title</p>
-                        <h1 className="text-2xl font-black text-slate-800 leading-tight block">{selectedReg.paperDetails?.title || 'No Title Provided'}</h1>
+               {/* Modal Main Content Area */}
+               <div className="flex-1 flex flex-col min-w-0 h-full">
+                  <div className="flex-1 overflow-y-auto p-6 md:p-12 custom-scrollbar">
+                     <div className="flex justify-between items-start mb-10 gap-4">
+                        <div className="flex-1">
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Research Title</p>
+                           <h1 className="text-xl md:text-2xl font-black text-slate-800 leading-tight block">{selectedReg.paperDetails?.title || 'No Title Provided'}</h1>
+                        </div>
+                        <button onClick={() => setSelectedReg(null)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all shrink-0">
+                          <XCircle size={24} />
+                        </button>
                      </div>
-                     <button onClick={() => setSelectedReg(null)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all">
-                       <XCircle size={24} />
-                     </button>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
                     <section>
                        <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
                           <Users size={16} /> Personal Info
@@ -1237,7 +1238,7 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Modal Actions Footer */}
-                <div className="sticky bottom-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 p-8 flex flex-col sm:flex-row items-center justify-between gap-6 z-20">
+                <div className="bg-white/80 backdrop-blur-xl border-t border-slate-100 p-6 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 z-20">
                    <div className="flex items-center gap-6">
                       <div className={`px-5 py-3 rounded-2xl border transition-all ${selectedReg.paymentStatus === 'Completed' ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Payment Verification</p>
@@ -1278,7 +1279,8 @@ const AdminDashboard = () => {
                       )}
                    </div>
                 </div>
-             </motion.div>
+               </div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>

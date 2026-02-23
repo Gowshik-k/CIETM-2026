@@ -27,19 +27,18 @@ const saveDraft = async (req, res) => {
             }
 
             // Filter team members
-            const validTeamMembers = teamMembers ? teamMembers.filter(m => m.name && m.name.trim() !== '') : registration.teamMembers;
+            if (teamMembers) {
+                registration.teamMembers = teamMembers.filter(m => m && m.name && m.name.trim() !== '');
+            }
 
             // Update existing draft
             registration.personalDetails = personalDetails || registration.personalDetails;
-            registration.teamMembers = validTeamMembers;
-            registration.paperDetails = { ...registration.paperDetails, ...paperDetails };
 
             // Explicitly handle merging paperDetails to avoid overwriting nested fields if partial
             if (paperDetails) {
                 registration.paperDetails = {
-                    ...registration.paperDetails,
+                    ...registration.paperDetails.toObject(),
                     ...paperDetails,
-                    resourceType: paperDetails.resourceType || registration.paperDetails.resourceType,
                     keywords: paperDetails.keywords || registration.paperDetails.keywords
                 };
             }
@@ -359,9 +358,13 @@ const downloadAllPapersZip = async (req, res) => {
                 const response = await axios({
                     method: 'get',
                     url: reg.paperDetails.fileUrl,
-                    responseType: 'stream'
+                    responseType: 'stream',
+                    timeout: 30000 // 30 second timeout per file
                 });
-                archive.append(response.data, { name: fileName });
+
+                if (response.status === 200) {
+                    archive.append(response.data, { name: fileName });
+                }
             } catch (err) {
                 console.error(`Skipping file due to error: ${fileName}`, err.message);
             }

@@ -3,12 +3,22 @@ const nodemailer = require('nodemailer');
 const sendEmail = async (options) => {
     let transportConfig;
 
-    // Configuration based on service
     const service = process.env.EMAIL_SERVICE?.toLowerCase();
 
-    if (service === 'outlook' || service === 'outlook365' || service === 'hotmail') {
+    if (service === 'brevo' || process.env.EMAIL_HOST) {
+        // Brevo or Custom SMTP
         transportConfig = {
-            service: 'hotmail', // Most reliable preset for Microsoft accounts
+            host: process.env.EMAIL_HOST || 'smtp-relay.brevo.com',
+            port: process.env.EMAIL_PORT || 587,
+            secure: false, // true for 465, false for other ports
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        };
+    } else if (service === 'outlook' || service === 'outlook365' || service === 'hotmail') {
+        transportConfig = {
+            service: 'hotmail',
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS,
@@ -28,7 +38,7 @@ const sendEmail = async (options) => {
     const transporter = nodemailer.createTransport(transportConfig);
 
     const mailOptions = {
-        from: `"CIETM 2026" <${process.env.EMAIL_USER}>`,
+        from: process.env.EMAIL_FROM || `"CIETM 2026" <${process.env.EMAIL_USER}>`,
         to: options.email,
         subject: options.subject,
         html: options.message,
