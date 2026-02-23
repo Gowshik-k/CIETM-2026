@@ -9,67 +9,76 @@ const sendEmail = require('../utils/sendEmail');
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
-    const { name, email, password, phone, role } = req.body;
-
-    // Check if user already exists in MAIN User table
-    const userExists = await User.findOne({ email });
-
-    if (userExists) {
-        return res.status(400).json({ message: 'User already exists' });
-    }
-
-    // Generate 6-digit verification code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Check if there is already a pending registration for this email
-    const pendingUserExists = await PendingUser.findOne({ email });
-
-    if (pendingUserExists) {
-        // Update existing pending user
-        // Note: PendingUser model has a pre-save hook that hashes the password
-        pendingUserExists.name = name;
-        pendingUserExists.password = password;
-        pendingUserExists.phone = phone;
-        pendingUserExists.role = role || 'author';
-        pendingUserExists.verificationCode = verificationCode;
-        pendingUserExists.createdAt = Date.now(); // Reset TTL
-        await pendingUserExists.save();
-    } else {
-        // Create new pending user
-        // Note: Password will be hashed by PendingUser pre-save hook
-        await PendingUser.create({
-            name,
-            email,
-            password,
-            phone,
-            role: role || 'author',
-            verificationCode
-        });
-    }
-
     try {
-        await sendEmail({
-            email,
-            subject: 'CIETM 2026 - Email Verification',
-            message: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #6366f1;">Welcome to CIETM 2026!</h2>
-                    <p>Hello ${name},</p>
-                    <p>Thank you for registering. Please verify your email to complete your account creation.</p>
-                    <p>Your verification code is:</p>
-                    <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
-                        <h1 style="color: #6366f1; font-size: 32px; letter-spacing: 8px; margin: 0;">${verificationCode}</h1>
+        const { name, email, password, phone, role } = req.body;
+
+        // Check if user already exists in MAIN User table
+        const userExists = await User.findOne({ email });
+
+        if (userExists) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
+        // Generate 6-digit verification code
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Check if there is already a pending registration for this email
+        const pendingUserExists = await PendingUser.findOne({ email });
+
+        if (pendingUserExists) {
+            // Update existing pending user
+            pendingUserExists.name = name;
+            pendingUserExists.password = password;
+            pendingUserExists.phone = phone;
+            pendingUserExists.role = role || 'author';
+            pendingUserExists.verificationCode = verificationCode;
+            pendingUserExists.createdAt = Date.now(); // Reset TTL
+            await pendingUserExists.save();
+        } else {
+            // Create new pending user
+            await PendingUser.create({
+                name,
+                email,
+                password,
+                phone,
+                role: role || 'author',
+                verificationCode
+            });
+        }
+
+        try {
+            await sendEmail({
+                email,
+                subject: 'CIETM 2026 - Email Verification',
+                message: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                        <h2 style="color: #6366f1;">Welcome to CIETM 2026!</h2>
+                        <p>Hello ${name},</p>
+                        <p>Thank you for registering. Please verify your email to complete your account creation.</p>
+                        <p>Your verification code is:</p>
+                        <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
+                            <h1 style="color: #6366f1; font-size: 32px; letter-spacing: 8px; margin: 0;">${verificationCode}</h1>
+                        </div>
+                        <p>This code will expire in 1 hour.</p>
                     </div>
-                    <p>This code will expire in 1 hour.</p>
-                </div>
-            `
-        });
-        res.status(201).json({
-            message: 'Verification code sent to your email. Please verify to complete registration.'
-        });
+                `
+            });
+            res.status(201).json({
+                message: 'Verification code sent to your email. Please verify to complete registration.'
+            });
+        } catch (emailError) {
+            console.error('Email send error:', emailError);
+            return res.status(500).json({
+                message: 'Account created but failed to send verification email. Please try resending from the login page.',
+                error: emailError.message
+            });
+        }
     } catch (error) {
-        console.error('Email send error:', error);
-        res.status(500).json({ message: 'Failed to send verification email' });
+        console.error('Registration Error:', error);
+        res.status(500).json({
+            message: 'Internal server error during registration',
+            error: error.message
+        });
     }
 };
 
