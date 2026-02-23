@@ -1,21 +1,17 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
+    // Brevo / SendinBlue configuration
     const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST || 'smtp-relay.brevo.com',
-        port: process.env.EMAIL_PORT || 587,
-        secure: false, // true for 465, false for other ports
+        service: 'Brevo',
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
         },
-        // Additional settings for reliability
-        connectionTimeout: 10000, // 10 seconds
-        greetingTimeout: 10000,
-        socketTimeout: 30000, // 30 seconds
-        pool: true,
-        maxConnections: 5,
-        maxMessages: 100,
+        // Increase timeout for slow network handshakes
+        connectionTimeout: 30000,
+        greetingTimeout: 30000,
+        socketTimeout: 45000,
     });
 
     const mailOptions = {
