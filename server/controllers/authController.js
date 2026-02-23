@@ -1,9 +1,9 @@
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const PendingUser = require('../models/PendingUser');
 const generateToken = require('../utils/generateToken');
 const sendEmail = require('../utils/sendEmail');
-
 
 // @desc    Register a new user (Create PendingUser)
 // @route   POST /api/auth/register
@@ -13,7 +13,6 @@ const registerUser = async (req, res) => {
         const { name, email, password, phone, role } = req.body;
 
         // 1. Check Database Connection
-        const mongoose = require('mongoose');
         if (mongoose.connection.readyState !== 1) {
             console.error('DB Status:', mongoose.connection.readyState);
             return res.status(500).json({
@@ -89,7 +88,7 @@ const registerUser = async (req, res) => {
         } catch (emailError) {
             console.error('Email send error:', emailError.message);
             return res.status(500).json({
-                message: 'Account created but failed to send verification email. Please try resending from the login page or check your email settings.',
+                message: 'Account created but failed to send verification email. Please check your Brevo settings.',
                 error: emailError.message
             });
         }
@@ -97,7 +96,8 @@ const registerUser = async (req, res) => {
         console.error('Registration Error:', error.message);
         res.status(500).json({
             message: 'Internal server error during registration',
-            error: error.message
+            error: error.message,
+            stack: error.stack
         });
     }
 };
@@ -106,25 +106,28 @@ const registerUser = async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = async (req, res) => {
-    const { email, password } = req.body;
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email }).select('+password');
 
-    const user = await User.findOne({ email }).select('+password');
+        if (user && (await user.matchPassword(password))) {
+            if (!user.isEmailVerified) {
+                return res.status(401).json({ message: 'Please verify your email first', isUnverified: true, email: user.email });
+            }
 
-    if (user && (await user.matchPassword(password))) {
-        if (!user.isEmailVerified) {
-            return res.status(401).json({ message: 'Please verify your email first', isUnverified: true, email: user.email });
+            res.json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                phone: user.phone,
+                token: generateToken(user._id),
+            });
+        } else {
+            res.status(401).json({ message: 'Invalid email or password' });
         }
-
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            phone: user.phone,
-            token: generateToken(user._id),
-        });
-    } else {
-        res.status(401).json({ message: 'Invalid email or password' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
 
@@ -132,33 +135,31 @@ const loginUser = async (req, res) => {
 // @route   GET /api/auth/profile
 // @access  Private
 const getUserProfile = async (req, res) => {
-    const user = await User.findById(req.user._id);
-
-    if (user) {
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            phone: user.phone
-        });
-    } else {
-        res.status(404).json({ message: 'User not found' });
+    try {
+        const user = await User.findById(req.user._id);
+        if (user) {
+            res.json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                phone: user.phone
+            });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
 
 // @desc    Verify email (Move from Pending -> User)
-// @route   POST /api/auth/verify-email
-// @access  Public
 const verifyEmail = async (req, res) => {
     try {
         const { email, code } = req.body;
-
-        // Check PendingUser first
         const pendingUser = await PendingUser.findOne({ email });
 
         if (!pendingUser) {
-            // Check if already verified in main User table
             const user = await User.findOne({ email });
             if (user) {
                 return res.status(400).json({ message: 'User already verified. Please login.' });
@@ -170,12 +171,10 @@ const verifyEmail = async (req, res) => {
             return res.status(400).json({ message: 'Invalid verification code' });
         }
 
-        // Create actual User from PendingUser data
-        // We use insertOne to bypass Mongoose hooks because the password IS ALREADY HASHED in pendingUser
         await User.collection.insertOne({
             name: pendingUser.name,
             email: pendingUser.email,
-            password: pendingUser.password, // Already hashed
+            password: pendingUser.password,
             phone: pendingUser.phone,
             role: pendingUser.role,
             isEmailVerified: true,
@@ -185,8 +184,6 @@ const verifyEmail = async (req, res) => {
         });
 
         const createdUser = await User.findOne({ email });
-
-        // Delete pending record
         await PendingUser.deleteOne({ _id: pendingUser._id });
 
         res.json({
@@ -195,178 +192,100 @@ const verifyEmail = async (req, res) => {
             email: createdUser.email,
             role: createdUser.role,
             phone: createdUser.phone,
-            isEmailVerified: createdUser.isEmailVerified,
             token: generateToken(createdUser._id),
             message: 'Email verified successfully'
         });
     } catch (error) {
-        console.error('Error in verifyEmail:', error);
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
 };
 
 // @desc    Resend verification code
-// @route   POST /api/auth/resend-verification
-// @access  Public
 const resendVerification = async (req, res) => {
-    const { email } = req.body;
-
-    const pendingUser = await PendingUser.findOne({ email });
-
-    if (!pendingUser) {
-        // If already verified user tries to resend?
-        const user = await User.findOne({ email });
-        if (user) {
-            return res.status(400).json({ message: 'User already verified.' });
-        }
-        return res.status(404).json({ message: 'Pending registration not found' });
-    }
-
-    // Generate new code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-    pendingUser.verificationCode = verificationCode;
-    pendingUser.createdAt = Date.now(); // Reset TTL
-    await pendingUser.save();
-
     try {
+        const { email } = req.body;
+        const pendingUser = await PendingUser.findOne({ email });
+
+        if (!pendingUser) {
+            const user = await User.findOne({ email });
+            if (user) return res.status(400).json({ message: 'User already verified.' });
+            return res.status(404).json({ message: 'Pending registration not found' });
+        }
+
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        pendingUser.verificationCode = verificationCode;
+        pendingUser.createdAt = Date.now();
+        await pendingUser.save();
+
         await sendEmail({
             email,
             subject: 'CIETM 2026 - New Verification Code',
-            message: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #6366f1;">New Verification Code</h2>
-                    <p>Hello ${pendingUser.name},</p>
-                    <p>Here is your new verification code:</p>
-                    <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
-                        <h1 style="color: #6366f1; font-size: 32px; letter-spacing: 8px; margin: 0;">${verificationCode}</h1>
-                    </div>
-                    <p>This code will expire in 1 hour.</p>
-                </div>
-            `
+            message: `<div style="font-family: Arial; padding: 20px;"><h2>Code: ${verificationCode}</h2></div>`
         });
-        res.json({ message: 'New verification code sent to your email' });
+        res.json({ message: 'New verification code sent' });
     } catch (error) {
-        console.error('Email send error:', error);
-        res.status(500).json({ message: 'Failed to send verification email' });
+        res.status(500).json({ message: 'Failed to send verification email', error: error.message });
     }
 };
 
 // @desc    Forgot Password
-// @route   POST /api/auth/forgot-password
-// @access  Public
 const forgotPassword = async (req, res) => {
-    const { email } = req.body;
-
     try {
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: req.body.email });
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        // Get reset token
         const resetToken = user.getResetPasswordToken();
-
         await user.save({ validateBeforeSave: false });
 
-        // Create reset url
         const frontendBaseUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
         const frontendResetUrl = `${frontendBaseUrl.replace(/\/$/, '')}/reset-password/${resetToken}`;
 
+        await sendEmail({
+            email: user.email,
+            subject: 'CIETM 2026 - Password Reset',
+            message: `<div style="padding: 20px;"><a href="${frontendResetUrl}">Reset Password</a></div>`
+        });
 
-        const message = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #6366f1;">Password Reset Request</h2>
-                <p>You are receiving this email because you (or someone else) has requested the reset of a password.</p>
-                <p>Please click the button below to reset your password:</p>
-                <div style="text-align: center; margin: 20px 0;">
-                    <a href="${frontendResetUrl}" style="background-color: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Reset Password</a>
-                </div>
-                <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
-                <p>This link will expire in 10 minutes.</p>
-            </div>
-        `;
-
-        try {
-            await sendEmail({
-                email: user.email,
-                subject: 'CIETM 2026 - Password Reset',
-                message: message
-            });
-
-            res.status(200).json({ message: 'Email sent' });
-        } catch (error) {
-            console.error(error);
-            user.resetPasswordToken = undefined;
-            user.resetPasswordExpire = undefined;
-
-            await user.save({ validateBeforeSave: false });
-
-            return res.status(500).json({ message: 'Email could not be sent' });
-        }
+        res.status(200).json({ message: 'Email sent' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
 
 // @desc    Reset Password
-// @route   PUT /api/auth/reset-password/:resetToken
-// @access  Public
 const resetPassword = async (req, res) => {
-    // Get hashed token
-    const resetPasswordToken = crypto
-        .createHash('sha256')
-        .update(req.params.resetToken)
-        .digest('hex');
-
     try {
+        const resetPasswordToken = crypto.createHash('sha256').update(req.params.resetToken).digest('hex');
         const user = await User.findOne({
             resetPasswordToken,
             resetPasswordExpire: { $gt: Date.now() }
         });
 
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid token' });
-        }
+        if (!user) return res.status(400).json({ message: 'Invalid token' });
 
-        // Set new password
         user.password = req.body.password;
         user.resetPasswordToken = undefined;
         user.resetPasswordExpire = undefined;
-
         await user.save();
 
-        res.status(200).json({
-            message: 'Password updated successfully',
-            token: generateToken(user._id)
-        });
+        res.status(200).json({ message: 'Password updated', token: generateToken(user._id) });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
 
 // @desc    Update Password
-// @route   PUT /api/auth/update-password
-// @access  Private
 const updatePassword = async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select('+password');
-        const { currentPassword, newPassword } = req.body;
-
-        if (!(await user.matchPassword(currentPassword))) {
+        if (!(await user.matchPassword(req.body.currentPassword))) {
             return res.status(401).json({ message: 'Current password is incorrect' });
         }
-
-        user.password = newPassword;
+        user.password = req.body.newPassword;
         await user.save();
-
-        res.json({ message: 'Password updated successfully' });
+        res.json({ message: 'Password updated' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
 
