@@ -9,6 +9,7 @@ const sendEmail = require('../utils/sendEmail');
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
+    console.log('Registration request received for:', req.body.email);
     try {
         const { name, email, password, phone, role } = req.body;
 
