@@ -23,7 +23,7 @@ const sendEmail = async (options) => {
                 'content-type': 'application/json',
                 'accept': 'application/json'
             },
-            timeout: 20000
+            timeout: 25000
         });
 
         console.log(`Email sent successfully to ${options.email}`);
