@@ -44,7 +44,19 @@ const sendEmail = async (options) => {
         html: options.message,
     };
 
-    await transporter.sendMail(mailOptions);
+    console.log('--- Sending Email ---');
+    console.log('Service:', process.env.EMAIL_SERVICE);
+    console.log('Host:', process.env.EMAIL_HOST);
+    console.log('From:', mailOptions.from);
+    console.log('To:', mailOptions.to);
+
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent:', info.messageId);
+    } catch (error) {
+        console.error('Nodemailer Error:', error);
+        throw error;
+    }
 };
 
 module.exports = sendEmail;
