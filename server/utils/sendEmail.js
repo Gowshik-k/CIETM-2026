@@ -1,41 +1,51 @@
-const SibApiV3Sdk = require('sib-api-v3-sdk');
+const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-    try {
-        const defaultClient = SibApiV3Sdk.ApiClient.instance;
-        const apiKey = defaultClient.authentications['api-key'];
+    let transportConfig;
 
-        if (!process.env.EMAIL_PASS) {
-            throw new Error('EMAIL_PASS API key is missing');
-        }
+    const service = process.env.EMAIL_SERVICE?.toLowerCase();
 
-        apiKey.apiKey = process.env.EMAIL_PASS;
-
-        const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-
-        let senderEmail = "noreply@cietm.online";
-        if (process.env.EMAIL_FROM) {
-            const match = process.env.EMAIL_FROM.match(/<(.+)>/);
-            if (match && match[1]) {
-                senderEmail = match[1];
-            } else if (process.env.EMAIL_FROM.includes('@')) {
-                senderEmail = process.env.EMAIL_FROM;
-            }
-        }
-
-        const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
-        sendSmtpEmail.subject = options.subject;
-        sendSmtpEmail.htmlContent = options.message;
-        sendSmtpEmail.sender = { name: "CIETM 2026", email: senderEmail };
-        sendSmtpEmail.to = [{ email: options.email }];
-
-        await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log(`Email sent successfully to ${options.email}`);
-    } catch (error) {
-        const errorDetail = error.response?.body?.message || error.message;
-        console.error('Brevo SDK Error:', errorDetail);
-        throw new Error(`Email Service Error: ${errorDetail}`);
+    if (service === 'brevo' || process.env.EMAIL_HOST) {
+        // Brevo or Custom SMTP
+        transportConfig = {
+            host: process.env.EMAIL_HOST || 'smtp-relay.brevo.com',
+            port: process.env.EMAIL_PORT || 587,
+            secure: false, // true for 465, false for other ports
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        };
+    } else if (service === 'outlook' || service === 'outlook365' || service === 'hotmail') {
+        transportConfig = {
+            service: 'hotmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        };
+    } else {
+        // Default for Gmail and others
+        transportConfig = {
+            service: process.env.EMAIL_SERVICE || 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        };
     }
+
+    const transporter = nodemailer.createTransport(transportConfig);
+
+    const mailOptions = {
+        from: process.env.EMAIL_FROM || `"CIETM 2026" <${process.env.EMAIL_USER}>`,
+        to: options.email,
+        subject: options.subject,
+        html: options.message,
+    };
+
+    await transporter.sendMail(mailOptions);
 };
 
 module.exports = sendEmail;
+
