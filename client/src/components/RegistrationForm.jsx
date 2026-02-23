@@ -414,34 +414,87 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
               <h2 className="text-2xl font-bold text-slate-900 mb-6 shrink-0">Step 1: Account Creation</h2>
               
               {!showVerification ? (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                    <div className={groupClass}>
-                      <label className={labelClass}>Full Name</label>
-                      <input name="name" value={formData.name} onChange={handleChange} placeholder="Enter your name" className={`${inputClass} ${errors.name ? errorInputClass : ''}`} />
-                    </div>
-                    <div className={groupClass}>
-                      <label className={labelClass}>Mobile</label>
-                      <input name="mobile" value={formData.mobile} onChange={handleChange} placeholder="Mobile number" className={`${inputClass} ${errors.mobile ? errorInputClass : ''}`} />
-                    </div>
-                  </div>
-
-                  <div className={groupClass}>
-                    <label className={labelClass}>Email</label>
-                    <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="email@example.com" className={`${inputClass} ${errors.email ? errorInputClass : ''}`} />
+                <form onSubmit={(e) => { e.preventDefault(); nextStep(); }} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Enter your full name"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 text-sm"
+                      required
+                    />
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                    <div className={groupClass}>
-                      <label className={labelClass}>Password</label>
-                      <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Create password" className={`${inputClass} ${errors.password ? errorInputClass : ''}`} />
-                    </div>
-                    <div className={groupClass}>
-                      <label className={labelClass}>Confirm Password</label>
-                      <input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm password" className={inputClass} />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Mobile</label>
+                    <input
+                      type="tel"
+                      name="mobile"
+                      value={formData.mobile}
+                      onChange={handleChange}
+                      placeholder="Enter 10-digit mobile number"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 text-sm"
+                      required
+                    />
                   </div>
-                </>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Enter your email address"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 text-sm"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Create password"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 text-sm"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="Confirm password"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 text-sm"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 group disabled:opacity-70"
+                  >
+                    {loading ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        Next
+                        <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </button>
+                </form>
               ) : (
                 <div className="text-center max-w-md mx-auto my-4 animate-in zoom-in duration-300 flex flex-col justify-center h-full">
                   <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6 text-indigo-600 shrink-0">

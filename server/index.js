@@ -68,9 +68,10 @@ app.use((req, res, next) => {
 // Error Handling Middleware
 app.use((err, req, res, next) => {
     const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+    console.error(`[ERROR] ${req.method} ${req.url}:`, err.message);
     res.status(statusCode).json({
         message: err.message,
-        stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+        stack: err.stack, // Temporarily leave enabled for production debugging
     });
 });
 

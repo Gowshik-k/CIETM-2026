@@ -7,8 +7,18 @@ const sendEmail = async (options) => {
         }
 
         // Clean sender email
+        // Brevo requires a verified sender email address, not an SMTP username
         let senderEmail = "noreply@cietm.online";
-        if (process.env.EMAIL_USER && process.env.EMAIL_USER.includes('@')) {
+
+        // If EMAIL_FROM is available, try to extract the email part
+        if (process.env.EMAIL_FROM) {
+            const match = process.env.EMAIL_FROM.match(/<(.+)>/);
+            if (match && match[1]) {
+                senderEmail = match[1];
+            } else if (process.env.EMAIL_FROM.includes('@')) {
+                senderEmail = process.env.EMAIL_FROM;
+            }
+        } else if (process.env.EMAIL_USER && process.env.EMAIL_USER.includes('@') && !process.env.EMAIL_USER.includes('smtp-brevo.com')) {
             senderEmail = process.env.EMAIL_USER;
         }
 
