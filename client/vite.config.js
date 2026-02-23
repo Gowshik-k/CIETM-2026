@@ -8,7 +8,9 @@ export default defineConfig({
     plugins: [tailwindcss(),
     react()],
     build: {
-        outDir: 'dist'
+        outDir: 'dist',
+        minify: 'esbuild',
+        sourcemap: false
     },
     server: {
         host: true,
