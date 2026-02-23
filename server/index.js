@@ -19,8 +19,23 @@ app.use(helmet({
 }));
 app.use(compression());
 
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    process.env.CLIENT_URL,
+    'https://cietm.online',
+    'http://localhost:5173',
+    'http://10.237.41.18:5173'
+].filter(Boolean);
+
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            return callback(new Error('CORS Policy: Origin not allowed'), false);
+        }
+        return callback(null, true);
+    },
     credentials: true,
 };
 app.use(cors(corsOptions));

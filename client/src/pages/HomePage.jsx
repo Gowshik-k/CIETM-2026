@@ -122,13 +122,13 @@ const HomePage = () => {
   ];
 
   const advisoryBoard = [
-    { name: "Prof. Robert Chen", affiliation: "University of Oxford", img: "https://images.unsplash.com/photo-1507003211169-7a5171755184?w=400&h=400&fit=crop" },
+    { name: "Prof. Robert Chen", affiliation: "University of Oxford", img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop" },
     { name: "Dr. Elena Rossi", affiliation: "Research Director, CERN", img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop" },
     { name: "Prof. Sanjay Gupta", affiliation: "IIT Delhi", img: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop" },
     { name: "Dr. Sarah Miller", affiliation: "Director of AI, Google", img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop" },
     { name: "Prof. Yuki Tanaka", affiliation: "University of Tokyo", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop" },
     { name: "Dr. James Wilson", affiliation: "Fellow, IEEE", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop" },
-    { name: "Prof. Maria Garcia", affiliation: "Technical University of Munich", img: "https://images.unsplash.com/photo-1551836022-d5d8b5c9d67d?w=400&h=400&fit=crop" },
+    { name: "Prof. Maria Garcia", affiliation: "Technical University of Munich", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop" },
     { name: "Dr. Ahmed Mansour", affiliation: "KAUST", img: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=400&h=400&fit=crop" },
     { name: "Prof. Linda Thompson", affiliation: "UC Berkeley", img: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=400&fit=crop" },
     { name: "Dr. Thomas Wright", affiliation: "Chief Scientist, IBM Research", img: "https://images.unsplash.com/photo-1548142813-c348350df52b?w=400&h=400&fit=crop" }
