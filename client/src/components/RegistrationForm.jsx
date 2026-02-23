@@ -425,6 +425,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                       placeholder="Enter your full name"
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 text-sm"
                       required
+                      autocomplete="name"
                     />
                   </div>
                   
@@ -438,6 +439,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                       placeholder="Enter 10-digit mobile number"
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 text-sm"
                       required
+                      autocomplete="tel"
                     />
                   </div>
 
@@ -451,6 +453,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                       placeholder="Enter your email address"
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 text-sm"
                       required
+                      autocomplete="email"
                     />
                   </div>
 
@@ -464,6 +467,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                       placeholder="Create password"
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 text-sm"
                       required
+                      autocomplete="new-password"
                     />
                   </div>
 
@@ -477,6 +481,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                       placeholder="Confirm password"
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 text-sm"
                       required
+                      autocomplete="new-password"
                     />
                   </div>
 
