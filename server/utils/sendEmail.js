@@ -32,7 +32,6 @@ const sendEmail = async (options) => {
         await apiInstance.sendTransacEmail(sendSmtpEmail);
         console.log(`Email sent successfully to ${options.email}`);
     } catch (error) {
-        // Log detailed error from SDK
         const errorDetail = error.response?.body?.message || error.message;
         console.error('Brevo SDK Error:', errorDetail);
         throw new Error(`Email Service Error: ${errorDetail}`);
