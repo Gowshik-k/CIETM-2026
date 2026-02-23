@@ -12,6 +12,21 @@ const registerUser = async (req, res) => {
     try {
         const { name, email, password, phone, role } = req.body;
 
+        // 1. Check Database Connection
+        const mongoose = require('mongoose');
+        if (mongoose.connection.readyState !== 1) {
+            console.error('DB Status:', mongoose.connection.readyState);
+            return res.status(500).json({
+                message: 'Database connection is not ready. Please try again in a few seconds.',
+                error: 'Mongoose connection state: ' + mongoose.connection.readyState
+            });
+        }
+
+        // 2. Validate Inputs
+        if (!email || !password || !name) {
+            return res.status(400).json({ message: 'Please provide name, email and password' });
+        }
+
         // Check if user already exists in MAIN User table
         const userExists = await User.findOne({ email });
 
@@ -46,7 +61,12 @@ const registerUser = async (req, res) => {
             });
         }
 
+        // 3. Send Verification Email
         try {
+            if (!process.env.EMAIL_PASS) {
+                throw new Error('EMAIL_PASS (Brevo API Key) is not configured in environment variables.');
+            }
+
             await sendEmail({
                 email,
                 subject: 'CIETM 2026 - Email Verification',
@@ -67,14 +87,14 @@ const registerUser = async (req, res) => {
                 message: 'Verification code sent to your email. Please verify to complete registration.'
             });
         } catch (emailError) {
-            console.error('Email send error:', emailError);
+            console.error('Email send error:', emailError.message);
             return res.status(500).json({
-                message: 'Account created but failed to send verification email. Please try resending from the login page.',
+                message: 'Account created but failed to send verification email. Please try resending from the login page or check your email settings.',
                 error: emailError.message
             });
         }
     } catch (error) {
-        console.error('Registration Error:', error);
+        console.error('Registration Error:', error.message);
         res.status(500).json({
             message: 'Internal server error during registration',
             error: error.message
