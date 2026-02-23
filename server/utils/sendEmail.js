@@ -17,10 +17,10 @@ const sendEmail = async (options) => {
         const result = await brevo.transactionalEmails.sendTransacEmail({
             subject: options.subject,
             htmlContent: options.message,
-            sender: { name: "CIETM 2026", email: process.env.EMAIL_USER || "noreply@cietm.online" },
+            sender: { name: "CIETM 2026", email: "noreply@cietm.online" },
             to: [{ email: options.email, name: options.email.split('@')[0] }]
         });
-        
+
         console.log('✅ Brevo API called successfully. Message ID:', result?.messageId || 'Success');
     } catch (error) {
         const errorDetails = error.body ? JSON.stringify(error.body) : error.message;
