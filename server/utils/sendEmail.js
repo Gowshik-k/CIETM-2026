@@ -1,65 +1,37 @@
-const nodemailer = require('nodemailer');
+const brevo = require('@getbrevo/brevo');
 
 const sendEmail = async (options) => {
-    let transportConfig;
-
-    const service = process.env.EMAIL_SERVICE?.toLowerCase();
-
-    if (service === 'brevo' || process.env.EMAIL_HOST) {
-        // Brevo or Custom SMTP
-        transportConfig = {
-            host: process.env.EMAIL_HOST || 'smtp-relay.brevo.com',
-            port: parseInt(process.env.EMAIL_PORT) || 587,
-            secure: parseInt(process.env.EMAIL_PORT) === 465, // true for 465, false for other ports (587)
-            requireTLS: parseInt(process.env.EMAIL_PORT) !== 465, // Only require STARTTLS if not using implicit TLS on 465
-            connectionTimeout: 10000,
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-        };
-    } else if (service === 'outlook' || service === 'outlook365' || service === 'hotmail') {
-        transportConfig = {
-            service: 'hotmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-        };
-    } else {
-        // Default for Gmail and others
-        transportConfig = {
-            service: process.env.EMAIL_SERVICE || 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-        };
+    // Determine which service is being used. If no API key, check if we need to throw error.
+    if (!process.env.BREVO_API_KEY) {
+        console.warn("\n⚠️ WARNING: BREVO_API_KEY is not set in your .env file!");
+        throw new Error('Email Service Error: BREVO_API_KEY is missing');
     }
 
-    const transporter = nodemailer.createTransport(transportConfig);
+    let defaultClient = brevo.ApiClient.instance;
+    let apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_API_KEY;
 
-    const mailOptions = {
-        from: process.env.EMAIL_FROM || `"CIETM 2026" <${process.env.EMAIL_USER}>`,
-        to: options.email,
-        subject: options.subject,
-        html: options.message,
-    };
+    let apiInstance = new brevo.TransactionalEmailsApi();
+    let sendSmtpEmail = new brevo.SendSmtpEmail();
 
-    console.log('--- Sending Email ---');
-    console.log('Service:', process.env.EMAIL_SERVICE);
-    console.log('Host:', process.env.EMAIL_HOST);
-    console.log('From:', mailOptions.from);
-    console.log('To:', mailOptions.to);
+    sendSmtpEmail.subject = options.subject;
+    sendSmtpEmail.htmlContent = options.message;
+    // Fallback if EMAIL_USER wasn't set, default to a sensible noreply
+    sendSmtpEmail.sender = { "name": "CIETM 2026", "email": process.env.EMAIL_USER || "noreply@cietm.online" };
+    sendSmtpEmail.to = [
+        { "email": options.email, "name": options.email.split('@')[0] }
+    ];
+
+    console.log('--- Sending Email via Brevo REST API ---');
+    console.log('To:', options.email);
 
     try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent:', info.messageId);
+        const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+        console.log('✅ Brevo API called successfully. Message ID:', data.messageId);
     } catch (error) {
-        console.error('Nodemailer Error:', error);
+        console.error('❌ Brevo API Error:', error.response?.text || error.message);
         throw error;
     }
 };
 
 module.exports = sendEmail;
-
