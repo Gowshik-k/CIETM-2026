@@ -9,9 +9,9 @@ const sendEmail = async (options) => {
         // Brevo or Custom SMTP
         transportConfig = {
             host: process.env.EMAIL_HOST || 'smtp-relay.brevo.com',
-            port: process.env.EMAIL_PORT || 587,
-            secure: false, // true for 465, false for other ports (587)
-            requireTLS: true, // Force TLS to prevent timeout
+            port: parseInt(process.env.EMAIL_PORT) || 587,
+            secure: parseInt(process.env.EMAIL_PORT) === 465, // true for 465, false for other ports (587)
+            requireTLS: parseInt(process.env.EMAIL_PORT) !== 465, // Only require STARTTLS if not using implicit TLS on 465
             connectionTimeout: 10000,
             auth: {
                 user: process.env.EMAIL_USER,
