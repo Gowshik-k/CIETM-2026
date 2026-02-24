@@ -47,7 +47,7 @@ const ResetPasswordPage = () => {
 
                 <div className="w-full max-w-md bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-[0_20px_40px_-5px_rgba(0,0,0,0.1)] border border-white/50 animate-[fadeIn_0.5s_ease-out] text-center">
                     <div className="flex justify-center mb-6">
-                        <CheckCircle size={64} className="text-emerald-500 drop-shadow-md" />
+                        <CheckCircle size={64} className="text-blue-500 drop-shadow-md" />
                     </div>
                     <h2 className="text-2xl font-extrabold text-slate-800 mb-2">Password Reset Successful!</h2>
                     <p className="text-slate-500 font-medium mb-8">You can now login with your new password.</p>

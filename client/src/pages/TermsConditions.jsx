@@ -68,7 +68,7 @@ const TermsConditions = () => {
             </div>
 
             <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+              <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
                 <CreditCard size={24} />
               </div>
               <h2 className="text-2xl font-bold text-slate-800">Payment Policy</h2>
@@ -132,7 +132,7 @@ const TermsConditions = () => {
                   <tbody className="text-sm">
                     <tr className="border-b border-slate-100">
                       <td className="py-4 font-bold text-slate-700">Paper Rejected</td>
-                      <td className="py-4 text-emerald-600 font-bold">100% Refund (if paid early)</td>
+                      <td className="py-4 text-blue-600 font-bold">100% Refund (if paid early)</td>
                     </tr>
                     <tr className="border-b border-slate-100">
                       <td className="py-4 font-bold text-slate-700">Before March 24, 2026</td>
@@ -144,7 +144,7 @@ const TermsConditions = () => {
                     </tr>
                     <tr>
                        <td className="py-4 font-bold text-slate-700">Duplicate Payment</td>
-                      <td className="py-4 text-emerald-600 font-bold">100% Refund (within 7-10 days)</td>
+                      <td className="py-4 text-blue-600 font-bold">100% Refund (within 7-10 days)</td>
                     </tr>
                   </tbody>
                 </table>

@@ -591,7 +591,7 @@ const HomePage = () => {
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="mb-7 inline-block relative">
                     {p.img ? (
-                      <img src={p.img} alt={p.name} className="w-[440px] h-[440px] rounded-[20px] object-cover bg-slate-100 shadow-sm transition-transform duration-300 group-hover:scale-105" />
+                      <img src={p.img} alt={p.name} className="w-[440px] h-[340px] rounded-[20px] object-cover bg-slate-100 shadow-sm transition-transform duration-300 group-hover:scale-105" />
                     ) : (
                       <div className="w-[140px] h-[140px] rounded-[20px] bg-slate-100 text-slate-500 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-105">
                         <User size={36} strokeWidth={2} />
@@ -607,7 +607,7 @@ const HomePage = () => {
             <h3 className="text-2xl font-bold text-slate-500 uppercase tracking-[0.2em] text-center mb-12 mt-20 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[60px] before:bg-slate-300 after:content-[''] after:h-px after:w-[60px] after:bg-slate-300">Patron</h3>
             <div className="max-w-sm mx-auto">
               {[
-                { name: "Dr. K. Manikanda Subramanian", role: "Principal", img: "/assets/PRINCIPAL.png" }
+                { name: "Dr. K. Manikanda Subramanian", role: "Principal", img: "assets/Principal1.png" }
               ].map((p, i) => (
                 <motion.div 
                   key={i}
@@ -617,9 +617,9 @@ const HomePage = () => {
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="mb-7 inline-block relative">
                     {p.img ? (
-                      <img src={p.img} alt={p.name} className="w-[340px] h-[340px] rounded-[20px] object-cover bg-green-50 text-green-600 shadow-sm transition-transform duration-300 group-hover:scale-105" />
+                      <img src={p.img} alt={p.name} className="w-[440px] h-[340px] rounded-[20px] object-cover bg-indigo-50 text-indigo-600 shadow-sm transition-transform duration-300 group-hover:scale-105" />
                     ) : (
-                      <div className="w-[140px] h-[140px] rounded-[20px] bg-green-50 text-green-600 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-105">
+                      <div className="w-[140px] h-[140px] rounded-[20px] bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-105">
                         <User size={36} strokeWidth={2} />
                       </div>
                     )}
@@ -657,31 +657,31 @@ const HomePage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-8 max-w-6xl mx-auto px-4">
               {[
                 { name: "Mr. G. R. Seenivasan", role: "Assistant Professor", dept: "Civil Engineering", img: "/organizing team/G R Seenivasan.jpeg" },
-                { name: "R. Yoga", role: "Assistant Professor", dept: "CSE", img: "/organizing team/Yoga.png" },
-                { name: "M. Abirami", role: "Assistant Professor", dept: "CSE", img: "/organizing team/Abirami.png" },
-                { name: "P. Chandralakshmi", role: "Assistant Professor", dept: "EEE", img: "/organizing team/Chandralakshmi.jpeg" },
-                { name: "R. R. Yuganandhine", role: "Assistant Professor", dept: "ECE", img: "/organizing team/Yuganandhine.png" },
+                { name: "Ms. R. Yoga", role: "Assistant Professor", dept: "CSE", img: "/organizing team/Yoga.png" },
+                { name: "Ms. M. Abirami", role: "Assistant Professor", dept: "CSE", img: "/organizing team/Abirami.png" },
+                { name: "Ms. P. Chandralakshmi", role: "Assistant Professor", dept: "EEE", img: "/organizing team/Chandralakshmi.jpeg" },
+                { name: "Ms. R. R. Yuganandhine", role: "Assistant Professor", dept: "ECE", img: "/organizing team/Yuganandhine.png" },
                 { name: "Dr. L. Venkatesh", role: "Associate Professor", dept: "Mechanical Engineering", img: "/organizing team/venkatesh.jpeg" },
                 { name: "Mr. K. Senthilkumar", role: "Assistant Professor", dept: "Mechatronics Engineering", img: "/organizing team/Senthilkumar K.jpg.jpeg" },
-                { name: "N.Mithra", role: "Assistant Professor", dept: "Information Technology", img: "/organizing team/Nmithra.jpeg" },
-                { name: "T. Malarvizhi", role: "Assistant Professor", dept: "AI & DS", img: "/organizing team/Malarvizhi.png" },
+                { name: "Ms. N. Mithra", role: "Assistant Professor", dept: "Information Technology", img: "/organizing team/Nmithra.jpeg" },
+                { name: "Ms. T. Malarvizhi", role: "Assistant Professor", dept: "AI & DS", img: "/organizing team/Malarvizhi.png" },
                 { name: "Dr. M. Arunmozhi", role: "Associate Professor", dept: "MBA/DoMS", img: "/organizing team/Arunmozhi.jpeg" },
-                { name: "S.R.Sarvada", role: "Assistant Professor", dept: "S&H - English", img: "/organizing team/S.R.Sarvada.jpeg" },
-                { name: "V.Mohana Priya", role: "Assistant Professor", dept: "Mathematics", img: "/organizing team/Mohana-Priya .jpeg" },
-                { name: "Sangavi", role: "Assistant Professor", dept: "S&H", img: "/organizing team/Sangavi.jpeg" },
-                { name: "Mr. S.Arunkumar ", role: "Assistant Professor", dept: "Electronics Engineering", img: "/organizing team/Arunkumar .jpeg" }
+                { name: "Ms. S. R. Sarvada", role: "Assistant Professor", dept: "S&H - English", img: "/organizing team/S.R.Sarvada.jpeg" },
+                { name: "Ms. V. Mohana Priya", role: "Assistant Professor", dept: "Mathematics", img: "/organizing team/Mohana-Priya .jpeg" },
+                { name: "Ms. Sangavi", role: "Assistant Professor", dept: "S&H", img: "/organizing team/Sangavi.jpeg" },
+                { name: "Mr. S. Arunkumar ", role: "Assistant Professor", dept: "Electronics Engineering", img: "/organizing team/Arunkumar .jpeg" }
               ].map((m, idx, arr) => (
                 <motion.div 
                   key={idx}
                   whileHover={{ y: -8 }}
                   className={`bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-500 flex flex-col items-center text-center group h-full col-span-1 lg:col-span-2 ${arr.length % 3 === 2 && idx === arr.length - 2 ? 'lg:col-start-2' : arr.length % 3 === 1 && idx === arr.length - 1 ? 'lg:col-start-3' : ''}`}
                 >
-                  <div className="w-36 h-36 md:w-40 md:h-40 mb-6 relative">
+                  <div className="w-32 h-40 md:w-36 md:h-48 mb-6 relative">
                     {m.img ? (
                       <img 
                         src={m.img} 
                         alt={m.name} 
-                        className="w-full h-full rounded-[1.5rem] object-cover border-4 border-slate-50 group-hover:border-indigo-100 shadow-md group-hover:shadow-xl transition-all duration-500 group-hover:scale-105"
+                        className="w-full h-full rounded-[1.5rem] object-cover object-top border-4 border-slate-50 group-hover:border-indigo-100 shadow-md group-hover:shadow-xl transition-all duration-500 group-hover:scale-105"
                       />
                     ) : (
                       <div className="w-full h-full bg-slate-50 text-slate-400 rounded-[1.5rem] flex items-center justify-center border-4 border-slate-50 group-hover:bg-indigo-50 group-hover:text-indigo-500 shadow-md group-hover:shadow-xl transition-all duration-500 group-hover:scale-105">

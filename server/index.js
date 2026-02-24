@@ -5,8 +5,16 @@ const connectDB = require('./config/db');
 const helmet = require('helmet');
 const compression = require('compression');
 
-// Load environment variables
-dotenv.config();
+// Cache NODE_ENV before dotenv loads so we can force production testing locally
+const envNodeEnv = process.env.NODE_ENV;
+
+// Load environment variables (do not override if already set in process.env)
+dotenv.config({ override: false });
+
+// Restore NODE_ENV if it was explicitly passed to the process
+if (envNodeEnv) {
+    process.env.NODE_ENV = envNodeEnv;
+}
 
 // Connect to Database
 connectDB();
@@ -43,11 +51,6 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.get('/', (req, res) => {
-    res.send('API is running...');
-});
-
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
@@ -61,8 +64,26 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/settings', settingsRoutes);
 
-// 404 Handler
+// Serve frontend if it's built (Production / Static Hosting)
+const fs = require('fs');
+const path = require('path');
+const clientDistPath = path.join(__dirname, '../client/dist');
+
+if (fs.existsSync(clientDistPath)) {
+    console.log(`Serving static files from: ${clientDistPath}`);
+    app.use(express.static(clientDistPath));
+} else {
+    console.log(`Development mode API running without static frontend.`);
+    app.get('/', (req, res) => {
+        res.send('API is running... (Development Mode)');
+    });
+}
+
+// SPA Fallback & 404 Handler
 app.use((req, res, next) => {
+    if (fs.existsSync(clientDistPath) && req.method === 'GET' && !req.path.startsWith('/api')) {
+        return res.sendFile(path.resolve(clientDistPath, 'index.html'));
+    }
     res.status(404).json({ message: 'Route not found' });
 });
 

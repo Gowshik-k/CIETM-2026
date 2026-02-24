@@ -9,7 +9,8 @@ const {
     resendVerification,
     forgotPassword,
     resetPassword,
-    updatePassword
+    updatePassword,
+    adminCreateUser
 } = require('../controllers/authController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -22,5 +23,6 @@ router.put('/reset-password/:resetToken', resetPassword);
 router.get('/profile', protect, getUserProfile);
 router.get('/users', protect, admin, getUsers);
 router.put('/update-password', protect, updatePassword);
+router.post('/admin/create-user', protect, admin, adminCreateUser);
 
 module.exports = router;

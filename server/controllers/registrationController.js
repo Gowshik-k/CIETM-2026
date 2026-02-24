@@ -50,9 +50,14 @@ const saveDraft = async (req, res) => {
             // Filter team members
             const validTeamMembers = teamMembers ? teamMembers.filter(m => m.name && m.name.trim() !== '') : [];
 
+            // Generate a unique author ID (e.g., CIETM-123456)
+            const randomCode = Math.floor(100000 + Math.random() * 900000);
+            const authorId = `CIETM-${randomCode}`;
+
             // Create new draft
             registration = await Registration.create({
                 userId,
+                authorId,
                 personalDetails,
                 teamMembers: validTeamMembers,
                 paperDetails,

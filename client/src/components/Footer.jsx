@@ -38,7 +38,7 @@ const Footer = () => {
           {/* Brand & Mission - Spans 4 columns */}
           <div className="lg:col-span-4 flex flex-col items-center lg:items-start">
             <Link to="/" className="text-3xl font-black text-slate-900 tracking-tighter mb-8 flex items-center gap-2 group" onClick={() => scrollToSection('#hero')}>
-              CIETM <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">2026</span>
+              CIETM <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 p-1">2026</span>
             </Link>
             <p className="text-slate-500 leading-relaxed mb-10 text-base max-w-sm font-medium">
               Join the global dialogue at the prestigious International Conference on Engineering, Technology and Management. 

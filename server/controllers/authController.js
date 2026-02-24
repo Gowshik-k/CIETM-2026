@@ -229,8 +229,15 @@ const resendVerification = async (req, res) => {
 const forgotPassword = async (req, res) => {
     const { email } = req.body;
 
+    if (!email) {
+        return res.status(400).json({ message: 'Please provide an email address' });
+    }
+
     try {
-        const user = await User.findOne({ email });
+        // Case-insensitive and trimmed search
+        const user = await User.findOne({
+            email: new RegExp('^' + email.trim() + '$', 'i')
+        });
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -242,7 +249,14 @@ const forgotPassword = async (req, res) => {
         await user.save({ validateBeforeSave: false });
 
         // Create reset url
-        const frontendBaseUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+        let frontendBaseUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+        if (req.headers.referer) {
+            try {
+                // Extract origin from referer (e.g. http://10.237.41.18:5173 out of http://10.237.41.18:5173/login)
+                frontendBaseUrl = new URL(req.headers.referer).origin;
+            } catch (e) { }
+        }
+
         const frontendResetUrl = `${frontendBaseUrl.replace(/\/$/, '')}/reset-password/${resetToken}`;
 
 
@@ -274,7 +288,7 @@ const forgotPassword = async (req, res) => {
 
             await user.save({ validateBeforeSave: false });
 
-            return res.status(500).json({ message: 'Email could not be sent' });
+            return res.status(500).json({ message: 'Email could not be sent', error: error.message || error.toString() });
         }
     } catch (error) {
         console.error(error);
@@ -350,6 +364,50 @@ const getUsers = async (req, res) => {
     }
 };
 
+// @desc    Admin Create User
+// @route   POST /api/auth/admin/create-user
+// @access  Private/Admin
+const adminCreateUser = async (req, res) => {
+    const { name, email, password, phone, role } = req.body;
+
+    try {
+        // Check if user already exists in MAIN User table
+        const userExists = await User.findOne({ email });
+
+        if (userExists) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
+        // Create the user directly
+        const user = await User.create({
+            name,
+            email,
+            password, // Mongoose pre-save hook on User will hash this
+            phone,
+            role: role || 'author',
+            isEmailVerified: true
+        });
+
+        // If they were pending, remove them from pending
+        await PendingUser.deleteOne({ email });
+
+        res.status(201).json({
+            message: 'User created successfully',
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                phone: user.phone,
+                isEmailVerified: user.isEmailVerified
+            }
+        });
+    } catch (error) {
+        console.error('Admin Create User error:', error);
+        res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -359,5 +417,6 @@ module.exports = {
     resendVerification,
     forgotPassword,
     resetPassword,
-    updatePassword
+    updatePassword,
+    adminCreateUser
 };

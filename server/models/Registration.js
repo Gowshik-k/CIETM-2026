@@ -8,6 +8,12 @@ const registrationSchema = new mongoose.Schema({
         unique: true,
         index: true
     },
+    authorId: {
+        type: String,
+        unique: true,
+        sparse: true,
+        index: true
+    },
     personalDetails: {
         name: String,
         email: String,

@@ -1,7 +1,10 @@
 const Settings = require('../models/Settings');
 const Registration = require('../models/Registration');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
+const PendingUser = require('../models/PendingUser');
 const { createNotification } = require('./notificationController');
+const { cloudinary } = require('../config/cloudinary');
 
 // @desc    Get system settings
 // @route   GET /api/settings
@@ -96,9 +99,59 @@ const exportRegistrations = async (req, res) => {
     }
 };
 
+// @desc    Clear database (except admins)
+// @route   DELETE /api/settings/cleanup/database
+// @access  Admin
+const cleanupDatabase = async (req, res) => {
+    try {
+        // Delete all registrations, notifications, and pending users
+        await Registration.deleteMany({});
+        await Notification.deleteMany({});
+        await PendingUser.deleteMany({});
+
+        // Delete all users except admins
+        await User.deleteMany({ role: { $ne: 'admin' } });
+
+        res.json({ message: 'Database cleaned up successfully (admin accounts preserved).' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Clear Cloudinary resources for the conference
+// @route   DELETE /api/settings/cleanup/cloudinary
+// @access  Admin
+const cleanupCloudinary = async (req, res) => {
+    try {
+        // Find and delete all resources in the conference_papers folder
+        // Papers are uploaded as 'raw' resources (DOCX)
+        const rawResult = await cloudinary.api.delete_resources_by_prefix('conference_papers/', { resource_type: 'raw' });
+
+        // Also delete any images that might accidentally be there
+        const imgResult = await cloudinary.api.delete_resources_by_prefix('conference_papers/', { resource_type: 'image' });
+
+        // Delete the folder itself, catch error if not empty or not found
+        let folderResult = null;
+        try {
+            folderResult = await cloudinary.api.delete_folder('conference_papers');
+        } catch (folderErr) {
+            console.warn('Could not delete Cloudinary folder:', folderErr.message);
+        }
+
+        res.json({
+            message: 'Cloudinary files cleaned up successfully.',
+            details: { raw: rawResult, image: imgResult, folder: folderResult }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message || 'Failed to clean up Cloudinary' });
+    }
+};
+
 module.exports = {
     getSettings,
     updateSettings,
     broadcastNotification,
-    exportRegistrations
+    exportRegistrations,
+    cleanupDatabase,
+    cleanupCloudinary
 };

@@ -7,7 +7,7 @@ import {
   XCircle, Search, Filter, ExternalLink, Home, 
   LayoutDashboard, Download, PieChart, BarChart2, 
   Settings, Bell, Mail, Shield, ChevronRight,
-  TrendingUp, IndianRupee, AlertCircle, CreditCard
+  TrendingUp, IndianRupee, AlertCircle, CreditCard, Trash2, UserPlus
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -106,10 +106,14 @@ const AdminDashboard = () => {
   const [settings, setSettings] = useState(null);
   const [users, setUsers] = useState([]);
   const [broadcast, setBroadcast] = useState({ title: '', message: '', type: 'info' });
+  const [newAuthor, setNewAuthor] = useState({ name: '', email: '', phone: '', password: '' });
+  const [isCreatingAuthor, setIsCreatingAuthor] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
   const [scannedResult, setScannedResult] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hasNewNotifications, setHasNewNotifications] = useState(true);
 
   useEffect(() => {
     fetchAllData();
@@ -185,6 +189,31 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleCreateAuthor = async (e) => {
+    e.preventDefault();
+    if (!newAuthor.name || !newAuthor.email || !newAuthor.password) {
+      return toast.error("Please fill in all required fields (Name, Email, Password)");
+    }
+    
+    setIsCreatingAuthor(true);
+    const loadingToast = toast.loading("Creating new author account...");
+    try {
+      const config = { headers: { Authorization: `Bearer ${user?.token}` } };
+      await axios.post('/api/auth/admin/create-user', newAuthor, config);
+      
+      toast.success("Author account created successfully!", { id: loadingToast });
+      setNewAuthor({ name: '', email: '', phone: '', password: '' });
+      setIsCreateModalOpen(false); // Close the modal on success
+      // Refresh the users list
+      const usersRes = await axios.get('/api/auth/users', config);
+      setUsers(usersRes.data);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to create author", { id: loadingToast });
+    } finally {
+      setIsCreatingAuthor(false);
+    }
+  };
+
   const exportToExcel = async () => {
     const loadingToast = toast.loading("Preparing Excel workbook...");
     try {
@@ -204,6 +233,35 @@ const AdminDashboard = () => {
       toast.success("Excel file downloaded successfully", { id: loadingToast });
     } catch (error) {
       toast.error("Excel export failed", { id: loadingToast });
+    }
+  };
+
+  const handleCleanupDatabase = async () => {
+    const confirmation = prompt('Are you absolutely sure you want to PURGE the database? This action is IRREVERSIBLE. Type "CONFIRM" to proceed.');
+    if (confirmation !== 'CONFIRM') return toast.error("Database purge cancelled.");
+
+    const loadingToast = toast.loading("Purging database (keeping admins)...");
+    try {
+      const config = { headers: { Authorization: `Bearer ${user?.token}` } };
+      await axios.delete('/api/settings/cleanup/database', config);
+      toast.success("Database purged successfully", { id: loadingToast });
+      fetchAllData();
+    } catch (error) {
+      toast.error("Database purge failed", { id: loadingToast });
+    }
+  };
+
+  const handleCleanupCloudinary = async () => {
+    const confirmation = prompt('Are you absolutely sure you want to PURGE all Cloudinary files? This action is IRREVERSIBLE. Type "CONFIRM" to proceed.');
+    if (confirmation !== 'CONFIRM') return toast.error("Cloudinary purge cancelled.");
+
+    const loadingToast = toast.loading("Purging Cloudinary files...");
+    try {
+      const config = { headers: { Authorization: `Bearer ${user?.token}` } };
+      const res = await axios.delete('/api/settings/cleanup/cloudinary', config);
+      toast.success(res.data.message || "Cloudinary purged successfully", { id: loadingToast });
+    } catch (error) {
+      toast.error("Cloudinary purge failed", { id: loadingToast });
     }
   };
 
@@ -246,8 +304,10 @@ const AdminDashboard = () => {
       const matchesFilter = filter === 'All' || reg.status === filter;
       const authorName = reg.personalDetails?.name || reg.userId?.name || '';
       const paperTitle = reg.paperDetails?.title || '';
+      const authorId = reg.authorId || `#CMP-26-${reg._id.slice(-6).toUpperCase()}`;
       const matchesSearch = authorName.toLowerCase().includes(search.toLowerCase()) || 
-                            paperTitle.toLowerCase().includes(search.toLowerCase());
+                            paperTitle.toLowerCase().includes(search.toLowerCase()) ||
+                            authorId.toLowerCase().includes(search.toLowerCase());
       return matchesFilter && matchesSearch;
     });
   }, [registrations, filter, search]);
@@ -377,9 +437,17 @@ const AdminDashboard = () => {
 
           <div className="flex items-center gap-2 md:gap-4">
              <div className="relative hidden md:block">
-                <button className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-white hover:text-indigo-600 transition-all">
+                <button 
+                  onClick={() => {
+                    setHasNewNotifications(false);
+                    setActiveTab('submissions');
+                  }}
+                  className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center hover:bg-white hover:text-indigo-600 transition-all"
+                >
                   <Bell size={18} />
-                  <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                  {hasNewNotifications && analytics?.recent?.length > 0 && (
+                     <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                  )}
                 </button>
              </div>
              <button onClick={fetchAllData} className="p-3 md:px-4 md:py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest border border-indigo-100 hover:bg-indigo-100 transition-all flex items-center justify-center">
@@ -387,7 +455,7 @@ const AdminDashboard = () => {
                 <span className="hidden md:inline">Force Sync</span>
              </button>
              <button title="Export to Excel" onClick={exportToExcel} className="p-3 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
-                <Download size={18} className="text-emerald-600" />
+                <Download size={18} className="text-blue-600" />
                 <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline text-slate-600">Export XLSX</span>
              </button>
              <button 
@@ -407,7 +475,7 @@ const AdminDashboard = () => {
         </header>
 
         {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto p-10 custom-scrollbar scroll-smooth">
+        <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar scroll-smooth">
           <AnimatePresence mode="wait">
             {activeTab === 'overview' && (
               <motion.div 
@@ -422,7 +490,7 @@ const AdminDashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {[
                     { label: 'Total Registrations', value: analytics?.overview?.totalRegistrations || 0, icon: Users, color: 'indigo', trend: '+12% this week' },
-                    { label: 'Papers Accepted', value: analytics?.overview?.totalAccepted || 0, icon: CheckCircle, color: 'emerald', trend: '45% approval rate' },
+                    { label: 'Papers Accepted', value: analytics?.overview?.totalAccepted || 0, icon: CheckCircle, color: 'blue', trend: '45% approval rate' },
                     { label: 'Revenue Collected', value: `₹${analytics?.overview?.totalPayments?.toLocaleString() || 0}`, icon: IndianRupee, color: 'blue', trend: 'Payments synced' },
                     { label: 'Pending Review', value: analytics?.overview?.totalPending || 0, icon: Clock, color: 'amber', trend: 'Needs attention' },
                   ].map((stat, i) => (
@@ -432,13 +500,13 @@ const AdminDashboard = () => {
                       whileHover={{ y: -5 }}
                       className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all group"
                     >
-                      <div className={`w-12 h-12 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                      <div className={`w-12 h-12 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform`}>
                         <stat.icon size={24} />
                       </div>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                      <p className="text-3xl font-black text-slate-800 mb-4">{stat.value}</p>
+                      <p className="text-2xl md:text-3xl font-black text-slate-800 mb-4">{stat.value}</p>
                       <div className="flex items-center gap-2">
-                        <span className={`text-[9px] font-bold px-2 py-1 rounded-md bg-${stat.color}-50 text-${stat.color}-600`}>
+                        <span className={`text-[8px] md:text-[9px] font-bold px-2 py-1 rounded-md bg-${stat.color}-50 text-${stat.color}-600`}>
                           {stat.trend}
                         </span>
                       </div>
@@ -449,8 +517,8 @@ const AdminDashboard = () => {
                 {/* Charts and Lists Group */}
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                   {/* Track Distribution Chart */}
-                  <div className="xl:col-span-2 bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm">
-                    <div className="flex justify-between items-center mb-8">
+                  <div className="xl:col-span-2 bg-white rounded-[2.5rem] border border-slate-100 p-6 md:p-8 shadow-sm">
+                    <div className="flex justify-between items-center mb-6 md:mb-8">
                        <div>
                          <h3 className="text-lg font-black text-slate-800">Registration Velocity</h3>
                          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Across Conference Tracks</p>
@@ -477,7 +545,7 @@ const AdminDashboard = () => {
                   </div>
 
                   {/* Recent Activity List */}
-                  <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm flex flex-col">
+                  <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 md:p-8 shadow-sm flex flex-col">
                     <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
                        Recent Submissions <span className="bg-indigo-50 text-indigo-600 text-[10px] px-2 py-0.5 rounded-full">New</span>
                     </h3>
@@ -565,6 +633,9 @@ const AdminDashboard = () => {
                                      <div>
                                         <p className="text-sm font-black text-slate-800 leading-none">{reg.personalDetails?.name || reg.userId?.name}</p>
                                         <p className="text-[10px] font-semibold text-slate-400 mt-1">{reg.userId?.email}</p>
+                                        <p className="text-[10px] font-bold text-indigo-600 mt-0.5 tracking-wider font-mono">
+                                          {reg.authorId || `#CMP-26-${reg._id.slice(-6).toUpperCase()}`}
+                                        </p>
                                      </div>
                                   </div>
                                </td>
@@ -581,7 +652,7 @@ const AdminDashboard = () => {
                                <td className="px-8 py-6">
                                   <div className="flex items-center gap-2">
                                      {reg.attended ? (
-                                       <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-600 uppercase tracking-tighter">
+                                       <span className="flex items-center gap-1.5 text-[10px] font-black text-blue-600 uppercase tracking-tighter">
                                           <CheckCircle size={14} /> Present
                                        </span>
                                      ) : (
@@ -593,7 +664,7 @@ const AdminDashboard = () => {
                                </td>
                                <td className="px-8 py-6">
                                   <span className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-[0.15em] inline-block shadow-sm ${
-                                    reg.status === 'Accepted' ? 'bg-emerald-100 text-emerald-700' :
+                                    reg.status === 'Accepted' ? 'bg-blue-100 text-blue-700' :
                                     reg.status === 'Rejected' ? 'bg-red-100 text-red-700' :
                                     reg.status === 'Under Review' ? 'bg-amber-100 text-amber-700 border-amber-200' :
                                     'bg-indigo-50 text-indigo-600'
@@ -651,9 +722,17 @@ const AdminDashboard = () => {
                          <h3 className="text-lg font-black text-slate-800">Registered Accounts</h3>
                          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Manage platform access</p>
                       </div>
-                      <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                         {users.length} Total Users
-                      </span>
+                      <div className="flex items-center gap-4">
+                         <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                            {users.length} Total Users
+                         </span>
+                         <button 
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="px-4 py-2 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-200 transition-all flex items-center gap-2"
+                         >
+                            <UserPlus size={14} /> Create User
+                         </button>
+                      </div>
                    </div>
                    <div className="overflow-x-auto custom-scrollbar">
                       <table className="w-full text-left">
@@ -695,7 +774,7 @@ const AdminDashboard = () => {
                                <td className="px-8 py-6 text-right">
                                   <div className="flex items-center justify-end gap-2">
                                      {u.isEmailVerified ? (
-                                       <span className="flex items-center gap-1.5 text-xs font-black text-emerald-600 uppercase tracking-tighter">
+                                       <span className="flex items-center gap-1.5 text-xs font-black text-blue-600 uppercase tracking-tighter">
                                           <CheckCircle size={14} /> Verified
                                        </span>
                                      ) : (
@@ -733,7 +812,7 @@ const AdminDashboard = () => {
                     <QRScanner onScan={handleVerifyQR} />
                     
                     <div className="mt-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                       Scanner Active
                     </div>
                   </div>
@@ -764,7 +843,7 @@ const AdminDashboard = () => {
                             <div className="grid grid-cols-2 gap-4">
                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">ID Status</p>
-                                  <p className="text-xs font-bold text-emerald-600 flex items-center gap-1.5"><ShieldCheck size={14} /> ACTIVE</p>
+                                  <p className="text-xs font-bold text-blue-600 flex items-center gap-1.5"><ShieldCheck size={14} /> ACTIVE</p>
                                </div>
                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Registration</p>
@@ -772,7 +851,7 @@ const AdminDashboard = () => {
                                </div>
                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 col-span-2">
                                   <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Attendance Record</p>
-                                  <p className="text-xs font-bold text-emerald-600 flex items-center gap-1.5 uppercase tracking-tighter">
+                                  <p className="text-xs font-bold text-blue-600 flex items-center gap-1.5 uppercase tracking-tighter">
                                      <Clock size={14} /> Logged at {new Date(scannedResult.attendedAt).toLocaleTimeString()}
                                   </p>
                                </div>
@@ -784,18 +863,18 @@ const AdminDashboard = () => {
                                <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{scannedResult.personalDetails?.institution}</p>
                             </div>
 
-                            <div className={`p-5 rounded-2xl border ${scannedResult.paymentStatus === 'Completed' ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
+                            <div className={`p-5 rounded-2xl border ${scannedResult.paymentStatus === 'Completed' ? 'bg-blue-50 border-blue-100' : 'bg-red-50 border-red-100'}`}>
                                <div className="flex justify-between items-center">
                                   <div>
-                                     <p className={`text-[8px] font-black uppercase mb-1 ${scannedResult.paymentStatus === 'Completed' ? 'text-emerald-600' : 'text-red-600'}`}>Payment Status</p>
-                                     <p className={`text-lg font-black ${scannedResult.paymentStatus === 'Completed' ? 'text-emerald-800' : 'text-red-800'}`}>{scannedResult.paymentStatus}</p>
+                                     <p className={`text-[8px] font-black uppercase mb-1 ${scannedResult.paymentStatus === 'Completed' ? 'text-blue-600' : 'text-red-600'}`}>Payment Status</p>
+                                     <p className={`text-lg font-black ${scannedResult.paymentStatus === 'Completed' ? 'text-blue-800' : 'text-red-800'}`}>{scannedResult.paymentStatus}</p>
                                   </div>
-                                  <div className={`p-2 rounded-xl ${scannedResult.paymentStatus === 'Completed' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-red-500 text-white shadow-lg shadow-red-200'}`}>
+                                  <div className={`p-2 rounded-xl ${scannedResult.paymentStatus === 'Completed' ? 'bg-blue-500 text-white shadow-lg shadow-blue-200' : 'bg-red-500 text-white shadow-lg shadow-red-200'}`}>
                                      <CreditCard size={24} />
                                   </div>
                                </div>
                                {scannedResult.paymentStatus === 'Completed' && (
-                                  <p className="text-[10px] font-bold text-emerald-700 mt-3 border-t border-emerald-200/50 pt-3">
+                                  <p className="text-[10px] font-bold text-blue-700 mt-3 border-t border-blue-200/50 pt-3">
                                      Transaction: {scannedResult.transactionId}
                                   </p>
                                )}
@@ -808,12 +887,12 @@ const AdminDashboard = () => {
                                <p className="text-xs font-bold text-red-600">Entry Restricted: Payment is {scannedResult.paymentStatus.toLowerCase()}.</p>
                             </div>
                          ) : (
-                            <div className="mt-8 p-6 bg-emerald-600 rounded-3xl text-white shadow-xl shadow-emerald-100 flex flex-col items-center justify-center gap-2">
+                            <div className="mt-8 p-6 bg-blue-600 rounded-3xl text-white shadow-xl shadow-blue-100 flex flex-col items-center justify-center gap-2">
                                <div className="flex items-center gap-3">
                                  <CheckCircle size={24} />
                                  <span className="font-black uppercase tracking-widest text-sm">Clear For Entry</span>
                                </div>
-                               <p className="text-[10px] font-bold text-emerald-100 opacity-80 uppercase tracking-widest">Attendance Recorded Automatically</p>
+                               <p className="text-[10px] font-bold text-blue-100 opacity-80 uppercase tracking-widest">Attendance Recorded Automatically</p>
                             </div>
                          )}
                          
@@ -869,9 +948,9 @@ const AdminDashboard = () => {
                              </div>
                           </div>
                           <div className="space-y-6 flex-1">
-                             <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                                <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Total Revenue</p>
-                                <p className="text-2xl font-black text-emerald-700">₹{analytics.overview.totalPayments?.toLocaleString()}</p>
+                             <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                                <p className="text-[10px] font-black text-blue-600 uppercase mb-1">Total Revenue</p>
+                                <p className="text-2xl font-black text-blue-700">₹{analytics.overview.totalPayments?.toLocaleString()}</p>
                              </div>
                              <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -888,8 +967,8 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* Track Engagement */}
-                    <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm">
-                       <h3 className="text-lg font-black text-slate-800 mb-8 border-b border-slate-100 pb-4">Track Insights</h3>
+                    <div className="bg-white rounded-[2.5rem] border border-slate-200 p-6 md:p-8 shadow-sm">
+                       <h3 className="text-lg font-black text-slate-800 mb-6 md:mb-8 border-b border-slate-100 pb-4">Track Insights</h3>
                        <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                           {analytics.tracks.map((track, i) => (
                             <div key={i} className="space-y-2">
@@ -993,8 +1072,8 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* Global Announcement */}
-                    <div className="bg-white rounded-[2.5rem] border border-slate-200 p-10 shadow-sm">
-                       <h3 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-3">
+                    <div className="bg-white rounded-[2.5rem] border border-slate-200 p-6 md:p-10 shadow-sm">
+                       <h3 className="text-xl font-black text-slate-800 mb-6 md:mb-8 flex items-center gap-3">
                           <Bell className="text-amber-500" /> Global Broadcast
                        </h3>
                        <form onSubmit={handleBroadcast} className="space-y-6">
@@ -1040,6 +1119,38 @@ const AdminDashboard = () => {
                           </button>
                        </form>
                     </div>
+
+                    {/* Danger Zone */}
+                    <div className="bg-red-50/50 rounded-[2.5rem] border border-red-200 p-6 md:p-10 shadow-sm col-span-1 lg:col-span-2">
+                       <h3 className="text-xl font-black text-red-800 mb-6 md:mb-8 flex items-center gap-3">
+                          <AlertCircle className="text-red-600" /> Danger Zone
+                       </h3>
+                       <div className="bg-white rounded-2xl p-6 border border-red-100 flex flex-col md:flex-row items-center justify-between gap-6 mb-4">
+                          <div>
+                            <p className="text-sm font-black text-slate-800">System Reset (Preserve Admins)</p>
+                            <p className="text-xs font-bold text-slate-500 mt-1 max-w-md">Permanently delete all author accounts, registrations, drafts, and notifications. Admin accounts will be preserved.</p>
+                          </div>
+                          <button 
+                            onClick={handleCleanupDatabase}
+                            className="w-full md:w-auto px-6 py-4 bg-red-100 bg-opacity-50 text-red-700 hover:bg-red-600 hover:text-white border border-red-200 hover:border-red-600 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                          >
+                            <Trash2 size={16} /> Purge Database
+                          </button>
+                       </div>
+                       
+                       <div className="bg-white rounded-2xl p-6 border border-red-100 flex flex-col md:flex-row items-center justify-between gap-6">
+                          <div>
+                            <p className="text-sm font-black text-slate-800">Clear Cloudinary Vault</p>
+                            <p className="text-xs font-bold text-slate-500 mt-1 max-w-md">Permanently delete all uploaded manuscripts, payment proofs, and files from Cloudinary storage.</p>
+                          </div>
+                          <button 
+                            onClick={handleCleanupCloudinary}
+                            className="w-full md:w-auto px-6 py-4 bg-red-100 bg-opacity-50 text-red-700 hover:bg-red-600 hover:text-white border border-red-200 hover:border-red-600 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                          >
+                            <Trash2 size={16} /> Purge Cloudinary
+                          </button>
+                       </div>
+                    </div>
                  </div>
                </motion.div>
             )}
@@ -1063,25 +1174,28 @@ const AdminDashboard = () => {
               initial={{ scale: 0.9, opacity: 0, y: 50 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 50 }}
-              className="relative w-[95vw] md:w-full max-w-6xl bg-white rounded-[3rem] shadow-2xl flex flex-col md:flex-row h-[90vh] md:h-[85vh] overflow-hidden"
+              className="relative w-full md:w-[95vw] lg:w-full max-w-6xl bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row h-[90vh] md:h-[85vh] overflow-hidden overflow-y-auto md:overflow-y-hidden"
             >
                {/* Modal Sidebar - Summary */}
-               <div className="w-full md:w-80 bg-slate-50 border-r border-slate-100 p-10 flex flex-col">
-                  <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center text-white text-3xl font-black mb-6 shadow-xl shadow-indigo-200 mx-auto md:mx-0">
-                    {selectedReg.personalDetails?.name?.charAt(0) || selectedReg.userId?.name?.charAt(0)}
-                  </div>
-                  <div className="text-center md:text-left mb-8">
-                    <h2 className="text-xl font-black text-slate-800 leading-tight">{selectedReg.personalDetails?.name || selectedReg.userId?.name}</h2>
-                    <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest truncate">{selectedReg.userId?.email}</p>
+               <div className="w-full md:w-80 bg-slate-50 border-r border-slate-100 p-6 md:p-10 flex flex-col shrink-0">
+                  <div className="flex md:flex-col items-center gap-4 md:gap-0">
+                    <div className="w-16 h-16 md:w-20 md:h-20 bg-indigo-600 rounded-2xl md:rounded-3xl flex items-center justify-center text-white text-2xl md:text-3xl font-black shadow-xl shadow-indigo-200 shrink-0">
+                    </div>
+                    <div className="text-left md:text-left md:mb-8 md:mt-6 overflow-hidden max-w-full">
+                      <h2 className="text-lg md:text-xl font-black text-slate-800 leading-tight truncate">{selectedReg.personalDetails?.name || selectedReg.userId?.name}</h2>
+                      <p className="text-xs font-bold text-slate-400 mt-1 md:mt-2 uppercase tracking-widest truncate">{selectedReg.userId?.email}</p>
+                    </div>
                   </div>
 
-                  <div className="space-y-3 mb-10">
+                  <div className="space-y-3 mb-6 md:mb-10 mt-6 md:mt-0">
                      <div className="flex justify-between items-center px-4 py-3 bg-white rounded-2xl border border-slate-200">
                         <span className="text-[9px] font-black text-slate-400 uppercase group-hover:block tracking-widest">ID</span>
-                        <span className="text-[10px] font-mono font-bold text-slate-800">...{selectedReg._id.slice(-6)}</span>
+                        <span className="text-[10px] font-mono font-bold text-slate-800">
+                           {selectedReg.authorId || `...${selectedReg._id.slice(-6)}`}
+                        </span>
                      </div>
                      <div className={`flex justify-between items-center px-4 py-3 rounded-2xl border ${
-                       selectedReg.status === 'Accepted' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600'
+                       selectedReg.status === 'Accepted' ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-amber-50 border-amber-100 text-amber-600'
                      }`}>
                         <span className="text-[9px] font-black uppercase tracking-widest">Status</span>
                         <span className="text-[10px] font-black uppercase tracking-widest">{selectedReg.status}</span>
@@ -1098,7 +1212,7 @@ const AdminDashboard = () => {
                      {selectedReg.status !== 'Accepted' && (
                        <button 
                          onClick={() => handleReview(selectedReg._id, 'Accepted')}
-                         className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-200 transition-all hover:-translate-y-1"
+                         className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-200 transition-all hover:-translate-y-1"
                        >
                          Approve Submission
                        </button>
@@ -1238,11 +1352,11 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Modal Actions Footer */}
-                <div className="bg-white/80 backdrop-blur-xl border-t border-slate-100 p-6 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 z-20">
-                   <div className="flex items-center gap-6">
-                      <div className={`px-5 py-3 rounded-2xl border transition-all ${selectedReg.paymentStatus === 'Completed' ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
+                <div className="bg-white/90 backdrop-blur-xl border-t border-slate-100 p-6 md:p-8 flex flex-col lg:flex-row items-center justify-between gap-4 md:gap-6 z-20 shrink-0">
+                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 md:gap-6 w-full lg:w-auto">
+                      <div className={`px-4 md:px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none ${selectedReg.paymentStatus === 'Completed' ? 'bg-blue-50 border-blue-100' : 'bg-red-50 border-red-100'}`}>
                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Payment Verification</p>
-                         <p className={`text-sm font-black flex items-center gap-2 ${selectedReg.paymentStatus === 'Completed' ? 'text-emerald-700' : 'text-red-700'}`}>
+                         <p className={`text-sm font-black flex items-center gap-2 ${selectedReg.paymentStatus === 'Completed' ? 'text-blue-700' : 'text-red-700'}`}>
                             {selectedReg.paymentStatus === 'Completed' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
                             {selectedReg.paymentStatus}
                          </p>
@@ -1250,7 +1364,7 @@ const AdminDashboard = () => {
                       
                       <button 
                         onClick={() => handleToggleAttendance(selectedReg)}
-                        className={`px-5 py-3 rounded-2xl border transition-all flex flex-col items-start ${selectedReg.attended ? 'bg-indigo-50 border-indigo-100' : 'bg-slate-50 border-slate-200'}`}
+                        className={`px-4 md:px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none flex flex-col justify-center sm:items-start ${selectedReg.attended ? 'bg-indigo-50 border-indigo-100' : 'bg-slate-50 border-slate-200'}`}
                       >
                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">On-site Attendance</p>
                          <span className={`text-sm font-black flex items-center gap-2 ${selectedReg.attended ? 'text-indigo-700' : 'text-slate-400'}`}>
@@ -1260,11 +1374,11 @@ const AdminDashboard = () => {
                       </button>
                    </div>
 
-                   <div className="flex items-center gap-3 w-full sm:w-auto">
+                   <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
                       {selectedReg.status !== 'Accepted' && (
                         <button 
                           onClick={() => handleReview(selectedReg._id, 'Accepted')}
-                          className="flex-1 sm:flex-none px-8 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.15em] hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-100"
+                          className="flex-1 w-full sm:w-auto px-6 md:px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.15em] hover:bg-blue-700 transition-all shadow-xl shadow-blue-100"
                         >
                           Accept Manuscript
                         </button>
@@ -1272,7 +1386,7 @@ const AdminDashboard = () => {
                       {selectedReg.status !== 'Rejected' && (
                         <button 
                           onClick={() => handleReview(selectedReg._id, 'Rejected')}
-                          className="flex-1 sm:flex-none px-8 py-4 bg-white text-red-500 border border-red-100 rounded-2xl font-black text-xs uppercase tracking-[0.15em] hover:bg-red-50 transition-all"
+                          className="flex-1 w-full sm:w-auto px-6 md:px-8 py-4 bg-white text-red-500 border border-red-100 rounded-2xl font-black text-xs uppercase tracking-[0.15em] hover:bg-red-50 transition-all"
                         >
                           Reject
                         </button>
@@ -1283,6 +1397,102 @@ const AdminDashboard = () => {
             </motion.div>
           </div>
         )}
+      </AnimatePresence>
+
+      {/* Create Author Modal */}
+      <AnimatePresence>
+         {isCreateModalOpen && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
+               <motion.div 
+                 initial={{ opacity: 0 }} 
+                 animate={{ opacity: 1 }} 
+                 exit={{ opacity: 0 }} 
+                 onClick={() => setIsCreateModalOpen(false)}
+                 className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+               />
+               <motion.div 
+                 initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                 animate={{ scale: 1, opacity: 1, y: 0 }}
+                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                 className="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl border border-slate-100 p-8 md:p-10 overflow-hidden"
+               >
+                  <div className="flex justify-between items-start mb-8">
+                     <div>
+                        <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                           <UserPlus className="text-emerald-500" /> Create Author
+                        </h3>
+                        <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">Directly verify & add user</p>
+                     </div>
+                     <button onClick={() => setIsCreateModalOpen(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-800 rounded-full transition-colors">
+                        <X size={20} />
+                     </button>
+                  </div>
+
+                  <form onSubmit={handleCreateAuthor} className="space-y-6">
+                     <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 block mb-2">Full Name *</label>
+                        <input 
+                          type="text" 
+                          placeholder="Dr. John Doe"
+                          value={newAuthor.name}
+                          onChange={(e) => setNewAuthor({...newAuthor, name: e.target.value})}
+                          className="w-full bg-slate-50 border border-slate-100 p-4 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                          required
+                        />
+                     </div>
+
+                     <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 block mb-2">Email Address *</label>
+                        <input 
+                          type="email" 
+                          placeholder="john.doe@example.com"
+                          value={newAuthor.email}
+                          onChange={(e) => setNewAuthor({...newAuthor, email: e.target.value})}
+                          className="w-full bg-slate-50 border border-slate-100 p-4 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                          required
+                        />
+                     </div>
+                     
+                     <div className="grid grid-cols-2 gap-4">
+                        <div>
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 block mb-2">Phone Number</label>
+                           <input 
+                             type="tel" 
+                             placeholder="+1 234 567 8900"
+                             value={newAuthor.phone}
+                             onChange={(e) => setNewAuthor({...newAuthor, phone: e.target.value})}
+                             className="w-full bg-slate-50 border border-slate-100 p-4 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                           />
+                        </div>
+                        <div>
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 block mb-2">Initial Password *</label>
+                           <input 
+                             type="password" 
+                             placeholder="••••••••"
+                             value={newAuthor.password}
+                             onChange={(e) => setNewAuthor({...newAuthor, password: e.target.value})}
+                             className="w-full bg-slate-50 border border-slate-100 p-4 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                             required
+                             minLength={6}
+                           />
+                        </div>
+                     </div>
+
+                     <div className="bg-emerald-50 text-emerald-700 p-4 rounded-2xl flex items-start gap-3 text-xs mb-4">
+                        <CheckCircle size={16} className="shrink-0 mt-0.5 text-emerald-500" />
+                        <p className="font-bold">Account will bypass email verification. Authors can log in immediately and change their password later.</p>
+                     </div>
+
+                     <button 
+                       disabled={isCreatingAuthor}
+                       className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-100 hover:-translate-y-1 transition-all disabled:opacity-50"
+                     >
+                       {isCreatingAuthor ? 'Creating Account...' : 'Create Verified Author'}
+                     </button>
+                  </form>
+               </motion.div>
+            </div>
+         )}
       </AnimatePresence>
 
       <style>{`
