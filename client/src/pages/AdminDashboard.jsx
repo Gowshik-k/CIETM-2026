@@ -114,6 +114,7 @@ const AdminDashboard = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState(true);
+  const [manualPaymentAmount, setManualPaymentAmount] = useState('');
 
   useEffect(() => {
     fetchAllData();
@@ -233,6 +234,31 @@ const AdminDashboard = () => {
       toast.success("Excel file downloaded successfully", { id: loadingToast });
     } catch (error) {
       toast.error("Excel export failed", { id: loadingToast });
+    }
+  };
+
+  const handleManualPaymentConfirm = async (reg) => {
+    if (!manualPaymentAmount || isNaN(manualPaymentAmount) || Number(manualPaymentAmount) <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    const loadingToast = toast.loading("Processing Manual Payment...");
+    try {
+      const config = { headers: { Authorization: `Bearer ${user?.token}` } };
+      const { data } = await axios.put(`/api/registrations/${reg._id}/status`, {
+        paymentStatus: 'Completed',
+        amount: Number(manualPaymentAmount),
+        transactionId: `MANUAL_CASH_${new Date().getTime()}`,
+        attended: true
+      }, config);
+      
+      setRegistrations(registrations.map(r => r._id === reg._id ? data : r));
+      if (selectedReg?._id === reg._id) setSelectedReg(data);
+      toast.success("Payment confirmed and attendance logged!", { id: loadingToast });
+      setManualPaymentAmount('');
+      fetchAllData();
+    } catch (error) {
+      toast.error("Failed to process manual payment", { id: loadingToast });
     }
   };
 
@@ -917,12 +943,12 @@ const AdminDashboard = () => {
                  exit={{ opacity: 0, scale: 0.95 }}
                  className="max-w-7xl mx-auto space-y-8"
                >
-                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Revenue Breakdown */}
-                    <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm">
+                    <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm lg:col-span-1 flex flex-col">
                        <h3 className="text-lg font-black text-slate-800 mb-8 border-b border-slate-100 pb-4">Finance Overview</h3>
-                       <div className="flex flex-col md:flex-row items-center gap-12">
-                          <div className="h-[250px] w-full max-w-[250px] relative">
+                       <div className="flex flex-col items-center gap-8 flex-1 justify-center">
+                          <div className="h-[220px] w-full max-w-[220px] relative">
                              <ResponsiveContainer width="100%" height="100%">
                                 <RePieChart>
                                    <Pie
@@ -930,35 +956,43 @@ const AdminDashboard = () => {
                                        { name: 'Completed', value: analytics.overview.completedPaymentsCount || 0 },
                                        { name: 'Unpaid (Accepted)', value: (analytics.overview.totalAccepted || 0) - (analytics.overview.completedPaymentsCount || 0) }
                                      ]}
-                                     innerRadius={60}
+                                     innerRadius={70}
                                      outerRadius={100}
                                      paddingAngle={8}
                                      dataKey="value"
+                                     stroke="none"
                                    >
-                                     <Cell fill="#10b981" />
+                                     <Cell fill="url(#colorRevenuePaid)" />
                                      <Cell fill="#f1f5f9" />
                                    </Pie>
+                                   <defs>
+                                      <linearGradient id="colorRevenuePaid" x1="0" y1="0" x2="0" y2="1">
+                                         <stop offset="5%" stopColor="#10b981" stopOpacity={1}/>
+                                         <stop offset="95%" stopColor="#059669" stopOpacity={1}/>
+                                      </linearGradient>
+                                   </defs>
                                 </RePieChart>
                              </ResponsiveContainer>
                              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <p className="text-2xl font-black text-slate-800 leading-none">
+                                <p className="text-3xl font-black text-slate-800 leading-none mb-1">
                                   {Math.round(((analytics.overview.completedPaymentsCount || 0) / (analytics.overview.totalAccepted || 1)) * 100)}%
                                 </p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase">Paid</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Paid</p>
                              </div>
                           </div>
-                          <div className="space-y-6 flex-1">
-                             <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                                <p className="text-[10px] font-black text-blue-600 uppercase mb-1">Total Revenue</p>
-                                <p className="text-2xl font-black text-blue-700">₹{analytics.overview.totalPayments?.toLocaleString()}</p>
+                          
+                          <div className="w-full space-y-4">
+                             <div className="p-5 bg-gradient-to-br from-indigo-50 to-blue-50/50 rounded-2xl border border-indigo-100/50 shadow-inner group hover:shadow-md transition-all">
+                                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1.5 opacity-80 group-hover:opacity-100">Total Revenue</p>
+                                <p className="text-3xl font-black text-indigo-700">₹{analytics.overview.totalPayments?.toLocaleString()}</p>
                              </div>
                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                   <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Paid Authors</p>
+                                <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm hover:border-slate-200 transition-colors">
+                                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Paid Authors</p>
                                    <p className="text-xl font-black text-slate-700">{analytics.overview.completedPaymentsCount}</p>
                                 </div>
-                                <div>
-                                   <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Avg Ticket Size</p>
+                                <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm hover:border-slate-200 transition-colors">
+                                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Avg Ticket</p>
                                    <p className="text-xl font-black text-slate-700">₹{Math.round(analytics.overview.totalPayments / (analytics.overview.completedPaymentsCount || 1))}</p>
                                 </div>
                              </div>
@@ -966,25 +1000,63 @@ const AdminDashboard = () => {
                        </div>
                     </div>
 
-                    {/* Track Engagement */}
-                    <div className="bg-white rounded-[2.5rem] border border-slate-200 p-6 md:p-8 shadow-sm">
-                       <h3 className="text-lg font-black text-slate-800 mb-6 md:mb-8 border-b border-slate-100 pb-4">Track Insights</h3>
-                       <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                          {analytics.tracks.map((track, i) => (
-                            <div key={i} className="space-y-2">
-                               <div className="flex justify-between items-end">
-                                  <p className="text-xs font-black text-slate-700 max-w-[80%] truncate uppercase tracking-tight">{track._id}</p>
-                                  <p className="text-sm font-black text-indigo-600">{track.count}</p>
-                               </div>
-                               <div className="h-2 bg-slate-50 rounded-full overflow-hidden">
-                                  <motion.div 
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${(track.count / analytics.overview.totalRegistrations) * 100}%` }}
-                                    className="h-full bg-slate-900"
-                                  ></motion.div>
-                               </div>
-                            </div>
-                          ))}
+                    {/* Track Engagement Chart */}
+                    <div className="bg-white rounded-[2.5rem] border border-slate-200 p-6 md:p-8 shadow-sm lg:col-span-2 flex flex-col">
+                       <h3 className="text-lg font-black text-slate-800 mb-6 border-b border-slate-100 pb-4">Manuscripts per Track</h3>
+                       <div className="flex-1 w-full min-h-[400px]">
+                          {analytics.tracks && analytics.tracks.length > 0 ? (
+                             <ResponsiveContainer width="100%" height="100%">
+                                <BarChart
+                                   data={analytics.tracks.map(t => ({ name: t._id, Submissions: t.count }))}
+                                   margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
+                                >
+                                   <defs>
+                                      <linearGradient id="colorTrackCount" x1="0" y1="0" x2="0" y2="1">
+                                         <stop offset="5%" stopColor="#8b5cf6" stopOpacity={1}/>
+                                         <stop offset="95%" stopColor="#6366f1" stopOpacity={0.8}/>
+                                      </linearGradient>
+                                   </defs>
+                                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                   <XAxis 
+                                     dataKey="name" 
+                                     axisLine={false} 
+                                     tickLine={false} 
+                                     tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }} 
+                                     dy={15}
+                                     angle={-45}
+                                     textAnchor="end"
+                                   />
+                                   <YAxis 
+                                     axisLine={false} 
+                                     tickLine={false} 
+                                     tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} 
+                                     dx={-10}
+                                   />
+                                   <Tooltip 
+                                     cursor={{ fill: '#f8fafc' }}
+                                     contentStyle={{ 
+                                       borderRadius: '16px', 
+                                       border: 'none', 
+                                       boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                                       fontWeight: 700,
+                                       fontSize: '12px'
+                                     }}
+                                   />
+                                   <Bar 
+                                     dataKey="Submissions" 
+                                     fill="url(#colorTrackCount)" 
+                                     radius={[8, 8, 8, 8]} 
+                                     barSize={40}
+                                     animationDuration={1500}
+                                   />
+                                </BarChart>
+                             </ResponsiveContainer>
+                          ) : (
+                             <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                                <TrendingUp size={48} className="opacity-20 mb-4" />
+                                <p className="font-bold text-sm tracking-wide">No track data available yet.</p>
+                             </div>
+                          )}
                        </div>
                     </div>
                  </div>
@@ -1017,6 +1089,20 @@ const AdminDashboard = () => {
                                className={`w-14 h-8 rounded-full transition-all relative ${settings.registrationOpen ? 'bg-indigo-600' : 'bg-slate-300'}`}
                              >
                                 <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${settings.registrationOpen ? 'left-7' : 'left-1'}`}></div>
+                             </button>
+                          </div>
+
+                          <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                             <div>
+                                <p className="text-sm font-black text-slate-800">Online Payments</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase">Enable/Disable payment gateway</p>
+                             </div>
+                             <button 
+                               type="button"
+                               onClick={() => setSettings({...settings, onlinePaymentEnabled: !settings.onlinePaymentEnabled})}
+                               className={`w-14 h-8 rounded-full transition-all relative ${settings.onlinePaymentEnabled ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                             >
+                                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${settings.onlinePaymentEnabled ? 'left-7' : 'left-1'}`}></div>
                              </button>
                           </div>
 
@@ -1354,24 +1440,47 @@ const AdminDashboard = () => {
                 {/* Modal Actions Footer */}
                 <div className="bg-white/90 backdrop-blur-xl border-t border-slate-100 p-6 md:p-8 flex flex-col lg:flex-row items-center justify-between gap-4 md:gap-6 z-20 shrink-0">
                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 md:gap-6 w-full lg:w-auto">
-                      <div className={`px-4 md:px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none ${selectedReg.paymentStatus === 'Completed' ? 'bg-blue-50 border-blue-100' : 'bg-red-50 border-red-100'}`}>
-                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Payment Verification</p>
-                         <p className={`text-sm font-black flex items-center gap-2 ${selectedReg.paymentStatus === 'Completed' ? 'text-blue-700' : 'text-red-700'}`}>
-                            {selectedReg.paymentStatus === 'Completed' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
-                            {selectedReg.paymentStatus}
-                         </p>
-                      </div>
+                      {selectedReg.paymentStatus === 'Completed' ? (
+                        <div className="px-4 md:px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none bg-blue-50 border-blue-100">
+                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Payment Verification</p>
+                           <p className="text-sm font-black flex items-center gap-2 text-blue-700">
+                              <CheckCircle size={16} /> Completed
+                           </p>
+                        </div>
+                      ) : (
+                        <div className="px-4 md:px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none bg-amber-50 border-amber-200 shadow-inner flex flex-col gap-2 relative">
+                           <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Manual Payment Collection</p>
+                           <div className="flex items-center gap-2">
+                              <input 
+                                 type="number"
+                                 placeholder="₹ Amount"
+                                 min="1"
+                                 value={manualPaymentAmount}
+                                 onChange={(e) => setManualPaymentAmount(e.target.value)}
+                                 className="w-24 bg-white border border-amber-200 rounded-lg p-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                              />
+                              <button
+                                 onClick={() => handleManualPaymentConfirm(selectedReg)}
+                                 className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg font-bold text-xs shadow-md transition-colors whitespace-nowrap"
+                              >
+                                 Confirm & Verify
+                              </button>
+                           </div>
+                        </div>
+                      )}
                       
-                      <button 
-                        onClick={() => handleToggleAttendance(selectedReg)}
-                        className={`px-4 md:px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none flex flex-col justify-center sm:items-start ${selectedReg.attended ? 'bg-indigo-50 border-indigo-100' : 'bg-slate-50 border-slate-200'}`}
-                      >
-                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">On-site Attendance</p>
-                         <span className={`text-sm font-black flex items-center gap-2 ${selectedReg.attended ? 'text-indigo-700' : 'text-slate-400'}`}>
-                            {selectedReg.attended ? <CheckCircle size={16} /> : <div className="w-4 h-4 rounded-full border-2 border-slate-300"></div>}
-                            {selectedReg.attended ? 'Marked Present' : 'Mark Absent'}
-                         </span>
-                      </button>
+                      {selectedReg.paymentStatus === 'Completed' && (
+                        <button 
+                          onClick={() => handleToggleAttendance(selectedReg)}
+                          className={`px-4 md:px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none flex flex-col justify-center sm:items-start ${selectedReg.attended ? 'bg-indigo-50 border-indigo-100' : 'bg-slate-50 border-slate-200'}`}
+                        >
+                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">On-site Attendance</p>
+                           <span className={`text-sm font-black flex items-center gap-2 ${selectedReg.attended ? 'text-indigo-700' : 'text-slate-400'}`}>
+                              {selectedReg.attended ? <CheckCircle size={16} /> : <div className="w-4 h-4 rounded-full border-2 border-slate-300"></div>}
+                              {selectedReg.attended ? 'Marked Present' : 'Mark Absent'}
+                           </span>
+                        </button>
+                      )}
                    </div>
 
                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">

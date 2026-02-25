@@ -9,6 +9,10 @@ const settingsSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    onlinePaymentEnabled: {
+        type: Boolean,
+        default: true
+    },
     deadlines: {
         abstractSubmission: Date,
         fullPaperSubmission: Date,

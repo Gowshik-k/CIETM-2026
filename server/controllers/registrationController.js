@@ -183,7 +183,7 @@ const sanitizeFilename = (text) => {
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/\s+/g, '_')
-        .replace(/[^a-z0-9_]/gi, '')
+        .replace(/[^a-z0-9_-]/gi, '')
         .replace(/_{2,}/g, '_')
         .toLowerCase();
 };
@@ -251,6 +251,17 @@ const updatePaper = async (req, res) => {
         // Prevent updates if already reviewed (Accepted/Rejected)
         if (['Accepted', 'Rejected'].includes(registration.status)) {
             return res.status(403).json({ message: `Cannot update paper as it has already been ${registration.status.toLowerCase()}.` });
+        }
+
+        // If there's an existing file, and the new file has a different public ID (e.g., different extension), delete the old one
+        const oldPublicId = registration.paperDetails.publicId;
+        if (oldPublicId && oldPublicId !== publicId) {
+            try {
+                const oldResourceType = registration.paperDetails.resourceType || 'raw';
+                await cloudinary.uploader.destroy(oldPublicId, { resource_type: oldResourceType });
+            } catch (err) {
+                console.error("Failed to delete old paper from Cloudinary on update:", err);
+            }
         }
 
         registration.paperDetails.fileUrl = fileUrl;
@@ -353,18 +364,17 @@ const downloadAllPapersZip = async (req, res) => {
         archive.pipe(res);
 
         for (const reg of registrations) {
-            const authorName = sanitizeFilename(reg.personalDetails?.name || 'author');
-            const paperTitle = sanitizeFilename(reg.paperDetails?.title || 'title');
             const originalName = reg.paperDetails?.originalName || '';
             const extension = originalName.split('.').pop() || 'docx';
-            const fileName = `${authorName}_${paperTitle.substring(0, 50)}.${extension}`;
+            const authorId = reg.authorId ? reg.authorId : `anonymous_${Date.now()}`;
+            const fileName = `${authorId}.${extension}`;
 
             try {
                 const response = await axios({
                     method: 'get',
                     url: reg.paperDetails.fileUrl,
                     responseType: 'stream',
-                    timeout: 30000 // 30 second timeout per file
+                    timeout: 30000
                 });
 
                 if (response.status === 200) {

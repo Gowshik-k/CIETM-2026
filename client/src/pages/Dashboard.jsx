@@ -33,6 +33,16 @@ const Dashboard = () => {
   const [showIDCard, setShowIDCard] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [lastSync, setLastSync] = useState(new Date());
+  const [settings, setSettings] = useState(null);
+
+  const fetchSettings = useCallback(async () => {
+    try {
+      const { data } = await axios.get('/api/settings');
+      setSettings(data);
+    } catch (error) {
+      console.error("Failed to fetch settings", error);
+    }
+  }, []);
 
   // Moved fetchRegistration outside useEffect to allow refreshing
   const fetchRegistration = useCallback(async () => {
@@ -108,7 +118,8 @@ const Dashboard = () => {
   useEffect(() => {
     fetchRegistration();
     fetchNotifications();
-  }, [fetchRegistration, fetchNotifications]);
+    fetchSettings();
+  }, [fetchRegistration, fetchNotifications, fetchSettings]);
 
   useEffect(() => {
     if (registration && ['Accepted', 'Rejected'].includes(registration.status) && activeTab === 'drafts') {
@@ -565,7 +576,9 @@ const Dashboard = () => {
                      <button 
                         onClick={() => {
                            if (registration?.status === 'Accepted') {
-                              handlePayment();
+                              setActiveTab('payment');
+                              const scrollTarget = document.querySelector('.overflow-y-auto') || window;
+                              scrollTarget.scrollTo({ top: 0, behavior: 'smooth' });
                            } else {
                               setActiveTab('paper');
                               const scrollTarget = document.querySelector('.overflow-y-auto') || window;
@@ -1100,15 +1113,26 @@ const Dashboard = () => {
             ) : registration?.status === 'Accepted' ? (
               <div className="relative z-10 w-full">
                 <h4 className="text-xl font-bold text-slate-800 mb-2">Checkout Ready</h4>
-                <p className="text-slate-500 mb-8 text-sm font-medium">Securely pay using UPI, Card or Internet Banking.</p>
-                <button 
-                  onClick={handlePayment}
-                  disabled={paymentLoading}
-                  className="w-full btn btn-primary py-3.5 rounded-xl shadow-lg shadow-indigo-200 font-bold flex items-center justify-center gap-2"
-                >
-                  {paymentLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <CreditCard size={18} />}
-                  {paymentLoading ? 'Processing...' : 'Continue to Payment'}
-                </button>
+                
+                {settings?.onlinePaymentEnabled === false ? (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center shadow-inner my-6">
+                     <AlertCircle size={32} className="text-amber-500 mx-auto mb-3" />
+                     <p className="text-amber-800 font-bold text-sm mb-1">Online Payments Unavailable</p>
+                     <p className="text-amber-700 text-xs">Please pay the registration fee at the venue during verification.</p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-slate-500 mb-8 text-sm font-medium">Securely pay using UPI, Card or Internet Banking.</p>
+                    <button 
+                      onClick={handlePayment}
+                      disabled={paymentLoading}
+                      className="w-full btn btn-primary py-3.5 rounded-xl shadow-lg shadow-indigo-200 font-bold flex items-center justify-center gap-2"
+                    >
+                      {paymentLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <CreditCard size={18} />}
+                      {paymentLoading ? 'Processing...' : 'Continue to Payment'}
+                    </button>
+                  </>
+                )}
               </div>
             ) : registration?.status === 'Draft' ? (
               <div className="relative z-10">
