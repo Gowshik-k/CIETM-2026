@@ -603,30 +603,29 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                     </div>
                   )}
 
-                   {(formData.category === 'FACULTY/RESEARCH SCHOLARS' || formData.category === 'INDUSTRY PERSONNEL') && (
-                    <div className={`${groupClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4`}>
-                        <div>
-                            <label className={labelClass}>Designation <span className="text-red-500">*</span></label>
-                            <input 
-                                name="designation" 
-                                value={formData.designation} 
-                                onChange={handleChange} 
-                                placeholder="e.g. Assistant Professor" 
-                                className={`${inputClass} ${errors.designation ? errorInputClass : ''}`}
-                            />
-                        </div>
-                        <div>
-                            <label className={labelClass}>Area of Specialization</label>
-                            <input 
-                                name="areaOfSpecialization" 
-                                value={formData.areaOfSpecialization} 
-                                onChange={handleChange} 
-                                placeholder="e.g. Machine Learning, Cloud Computing" 
-                                className={inputClass}
-                            />
-                        </div>
-                    </div>
+                  {(formData.category === 'FACULTY/RESEARCH SCHOLARS' || formData.category === 'INDUSTRY PERSONNEL') && (
+                     <div className={`${groupClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200`}>
+                         <label className={labelClass}>Designation <span className="text-red-500">*</span></label>
+                         <input 
+                             name="designation" 
+                             value={formData.designation} 
+                             onChange={handleChange} 
+                             placeholder="e.g. Assistant Professor" 
+                             className={`${inputClass} ${errors.designation ? errorInputClass : ''}`}
+                         />
+                     </div>
                   )}
+
+                  <div className={`${groupClass} animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200`}>
+                      <label className={labelClass}>Area of Specialization</label>
+                      <input 
+                          name="areaOfSpecialization" 
+                          value={formData.areaOfSpecialization} 
+                          onChange={handleChange} 
+                          placeholder="e.g. Machine Learning, Cloud Computing" 
+                          className={inputClass}
+                      />
+                  </div>
                </div>
             </div>
           )}
@@ -678,7 +677,27 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                       <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 mt-1 pt-3 border-t border-slate-100">
                         <div>
                           <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">{m.category === 'INDUSTRY PERSONNEL' ? 'Organization' : 'Institution'}</label>
-                          <input placeholder={m.category === 'INDUSTRY PERSONNEL' ? 'Organization' : 'Institution'} value={m.affiliation} onChange={(e) => updateTeamMember(i, 'affiliation', e.target.value)} className={inputClass} />
+                          <select 
+                             value={
+                                 hostColleges.includes(m.affiliation) 
+                                 ? m.affiliation 
+                                 : 'External'
+                             } 
+                             onChange={(e) => {
+                                 if(e.target.value !== 'External') {
+                                     updateTeamMember(i, 'affiliation', e.target.value);
+                                 } else if (!m.affiliation || hostColleges.includes(m.affiliation)) {
+                                     updateTeamMember(i, 'affiliation', '');
+                                 }
+                             }}
+                             className={`${inputClass} mb-2`}
+                          >
+                             {hostColleges.map((c, idx) => <option key={idx} value={c}>{c}</option>)}
+                             <option value="External">External Institution...</option>
+                          </select>
+                          {!hostColleges.includes(m.affiliation) && (
+                             <input placeholder={m.category === 'INDUSTRY PERSONNEL' ? 'Organization Name' : 'External Institution Name'} value={m.affiliation} onChange={(e) => updateTeamMember(i, 'affiliation', e.target.value)} className={`${inputClass} border-indigo-200 ring-2 ring-indigo-500/10 focus:ring-4`} />
+                          )}
                         </div>
                         <div>
                           <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">{m.category === 'INDUSTRY PERSONNEL' ? 'Vertical' : 'Department'}</label>
@@ -691,17 +710,15 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                           </div>
                         )}
                         {(m.category === 'FACULTY/RESEARCH SCHOLARS' || m.category === 'INDUSTRY PERSONNEL') && (
-                          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <div>
+                            <div>
                                 <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Designation</label>
                                 <input placeholder="e.g. Professor" value={m.designation} onChange={(e) => updateTeamMember(i, 'designation', e.target.value)} className={inputClass} />
-                             </div>
-                             <div>
-                                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Area of Specialization</label>
-                                <input placeholder="e.g. Machine Learning" value={m.areaOfSpecialization} onChange={(e) => updateTeamMember(i, 'areaOfSpecialization', e.target.value)} className={inputClass} />
-                             </div>
-                          </div>
+                            </div>
                         )}
+                        <div>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 mb-1 block">Area of Specialization</label>
+                            <input placeholder="e.g. Machine Learning" value={m.areaOfSpecialization} onChange={(e) => updateTeamMember(i, 'areaOfSpecialization', e.target.value)} className={inputClass} />
+                        </div>
                       </div>
                   </div>
                 </div>
@@ -726,7 +743,19 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
 
           {step === 4 && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
-              <h2 className="text-2xl font-bold text-slate-900 mb-6 shrink-0">Step 4: Paper Details</h2>
+              <h2 className="text-2xl font-bold text-slate-900 mb-4 shrink-0">Step 4: Paper Details</h2>
+              <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-xl p-4 mb-6 flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                  </div>
+                  <div>
+                      <h4 className="text-sm font-bold text-indigo-900 mb-1">Full Paper Submission</h4>
+                      <p className="text-xs text-indigo-700/80 leading-relaxed">
+                          You only need to provide your paper's core details (title, abstract, keywords) during registration. 
+                          The actual full paper file upload facility will be accessible securely from your Author Dashboard after completing this registration.
+                      </p>
+                  </div>
+              </div>
               <div className={groupClass}>
                 <label className={labelClass}>Paper Title <span className="text-red-500">*</span></label>
                 <input 

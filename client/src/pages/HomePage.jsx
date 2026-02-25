@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Calendar, MapPin, FileText, ArrowRight, 
+import {
+  Calendar, MapPin, FileText, ArrowRight,
   Globe, Users, Award, Sparkles,
   GraduationCap, BookOpen, CheckCircle, Download, FileCheck, Layers,
   Linkedin, Twitter, ChevronLeft, ChevronRight, ChevronUp, User
@@ -64,27 +64,27 @@ const HomePage = () => {
   };
 
   const tracks = [
-    { 
-      id: '01', 
-      title: 'Engineering Innovations', 
+    {
+      id: '01',
+      title: 'Engineering Innovations',
       desc: 'Advancements in Civil, Computer Science, Electrical, Electronics, Mechanical & Mechatronics Engineering.',
       icon: <Layers className="w-12 h-12 text-indigo-600 mb-6" />
     },
-    { 
-      id: '02', 
-      title: 'Economic Sustainability', 
+    {
+      id: '02',
+      title: 'Economic Sustainability',
       desc: 'Innovative models for Economic Sustainability, Circular Economy, and ESG-driven strategies.',
       icon: <Globe className="w-12 h-12 text-indigo-600 mb-6" />
     },
-    { 
-      id: '03', 
-      title: 'IT, AI & Communication', 
+    {
+      id: '03',
+      title: 'IT, AI & Communication',
       desc: 'Pioneering work in Information Technology, Artificial Intelligence, and Communication Engineering.',
       icon: <Sparkles className="w-12 h-12 text-indigo-600 mb-6" />
     },
-    { 
-      id: '04', 
-      title: 'Green Technology', 
+    {
+      id: '04',
+      title: 'Green Technology',
       desc: 'Research in Renewable Energy, Green Technology, and Sustainable Infrastructure development.',
       icon: <Award className="w-12 h-12 text-indigo-600 mb-6" />
     }
@@ -144,15 +144,15 @@ const HomePage = () => {
       <section id="hero" className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden bg-slate-950">
         {/* Background Layer */}
         <div className="absolute inset-0 z-0">
-          <motion.div 
+          <motion.div
             initial={{ scale: 1.1, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
             className="w-full h-full"
           >
-            <img 
-              src="https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1470&auto=format&fit=crop" 
-              alt="Modern Tech Conference" 
+            <img
+              src="https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1470&auto=format&fit=crop"
+              alt="Modern Tech Conference"
               className="w-full h-full object-cover"
             />
           </motion.div>
@@ -163,7 +163,7 @@ const HomePage = () => {
         </div>
 
         <div className="w-full max-w-7xl mx-auto px-6 text-center relative z-20">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -177,7 +177,7 @@ const HomePage = () => {
             <p className="text-indigo-300 text-base md:text-lg font-bold mb-2 tracking-[0.2em] uppercase">
               Innovating the Future of Technology & Management
             </p>
-            
+
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight mb-6 tracking-normal text-white drop-shadow-2xl max-w-4xl">
               Contemporary Improvements in <br className="hidden md:block" />
               Engineering Technology & <br className="hidden md:block" />
@@ -188,7 +188,7 @@ const HomePage = () => {
               <Link to="/register" className="btn btn-primary px-10 py-5 text-lg shadow-[0_0_30px_rgba(99,102,241,0.4)]">
                 Join the Conference <ArrowRight size={22} />
               </Link>
-              <a href="#about-conference" className="btn glass group px-10 py-5 text-lg border-white/20 hover:border-white/40 text-white shadow-2xl bg-white/5 hover:bg-white/10" onClick={(e) => {
+              <a href="#about-conference" className="btn glass group px-10 py-5 text-lg border-white/20 hover:border-white/40 text-black shadow-2xl bg-white/5 hover:bg-white/10" onClick={(e) => {
                 e.preventDefault();
                 document.querySelector('#about-conference')?.scrollIntoView({ behavior: 'smooth' });
               }}>
@@ -204,7 +204,7 @@ const HomePage = () => {
         </div>
 
         {/* Scroll Indicator */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2, duration: 1 }}
@@ -234,7 +234,7 @@ const HomePage = () => {
             <div className="w-20 h-1 bg-indigo-600 mx-auto mb-8 rounded-full"></div>
             <div className="flex flex-col gap-6 text-base text-slate-600 leading-relaxed mb-10 max-w-4xl mx-auto px-4">
               <p>
-                The conference aims to address the issues by providing a platform for the exchange of innovative ideas and information on recent advancements. 
+                The conference aims to address the issues by providing a platform for the exchange of innovative ideas and information on recent advancements.
                 This Conference provides a forum for undergraduates, post graduates, research scholars, faculty members and Personnel's from industry to come together and discuss the latest developments and innovations in Science, Engineering, Technology and Management.
               </p>
               <p>
@@ -250,15 +250,15 @@ const HomePage = () => {
             <div className="bg-slate-950 rounded-[30px] md:rounded-[40px] p-6 sm:p-10 md:p-16 text-white relative overflow-hidden shadow-2xl border border-white/5">
               <div className="absolute top-0 right-0 w-[600px] h-full bg-[radial-gradient(circle_at_70%_30%,rgba(99,102,241,0.15),transparent_70%)] pointer-events-none"></div>
               <div className="absolute bottom-0 left-0 w-full h-[300px] bg-gradient-to-t from-slate-950 to-transparent pointer-events-none"></div>
-              
+
               <div className="relative z-10 text-center max-w-5xl mx-auto">
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-[24px] bg-white/5 mb-8 text-indigo-400 backdrop-blur-md border border-white/10 rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                    <Sparkles size={40} className="drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
+                  <Sparkles size={40} className="drop-shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
                 </div>
                 <h3 className="text-3xl md:text-6xl font-black mb-12 uppercase tracking-tighter relative inline-block text-white leading-tight">
                   Themes <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Unlimited</span>
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
                   {[
                     { dept: "Computing & AI", tech: "Artificial Intelligence, Machine Learning, Data Science & Cyber Security" },
@@ -268,7 +268,7 @@ const HomePage = () => {
                     { dept: "Management & Economics", tech: "Digital Transformation, Fintech, ESG & Circular Economy" },
                     { dept: "Applied Sciences", tech: "Advanced Materials, Quantum Physics & Environmental Science" }
                   ].map((item, idx) => (
-                    <motion.div 
+                    <motion.div
                       key={idx}
                       whileHover={{ scale: 1.02 }}
                       className="p-6 md:p-8 rounded-[24px] bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/15 backdrop-blur-sm group/item relative overflow-hidden"
@@ -286,14 +286,14 @@ const HomePage = () => {
                     </motion.div>
                   ))}
                 </div>
-                
+
                 <div className="mt-12 pt-8 border-t border-white/10 flex flex-col items-center gap-4">
-                   <p className="text-sm text-slate-400 font-bold uppercase tracking-[0.3em]">And many more interdisciplinary topics</p>
-                   <div className="flex gap-2">
-                     {[1, 2, 3].map(i => (
-                       <div key={i} className="w-1.5 h-1.5 rounded-full bg-indigo-500/40"></div>
-                     ))}
-                   </div>
+                  <p className="text-sm text-slate-400 font-bold uppercase tracking-[0.3em]">And many more interdisciplinary topics</p>
+                  <div className="flex gap-2">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-indigo-500/40"></div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -321,9 +321,9 @@ const HomePage = () => {
                     <CheckCircle className="text-sky-400 mt-1 shrink-0" size={26} />
                     <div className="flex flex-col gap-3">
                       <span>Original work not published elsewhere and must follow IEEE formatting.</span>
-                      <a 
-                        href="https://www.ieee.org/content/dam/ieee-org/ieee/web/org/conferences/Conference-template-A4.doc" 
-                        target="_blank" 
+                      <a
+                        href="https://www.ieee.org/content/dam/ieee-org/ieee/web/org/conferences/Conference-template-A4.doc"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-sm font-bold text-sky-400 hover:text-sky-300 transition-colors w-fit"
                       >
@@ -389,16 +389,16 @@ const HomePage = () => {
                     { icon: <GraduationCap size={22} />, title: 'Conference date', date: 'April 29, 2026', active: true }
                   ].map((item, index, arr) => (
                     <div key={index} className={`relative pl-16 pb-10 ${index === arr.length - 1 ? 'pb-0' : ''}`}>
-                       {index !== arr.length - 1 && (
-                         <div className="absolute left-[20px] top-[30px] bottom-0 w-0.5 bg-white/10"></div>
-                       )}
-                       <div className={`absolute left-0 top-0 w-[42px] h-[42px] rounded-full border-2 flex items-center justify-center z-10 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${item.active ? 'bg-amber-500 border-amber-400 text-slate-900' : 'bg-slate-800 border-white/20 text-amber-500'}`}>
-                         {item.icon}
-                       </div>
-                       <div className="flex flex-col gap-1">
-                         <span className="text-xl font-bold text-white">{item.title}</span>
-                         <span className="text-lg font-semibold text-orange-400">{item.date}</span>
-                       </div>
+                      {index !== arr.length - 1 && (
+                        <div className="absolute left-[20px] top-[30px] bottom-0 w-0.5 bg-white/10"></div>
+                      )}
+                      <div className={`absolute left-0 top-0 w-[42px] h-[42px] rounded-full border-2 flex items-center justify-center z-10 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${item.active ? 'bg-amber-500 border-amber-400 text-slate-900' : 'bg-slate-800 border-white/20 text-amber-500'}`}>
+                        {item.icon}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xl font-bold text-white">{item.title}</span>
+                        <span className="text-lg font-semibold text-orange-400">{item.date}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -422,7 +422,7 @@ const HomePage = () => {
             <p className="text-lg text-slate-500 font-medium">We invite high-quality original research papers in the following tracks</p>
           </div>
 
-          <motion.div 
+          <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
@@ -436,13 +436,13 @@ const HomePage = () => {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
           >
             {tracks.map((track, i) => (
-              <motion.div 
+              <motion.div
                 variants={{
                   hidden: { opacity: 0, y: 30 },
                   visible: { opacity: 1, y: 0 }
                 }}
                 whileHover={{ y: -12, scale: 1.02 }}
-                key={track.id} 
+                key={track.id}
                 className="bg-white p-8 md:p-10 rounded-[32px] relative text-center flex flex-col items-center border border-slate-100 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(99,102,241,0.12)] hover:border-indigo-200 group h-full justify-between"
               >
                 <div className="absolute top-8 right-8 text-5xl font-black text-slate-100 group-hover:text-indigo-500/10 transition-colors pointer-events-none">{track.id}</div>
@@ -472,16 +472,16 @@ const HomePage = () => {
             <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
             <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
 
-            <div 
+            <div
               className="flex gap-8 hover:[animation-play-state:paused]"
-              style={{ 
-                  animation: `scroll ${duration}s linear infinite`,
-                  width: 'max-content'
+              style={{
+                animation: `scroll ${duration}s linear infinite`,
+                width: 'max-content'
               }}
             >
-                {/* 3 sets for smooth infinity scroll */}
+              {/* 3 sets for smooth infinity scroll */}
               {[...speakers, ...speakers, ...speakers].map((s, i) => (
-                <motion.div 
+                <motion.div
                   key={i}
                   whileHover={{ y: -5 }}
                   className="w-[220px] shrink-0 bg-white rounded-[20px] overflow-hidden border border-slate-50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_-12px_rgba(99,102,241,0.2)] transition-all duration-500 group/card h-full flex flex-col"
@@ -527,16 +527,16 @@ const HomePage = () => {
             <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
             <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
 
-            <div 
+            <div
               className="flex gap-8 hover:[animation-play-state:paused]"
-              style={{ 
-                  animation: `board-scroll ${advisoryDuration}s linear infinite`,
-                  width: 'max-content'
+              style={{
+                animation: `board-scroll ${advisoryDuration}s linear infinite`,
+                width: 'max-content'
               }}
             >
-                {/* 3 sets for smooth infinity scroll */}
+              {/* 3 sets for smooth infinity scroll */}
               {[...advisoryBoard, ...advisoryBoard, ...advisoryBoard].map((item, i) => (
-                <motion.div 
+                <motion.div
                   key={i}
                   whileHover={{ y: -5 }}
                   className="w-[220px] shrink-0 bg-white rounded-[20px] overflow-hidden border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_-12px_rgba(99,102,241,0.2)] transition-all duration-500 group/card h-full flex flex-col"
@@ -583,7 +583,7 @@ const HomePage = () => {
                 { name: "Thiru. M. Thangavelu", role: "Trustee", img: "/assets/Thangavelu.png" },
                 { name: "Dr. P. Natarajan", role: "Academic Director", img: "/assets/Natarajan.jpeg" }
               ].map((p, i) => (
-                <motion.div 
+                <motion.div
                   key={i}
                   whileHover={{ y: -8 }}
                   className="bg-white p-12 md:p-8 rounded-2xl text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-200 hover:border-indigo-500 transition-all duration-300 relative overflow-hidden group h-full"
@@ -609,7 +609,7 @@ const HomePage = () => {
               {[
                 { name: "Dr. K. Manikanda Subramanian", role: "Principal", img: "assets/Principal1.png" }
               ].map((p, i) => (
-                <motion.div 
+                <motion.div
                   key={i}
                   whileHover={{ y: -8 }}
                   className="bg-white p-12 md:p-8 rounded-2xl text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-200 hover:border-indigo-500 transition-all duration-300 relative overflow-hidden group h-full"
@@ -636,7 +636,7 @@ const HomePage = () => {
                 { name: "Convenor Name 1", role: "Professor & Head", img: null },
                 { name: "Convenor Name 2", role: "Professor & Head", img: null }
               ].map((p, i) => (
-                <motion.div 
+                <motion.div
                   key={i}
                   whileHover={{ y: -8 }}
                   className="bg-white p-12 md:p-8 rounded-2xl text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-200 hover:border-indigo-500 transition-all duration-300 relative overflow-hidden group h-full"
@@ -671,16 +671,16 @@ const HomePage = () => {
                 { name: "Ms. Sangavi", role: "Assistant Professor", dept: "S&H", img: "/organizing team/Sangavi.jpeg" },
                 { name: "Mr. S. Arunkumar ", role: "Assistant Professor", dept: "Electronics Engineering", img: "/organizing team/Arunkumar .jpeg" }
               ].map((m, idx, arr) => (
-                <motion.div 
+                <motion.div
                   key={idx}
                   whileHover={{ y: -8 }}
                   className={`bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-500 flex flex-col items-center text-center group h-full col-span-1 lg:col-span-2 ${arr.length % 3 === 2 && idx === arr.length - 2 ? 'lg:col-start-2' : arr.length % 3 === 1 && idx === arr.length - 1 ? 'lg:col-start-3' : ''}`}
                 >
                   <div className="w-32 h-40 md:w-36 md:h-48 mb-6 relative">
                     {m.img ? (
-                      <img 
-                        src={m.img} 
-                        alt={m.name} 
+                      <img
+                        src={m.img}
+                        alt={m.name}
                         className="w-full h-full rounded-[1.5rem] object-cover object-top border-4 border-slate-50 group-hover:border-indigo-100 shadow-md group-hover:shadow-xl transition-all duration-500 group-hover:scale-105"
                       />
                     ) : (
@@ -706,9 +706,9 @@ const HomePage = () => {
             <div className="relative w-full max-w-7xl min-h-[500px] md:min-h-[650px] rounded-[40px] md:rounded-[60px] overflow-hidden shadow-2xl flex items-center justify-center border border-slate-200">
               <img src="/assets/ciet.jpeg" alt="College Campus" className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-[2s] group-hover:scale-110" />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent z-10 transition-opacity group-hover:opacity-60"></div>
-              
+
               <div className="relative z-20 p-8 md:p-20 max-w-4xl text-center text-white">
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -719,7 +719,7 @@ const HomePage = () => {
                     Coimbatore Institute <br /> of <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">Engineering and Technology</span>
                   </h2>
                 </motion.div>
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
@@ -729,7 +729,7 @@ const HomePage = () => {
                   The Coimbatore Institute of Engineering and Technology (CIET), Coimbatore, Tamilnadu (An Autonomous institute) was established in 2001 by the Kovai Kalaimagal Educational Trust (KKET) to provide quality education in Engineering, Technology and Management. CIET is affiliated to Anna University, approved by AICTE, accredited with 'A' Grade by NAAC.
                 </motion.p>
               </div>
-              <a 
+              <a
                 href="https://www.google.com/maps/place/Coimbatore+Institute+of+Engineering+and+Technology/@10.998811,76.7731654,1217m/data=!3m1!1e3!4m6!3m5!1s0x3ba86104b8f60b01:0x75c28a0ddc379a9d!8m2!3d10.9957852!4d76.7716835!16s%2Fm%2F03y8_13?entry=ttu&g_ep=EgoyMDI2MDIxMS4wIKXMDSoASAFQAw%3D%3D"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -758,8 +758,8 @@ const HomePage = () => {
                 desc: "Sprawling 25-acre green campus located 25 kms from Coimbatore. Features a serene atmosphere surrounded by picturesque hillocks."
               }
             ].map((pillar, i) => (
-              <motion.div 
-                key={i} 
+              <motion.div
+                key={i}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -795,9 +795,9 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      
+
       {showScrollTop && (
-        <button 
+        <button
           className="fixed bottom-10 right-10 w-[60px] h-[60px] rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-indigo-500/40 shadow-xl z-50 hover:-translate-y-2 hover:scale-110 transition-all duration-300 border-none cursor-pointer"
           onClick={scrollToTop}
           aria-label="Scroll to top"

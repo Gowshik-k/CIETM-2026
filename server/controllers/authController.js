@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const User = require('../models/User');
+const Settings = require('../models/Settings');
 const PendingUser = require('../models/PendingUser');
 const generateToken = require('../utils/generateToken');
 const sendEmail = require('../utils/sendEmail');
@@ -10,6 +11,11 @@ const sendEmail = require('../utils/sendEmail');
 // @access  Public
 const registerUser = async (req, res) => {
     const { name, email, password, phone, role } = req.body;
+
+    const settings = await Settings.findOne();
+    if (settings && settings.registrationOpen === false) {
+        return res.status(403).json({ message: 'New registrations are currently closed.' });
+    }
 
     // Check if user already exists in MAIN User table
     const userExists = await User.findOne({ email });

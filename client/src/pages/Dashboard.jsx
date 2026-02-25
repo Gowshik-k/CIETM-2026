@@ -466,49 +466,67 @@ const Dashboard = () => {
             </motion.div>
 
             {/* Deadlines List */}
-            <motion.div variants={overviewItemVariants} className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 p-5 md:p-8 shadow-glass relative overflow-hidden group/timeline transition-all duration-500">
-               <h3 className="text-sm font-black text-slate-800 mb-6 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
-                    <Clock size={18} />
+            <motion.div variants={overviewItemVariants} className="bg-white rounded-[2rem] border border-slate-100 p-6 md:p-8 shadow-sm relative overflow-hidden group/timeline transition-all duration-500">
+               <h3 className="text-sm font-extrabold text-slate-800 mb-8 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-50/80 text-indigo-600 rounded-2xl flex items-center justify-center shadow-sm border border-indigo-100/50">
+                    <Clock size={18} strokeWidth={2.5} />
                   </div>
                   Conference Timeline
                </h3>
                
-               <div className="relative space-y-2 mt-4">
+               <div className="relative space-y-0 mt-2">
                   {/* Vertical Connector Line */}
-                  <div className="absolute left-[31px] top-4 bottom-4 w-[2px] bg-gradient-to-b from-indigo-100 via-slate-100 to-transparent"></div>
+                  <div className="absolute left-[20px] top-6 bottom-6 w-[2px] bg-slate-100"></div>
 
                   {[
-                     { label: 'Abstract Submission', date: '2026-03-08', done: true },
-                     { label: 'Full Paper Submission', date: '2026-03-16', active: true },
+                     { label: 'Abstract Submission', date: '2026-03-08' },
+                     { label: 'Full Paper Submission', date: '2026-03-16' },
                      { label: 'Acceptance Notification', date: '2026-03-24' },
                      { label: 'Registration Deadline', date: '2026-04-10' },
                      { label: 'Conference Date', date: '2026-04-29' }
-                  ].map((item, i) => (
+                  ].map((item, i, arr) => {
+                     const now = new Date();
+                     const isPast = (dateStr) => {
+                         const d = new Date(dateStr);
+                         d.setHours(23, 59, 59, 999);
+                         return now > d;
+                     };
+
+                     let currentActiveIndex = 0;
+                     if (isPast('2026-03-08')) currentActiveIndex = 1;
+                     if (isPast('2026-03-16')) currentActiveIndex = 2;
+                     if (isPast('2026-03-24')) currentActiveIndex = 3;
+                     if (isPast('2026-04-10')) currentActiveIndex = 4;
+                     if (isPast('2026-04-29')) currentActiveIndex = 5;
+
+                     const done = i < currentActiveIndex;
+                     const active = i === currentActiveIndex;
+
+                     return (
                      <motion.div 
                         key={i} 
                         initial={{ opacity: 0, x: -10 }} 
                         whileInView={{ opacity: 1, x: 0 }} 
                         transition={{ delay: i * 0.1 + 0.3 }}
                         viewport={{ once: true }}
-                        className="relative flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-all duration-300 group/item hover:shadow-md hover:shadow-slate-200/50 cursor-default"
+                        className="relative flex items-center justify-between py-5 group/item cursor-default bg-white z-10"
                      >
-                        <div className="flex items-center gap-5 relative z-10">
+                        <div className="flex items-center gap-5 bg-white pr-4">
                            {/* Status Icon Column */}
-                           <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-500 shadow-sm ${
-                              item.done ? 'bg-blue-500 border-blue-400 text-white shadow-blue-500/30' : 
-                              item.active ? 'bg-white border-indigo-600 text-indigo-600 scale-110 shadow-indigo-600/30 ring-4 ring-indigo-50' : 
-                              'bg-white border-slate-200 text-slate-300'
+                           <div className={`w-10 h-10 rounded-full flex items-center justify-center relative z-20 shrink-0 ${
+                              done ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20 ring-4 ring-white' : 
+                              active ? 'bg-white border-2 border-indigo-500 text-indigo-600 shadow-sm ring-4 ring-white' : 
+                              'bg-white border-2 border-slate-100 text-slate-300 ring-4 ring-white'
                            }`}>
-                              {item.done ? <CheckCircle size={16} /> : 
-                               item.active ? <Clock size={16} className="animate-spin-slow" /> : 
-                               <div className="w-2 h-2 bg-slate-200 rounded-full group-hover/item:bg-slate-400 transition-colors"></div>}
+                              {done ? <CheckCircle size={18} strokeWidth={2.5} /> : 
+                               active ? <Clock size={16} strokeWidth={2.5} /> : 
+                               <div className="w-2 h-2 bg-slate-300 rounded-full"></div>}
                            </div>
 
                            <div className="flex flex-col">
-                              <span className={`text-sm font-bold transition-colors ${
-                                 item.active ? 'text-indigo-700' : 
-                                 item.done ? 'text-slate-400 line-through' : 'text-slate-600 group-hover/item:text-slate-800'
+                              <span className={`text-sm tracking-tight transition-colors ${
+                                 active ? 'text-indigo-600 font-bold' : 
+                                 done ? 'text-slate-400 font-semibold line-through decoration-slate-300' : 'text-slate-600 font-semibold'
                               }`}>
                                  {item.label}
                               </span>
@@ -517,15 +535,17 @@ const Dashboard = () => {
                               </span>
                            </div>
                         </div>
-                        <span className={`hidden md:flex items-center justify-center px-4 py-1.5 rounded-lg border text-xs font-black uppercase tracking-wider transition-all duration-300 ${
-                           item.active ? 'bg-indigo-50 border-indigo-200 text-indigo-600 shadow-sm shadow-indigo-100' :
-                           item.done ? 'bg-slate-50 border-transparent text-slate-400' :
-                           'bg-white border-slate-100 text-slate-400 group-hover/item:border-slate-300 group-hover/item:text-slate-600'
-                        }`}>
-                           {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
-                        </span>
+                        <div className="bg-white pl-4 relative z-10">
+                            <span className={`hidden md:flex items-center justify-center px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                            active ? 'bg-indigo-50 border border-indigo-200/50 text-indigo-600' :
+                            done ? 'bg-slate-50 text-slate-400 border border-slate-100/50' :
+                            'bg-white border border-slate-100 text-slate-400'
+                            }`}>
+                            {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
+                            </span>
+                        </div>
                      </motion.div>
-                  ))}
+                  )})}
                </div>
             </motion.div>
          </div>
@@ -716,6 +736,10 @@ const Dashboard = () => {
             institution: registration?.personalDetails?.institution || '',
             department: registration?.personalDetails?.department || '',
             areaOfSpecialization: registration?.personalDetails?.areaOfSpecialization || '',
+            category: registration?.personalDetails?.category || 'UG/PG STUDENTS',
+            yearOfStudy: registration?.personalDetails?.yearOfStudy || '',
+            designation: registration?.personalDetails?.designation || '',
+            track: registration?.paperDetails?.track || 'CIDT',
             teamMembers: registration?.teamMembers ? JSON.parse(JSON.stringify(registration.teamMembers)) : [],
             keywords: registration?.paperDetails?.keywords?.join(', ') || ''
         });
@@ -725,9 +749,9 @@ const Dashboard = () => {
         try {
             setIsSavingDetails(true);
             const submitPayload = {
-                personalDetails: { ...registration.personalDetails, mobile: editData.mobile, institution: editData.institution, department: editData.department, areaOfSpecialization: editData.areaOfSpecialization },
+                personalDetails: { ...registration.personalDetails, mobile: editData.mobile, institution: editData.institution, department: editData.department, areaOfSpecialization: editData.areaOfSpecialization, yearOfStudy: editData.yearOfStudy, designation: editData.designation, category: editData.category },
                 teamMembers: editData.teamMembers,
-                paperDetails: { ...registration.paperDetails, title: editData.title, abstract: editData.abstract, keywords: editData.keywords.split(',').map(k => k.trim()).filter(k => k) }
+                paperDetails: { ...registration.paperDetails, title: editData.title, abstract: editData.abstract, keywords: editData.keywords.split(',').map(k => k.trim()).filter(k => k), track: editData.track }
             };
             await axios.post('/api/registrations/draft', submitPayload, { headers: { Authorization: `Bearer ${user.token}` } });
             await fetchRegistration();
@@ -753,13 +777,6 @@ const Dashboard = () => {
             <motion.div variants={overviewItemVariants} className="bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-glass border border-white/80 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500">
                <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-slate-100/50 pb-6">
                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em]">Edit Registration Details</h3>
-                   <div className="flex items-center gap-3">
-                       <button onClick={() => setEditData(null)} disabled={isSavingDetails} className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200">Cancel</button>
-                       <button onClick={handleSaveDetails} disabled={isSavingDetails} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50">
-                           {isSavingDetails ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <CheckCircle size={14}/>} 
-                           {isSavingDetails ? 'Saving...' : 'Save Changes'}
-                       </button>
-                   </div>
                </div>
                
                <div className="space-y-6">
@@ -774,28 +791,75 @@ const Dashboard = () => {
                              <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Abstract</label>
                              <textarea rows="4" value={editData.abstract} onChange={e => setEditData({...editData, abstract: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Paper Abstract" />
                          </div>
+                         <div>
+                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Track</label>
+                             <select value={editData.track} onChange={e => setEditData({...editData, track: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                                 <option value="CIDT">Track 1: Computing, Intelligence & Digital Technologies</option>
+                                 <option value="ESSI">Track 2: Engineering, Science & Sustainable Innovations</option>
+                                 <option value="EAHSS">Track 3: Education, Arts, Humanities & Social Sciences</option>
+                                 <option value="MBHSD">Track 4: Management, Business & Health Sciences</option>
+                             </select>
+                         </div>
                       </div>
                       
                       <h4 className="text-sm font-bold text-slate-800 mb-3">Principal Author Details</h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                         <div>
+                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Category</label>
+                             <select value={editData.category} onChange={e => setEditData({...editData, category: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                                 <option value="UG/PG STUDENTS">UG/PG STUDENTS</option>
+                                 <option value="FACULTY/RESEARCH SCHOLARS">FACULTY/RESEARCH SCHOLARS</option>
+                                 <option value="EXTERNAL / ONLINE PRESENTATION">EXTERNAL / ONLINE PRESENTATION</option>
+                                 <option value="INDUSTRY PERSONNEL">INDUSTRY PERSONNEL</option>
+                             </select>
+                         </div>
                          <div>
                              <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Mobile</label>
                              <input value={editData.mobile} onChange={e => setEditData({...editData, mobile: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Mobile number" />
                          </div>
                          <div>
                              <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Institution</label>
-                             <input value={editData.institution} onChange={e => setEditData({...editData, institution: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Institution" />
+                             <select 
+                                value={
+                                    ["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(editData.institution) 
+                                    ? editData.institution 
+                                    : 'External'
+                                } 
+                                onChange={e => {
+                                    if(e.target.value !== 'External') setEditData({...editData, institution: e.target.value});
+                                    else setEditData({...editData, institution: ''});
+                                }} 
+                                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all mb-2"
+                             >
+                                 <option value="Coimbatore Institute of Engineering and Technology">Coimbatore Institute of Engineering and Technology</option>
+                                 <option value="Coimbatore Institute of Management and Technology">Coimbatore Institute of Management and Technology</option>
+                                 <option value="Kovai Kalaimagal Arts and Science College">Kovai Kalaimagal Arts and Science College</option>
+                                 <option value="External">External Institution...</option>
+                             </select>
+                             {!["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(editData.institution) && (
+                                <input autoFocus value={editData.institution} onChange={e => setEditData({...editData, institution: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-indigo-200 bg-white ring-2 ring-indigo-500/10 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all mt-1" placeholder="Enter External Institution" />
+                             )}
                          </div>
                          <div>
                              <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Department</label>
                              <input value={editData.department} onChange={e => setEditData({...editData, department: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Department" />
                          </div>
-                         {(registration?.personalDetails?.category === 'FACULTY/RESEARCH SCHOLARS' || registration?.personalDetails?.category === 'INDUSTRY PERSONNEL') && (
+                         {(editData.category === 'UG/PG STUDENTS') && (
                             <div>
-                                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Area of Specialization</label>
-                                <input value={editData.areaOfSpecialization} onChange={e => setEditData({...editData, areaOfSpecialization: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Area of Specialization" />
+                                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Year of Study</label>
+                                <input value={editData.yearOfStudy} onChange={e => setEditData({...editData, yearOfStudy: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Year of Study" />
                             </div>
                          )}
+                         {(editData.category === 'FACULTY/RESEARCH SCHOLARS' || editData.category === 'INDUSTRY PERSONNEL') && (
+                            <div>
+                                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Designation</label>
+                                <input value={editData.designation} onChange={e => setEditData({...editData, designation: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Designation" />
+                            </div>
+                         )}
+                        <div>
+                            <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Area of Specialization</label>
+                            <input value={editData.areaOfSpecialization} onChange={e => setEditData({...editData, areaOfSpecialization: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Area of Specialization" />
+                        </div>
                       </div>
                    </div>
 
@@ -828,10 +892,36 @@ const Dashboard = () => {
                                           </select>
                                       </div>
                                       <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Institution</label><input value={m.affiliation || m.institution} onChange={e => updateEditTeamMember(idx, 'affiliation', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Institution Name"/></div>
+                                          <div className="flex flex-col gap-1">
+                                            <label className="block text-[9px] font-bold text-slate-400 uppercase ml-1">Institution</label>
+                                            <select 
+                                                value={
+                                                    ["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(m.affiliation || m.institution) 
+                                                    ? (m.affiliation || m.institution) 
+                                                    : 'External'
+                                                } 
+                                                onChange={e => {
+                                                    if(e.target.value !== 'External') {
+                                                        updateEditTeamMember(idx, 'affiliation', e.target.value);
+                                                    } else if (!(m.affiliation || m.institution) || ["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(m.affiliation || m.institution)) {
+                                                        updateEditTeamMember(idx, 'affiliation', '');
+                                                    }
+                                                }}
+                                                className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none mb-1"
+                                            >
+                                                <option value="Coimbatore Institute of Engineering and Technology">Coimbatore Institute of Engineering and Technology</option>
+                                                <option value="Coimbatore Institute of Management and Technology">Coimbatore Institute of Management and Technology</option>
+                                                <option value="Kovai Kalaimagal Arts and Science College">Kovai Kalaimagal Arts and Science College</option>
+                                                <option value="External">External Institution...</option>
+                                            </select>
+                                            {!["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(m.affiliation || m.institution) && (
+                                                <input value={m.affiliation || m.institution} onChange={e => updateEditTeamMember(idx, 'affiliation', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-indigo-200 ring-2 ring-indigo-500/10 text-xs focus:border-indigo-500 outline-none" placeholder="External Institution Name"/>
+                                            )}
+                                          </div>
                                         {(m.category === 'FACULTY/RESEARCH SCHOLARS' || m.category === 'INDUSTRY PERSONNEL') && (
-                                            <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Area of Specialization</label><input value={m.areaOfSpecialization} onChange={e => updateEditTeamMember(idx, 'areaOfSpecialization', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Specialization"/></div>
+                                            <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Designation</label><input value={m.designation} onChange={e => updateEditTeamMember(idx, 'designation', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Designation"/></div>
                                         )}
+                                        <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Area of Specialization</label><input value={m.areaOfSpecialization} onChange={e => updateEditTeamMember(idx, 'areaOfSpecialization', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Specialization"/></div>
                                       </div>
                                   </div>
                               </div>
@@ -843,6 +933,14 @@ const Dashboard = () => {
                       <h4 className="text-sm font-bold text-slate-800 mb-2">Paper Keywords</h4>
                       <p className="text-[10px] text-slate-400 font-medium mb-3">Comma separated keywords relevant to your paper.</p>
                       <input value={editData.keywords} onChange={e => setEditData({...editData, keywords: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="e.g. AI, Machine Learning, Robotics" />
+                   </div>
+                   
+                   <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
+                       <button onClick={() => setEditData(null)} disabled={isSavingDetails} className="px-5 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 shadow-sm">Cancel</button>
+                       <button onClick={handleSaveDetails} disabled={isSavingDetails} className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg hover:shadow-indigo-500/20 disabled:opacity-50">
+                           {isSavingDetails ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <CheckCircle size={16}/>} 
+                           {isSavingDetails ? 'Saving...' : 'Save Changes'}
+                       </button>
                    </div>
                </div>
             </motion.div>
@@ -913,12 +1011,22 @@ const Dashboard = () => {
                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Department</span>
                        <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.department}>{registration?.personalDetails?.department || 'N/A'}</p>
                     </div>
-                    {(registration?.personalDetails?.category === 'FACULTY/RESEARCH SCHOLARS' || registration?.personalDetails?.category === 'INDUSTRY PERSONNEL') && (
+                    {(registration?.personalDetails?.category === 'UG/PG STUDENTS') && (
                         <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Specialization</span>
-                           <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.areaOfSpecialization}>{registration?.personalDetails?.areaOfSpecialization || 'N/A'}</p>
+                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Year of Study</span>
+                           <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.yearOfStudy}>{registration?.personalDetails?.yearOfStudy || 'N/A'}</p>
                         </div>
                     )}
+                    {(registration?.personalDetails?.category === 'FACULTY/RESEARCH SCHOLARS' || registration?.personalDetails?.category === 'INDUSTRY PERSONNEL') && (
+                        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Designation</span>
+                           <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.designation}>{registration?.personalDetails?.designation || 'N/A'}</p>
+                        </div>
+                    )}
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Specialization</span>
+                       <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.areaOfSpecialization}>{registration?.personalDetails?.areaOfSpecialization || 'N/A'}</p>
+                    </div>
                  </div>
               </div>
 
@@ -951,12 +1059,26 @@ const Dashboard = () => {
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Institution</span>
                                     <p className="text-xs font-semibold text-slate-600 truncate" title={member.affiliation || member.institution}>{member.affiliation || member.institution || 'N/A'}</p>
                                  </div>
-                                 {(member.category === 'FACULTY/RESEARCH SCHOLARS' || member.category === 'INDUSTRY PERSONNEL') && (
+                                 <div>
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Department</span>
+                                    <p className="text-xs font-semibold text-slate-600 truncate" title={member.department}>{member.department || 'N/A'}</p>
+                                 </div>
+                                 {(member.category === 'UG/PG STUDENTS') && (
                                      <div>
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Specialization</span>
-                                        <p className="text-xs font-semibold text-slate-600 truncate" title={member.areaOfSpecialization}>{member.areaOfSpecialization || 'N/A'}</p>
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Year of Study</span>
+                                        <p className="text-xs font-semibold text-slate-600 truncate" title={member.yearOfStudy}>{member.yearOfStudy || 'N/A'}</p>
                                      </div>
                                  )}
+                                 {(member.category === 'FACULTY/RESEARCH SCHOLARS' || member.category === 'INDUSTRY PERSONNEL') && (
+                                     <div>
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Designation</span>
+                                        <p className="text-xs font-semibold text-slate-600 truncate" title={member.designation}>{member.designation || 'N/A'}</p>
+                                     </div>
+                                 )}
+                                 <div>
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Specialization</span>
+                                    <p className="text-xs font-semibold text-slate-600 truncate" title={member.areaOfSpecialization}>{member.areaOfSpecialization || 'N/A'}</p>
+                                 </div>
                               </div>
                            </div>
                         ))}
