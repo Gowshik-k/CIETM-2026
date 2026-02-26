@@ -405,7 +405,7 @@ const verifyEntry = async (req, res) => {
                 attended: true,
                 attendedAt: Date.now()
             },
-            { new: true }
+            { returnDocument: 'after' }
         ).populate('userId', 'name email phone');
 
         if (!registration) {
