@@ -60,4 +60,19 @@ const upload = multer({
     }
 });
 
-module.exports = { cloudinary, upload };
+const profilePicStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'profile_pictures',
+        resource_type: 'image',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+        transformation: [{ width: 500, height: 500, crop: 'limit' }]
+    }
+});
+
+const uploadProfilePic = multer({
+    storage: profilePicStorage,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
+module.exports = { cloudinary, upload, uploadProfilePic };

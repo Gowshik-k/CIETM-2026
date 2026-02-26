@@ -431,6 +431,38 @@ const verifyEntry = async (req, res) => {
     }
 };
 
+// @desc    Update Profile Picture
+// @route   PUT /api/registrations/profile-picture
+// @access  Private
+const updateProfilePicture = async (req, res) => {
+    try {
+        let registration = await Registration.findOne({ userId: req.user._id });
+
+        if (!registration) {
+            registration = new Registration({
+                userId: req.user._id,
+                personalDetails: {
+                    name: req.user.name,
+                    email: req.user.email,
+                    mobile: req.user.phone || '',
+                    profilePicture: req.body.profilePicture,
+                    category: 'UG/PG STUDENTS',
+                },
+                status: 'Draft'
+            });
+        } else {
+            registration.personalDetails.profilePicture = req.body.profilePicture;
+        }
+
+        await registration.save();
+
+        res.json({ message: 'Profile picture updated successfully', profilePicture: req.body.profilePicture });
+    } catch (error) {
+        console.error('Update Profile Picture Error:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 module.exports = {
     saveDraft,
     submitRegistration,
@@ -442,5 +474,6 @@ module.exports = {
     getAdminAnalytics,
     updateRegistrationStatus,
     downloadAllPapersZip,
-    verifyEntry
+    verifyEntry,
+    updateProfilePicture
 };

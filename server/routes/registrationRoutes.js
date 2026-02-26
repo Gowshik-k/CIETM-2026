@@ -11,10 +11,11 @@ const {
     getAdminAnalytics,
     updateRegistrationStatus,
     downloadAllPapersZip,
-    verifyEntry
+    verifyEntry,
+    updateProfilePicture
 } = require('../controllers/registrationController');
 const { protect, admin } = require('../middleware/authMiddleware');
-const { upload } = require('../config/cloudinary');
+const { upload, uploadProfilePic } = require('../config/cloudinary');
 
 router.get('/download/:id', protect, downloadPaper);
 router.get('/download-all', protect, admin, downloadAllPapersZip);
@@ -27,6 +28,7 @@ router.get('/analytics', protect, admin, getAdminAnalytics);
 router.put('/:id/review', protect, admin, reviewPaper);
 router.put('/:id/status', protect, admin, updateRegistrationStatus);
 router.post('/update-paper', protect, updatePaper);
+router.put('/profile-picture', protect, updateProfilePicture);
 
 // File upload route
 router.post('/upload', protect, upload.single('paper'), (req, res) => {
@@ -43,6 +45,18 @@ router.post('/upload', protect, upload.single('paper'), (req, res) => {
         });
     } else {
         res.status(400).json({ message: 'File upload failed' });
+    }
+});
+
+// Profile Picture upload route
+router.post('/upload-profile-picture', protect, uploadProfilePic.single('image'), (req, res) => {
+    if (req.file) {
+        res.json({
+            url: req.file.path,
+            publicId: req.file.filename
+        });
+    } else {
+        res.status(400).json({ message: 'Profile picture upload failed' });
     }
 });
 

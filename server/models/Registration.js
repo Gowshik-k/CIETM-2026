@@ -23,6 +23,7 @@ const registrationSchema = new mongoose.Schema({
         designation: String,
         areaOfSpecialization: String,
         yearOfStudy: String,
+        profilePicture: String,
         category: {
             type: String,
             enum: ['UG/PG STUDENTS', 'FACULTY/RESEARCH SCHOLARS', 'EXTERNAL / ONLINE PRESENTATION', 'INDUSTRY PERSONNEL', 'Inter-college Student', 'External Student', 'Industrial Delegate', 'Research Scholar']

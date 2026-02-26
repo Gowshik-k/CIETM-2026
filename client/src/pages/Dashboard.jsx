@@ -4,9 +4,9 @@ import axios from 'axios';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   FileText, CheckCircle, Clock, AlertCircle,
-  CreditCard, User, Settings, Bell, Download,
-  Menu, X, Search, ChevronRight, LogOut, LayoutDashboard,
-  Calendar, MapPin, ShieldCheck, Award, Layers, Upload, Home, Edit2
+  Settings, Bell, Download, Menu, X, Search, ChevronRight, LogOut,
+  LayoutDashboard, Calendar, MapPin, ShieldCheck, Award, Layers,
+  Upload, Home, Edit2, Camera, User, CreditCard
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import RegistrationForm from '../components/RegistrationForm';
@@ -20,6 +20,7 @@ const Dashboard = () => {
   const [registration, setRegistration] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [editData, setEditData] = useState(null);
@@ -31,6 +32,7 @@ const Dashboard = () => {
   const [changingPassword, setChangingPassword] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [showIDCard, setShowIDCard] = useState(false);
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [lastSync, setLastSync] = useState(new Date());
   const [settings, setSettings] = useState(null);
@@ -743,6 +745,7 @@ const Dashboard = () => {
         yearOfStudy: registration?.personalDetails?.yearOfStudy || '',
         designation: registration?.personalDetails?.designation || '',
         track: registration?.paperDetails?.track || 'CIDT',
+        profilePicture: registration?.personalDetails?.profilePicture || '',
         teamMembers: registration?.teamMembers ? JSON.parse(JSON.stringify(registration.teamMembers)) : [],
         keywords: registration?.paperDetails?.keywords?.join(', ') || ''
       });
@@ -787,7 +790,7 @@ const Dashboard = () => {
       try {
         setIsSavingDetails(true);
         const submitPayload = {
-          personalDetails: { ...registration.personalDetails, mobile: editData.mobile, institution: editData.institution, department: editData.department, areaOfSpecialization: editData.areaOfSpecialization, yearOfStudy: editData.yearOfStudy, designation: editData.designation, category: editData.category },
+          personalDetails: { ...registration.personalDetails, mobile: editData.mobile, institution: editData.institution, department: editData.department, areaOfSpecialization: editData.areaOfSpecialization, yearOfStudy: editData.yearOfStudy, designation: editData.designation, category: editData.category, profilePicture: editData.profilePicture },
           teamMembers: editData.teamMembers,
           paperDetails: { ...registration.paperDetails, title: editData.title, abstract: editData.abstract, keywords: editData.keywords.split(',').map(k => k.trim()).filter(k => k), track: editData.track }
         };
@@ -818,6 +821,7 @@ const Dashboard = () => {
             </div>
 
             <div className="space-y-6">
+              {/* Paper Details Section */}
               <div>
                 <h4 className="text-sm font-bold text-slate-800 mb-3">Paper Details</h4>
                 <div className="grid grid-cols-1 gap-4 mb-6">
@@ -1375,10 +1379,15 @@ const Dashboard = () => {
         </div>
 
         {/* User Card */}
-        <div className="px-4 mb-6">
+        <div className="px-4 mb-6 relative">
           <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100/50 flex items-center gap-3">
-            <div className="w-11 h-11 bg-white text-indigo-600 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm border border-slate-100 shrink-0">
-              {user?.name?.charAt(0)}
+            <div
+              className="w-11 h-11 bg-white text-indigo-600 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm border border-slate-100 shrink-0 overflow-hidden cursor-pointer group hover:border-indigo-200 transition-all"
+              onClick={() => setShowProfilePopup(!showProfilePopup)}
+            >
+              {registration?.personalDetails?.profilePicture ? (
+                <img src={registration.personalDetails.profilePicture} alt="Profile" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+              ) : user?.name?.charAt(0)}
             </div>
             <div className="min-w-0">
               <h3 className="font-extrabold text-slate-800 text-xs truncate uppercase tracking-wider">{user?.name}</h3>
@@ -1388,6 +1397,29 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+          {/* Profile Picture Popup */}
+          <AnimatePresence>
+            {showProfilePopup && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="absolute top-20 left-6 w-52 bg-white rounded-2xl shadow-xl shadow-slate-200 border border-slate-100 p-2 z-50 origin-top-left"
+              >
+                {registration?.personalDetails?.profilePicture && (
+                  <a href={registration.personalDetails.profilePicture} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors w-full text-left">
+                    <User size={14} /> View Avatar
+                  </a>
+                )}
+                <button
+                  onClick={() => { setShowProfilePopup(false); setActiveTab('settings'); }}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors w-full text-left"
+                >
+                  <Camera size={14} /> Update Avatar
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <nav className="flex-1 px-4 flex flex-col gap-1.5 overflow-y-auto pt-2">
@@ -1582,6 +1614,75 @@ const Dashboard = () => {
                         </div>
                       </div>
                     </div>
+
+                    <div className="pt-8 border-t border-slate-100">
+                      <h4 className="text-[0.65rem] font-black uppercase text-slate-400 mb-6 tracking-[0.2em]">Profile Avatar</h4>
+                      <div className="flex items-center gap-6 mb-2 group">
+                        <div className="relative w-24 h-24 rounded-2xl bg-slate-100 border-2 border-slate-200 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+                          {registration?.personalDetails?.profilePicture ? (
+                            <img src={registration?.personalDetails?.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                          ) : (
+                            <User size={32} className="text-slate-400" />
+                          )}
+                          {uploadingProfilePic && (
+                            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                              <div className="w-6 h-6 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              const file = e.target.files[0];
+                              if (!file) return;
+                              if (file.size > 5 * 1024 * 1024) {
+                                return toast.error("Image must be less than 5MB");
+                              }
+
+                              setUploadingProfilePic(true);
+                              const uploadData = new FormData();
+                              uploadData.append('image', file);
+
+                              try {
+                                const { data } = await axios.post('/api/registrations/upload-profile-picture', uploadData, {
+                                  headers: {
+                                    'Content-Type': 'multipart/form-data',
+                                    Authorization: `Bearer ${user?.token}`
+                                  }
+                                });
+
+                                await axios.put('/api/registrations/profile-picture', { profilePicture: data.url }, {
+                                  headers: {
+                                    Authorization: `Bearer ${user?.token}`
+                                  }
+                                });
+
+                                setRegistration(prev => ({
+                                  ...prev,
+                                  personalDetails: {
+                                    ...(prev?.personalDetails || {}),
+                                    profilePicture: data.url
+                                  }
+                                }));
+                                toast.success("Avatar updated successfully!", { icon: '📸' });
+                              } catch (error) {
+                                toast.error("Failed to upload image. Please try again.");
+                              } finally {
+                                setUploadingProfilePic(false);
+                              }
+                            }}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait"
+                            disabled={uploadingProfilePic}
+                          />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-800 mb-1">Update Author Avatar</h4>
+                          <p className="text-xs text-slate-500 mb-2">Upload a professional headshot for your Digital ID Card.</p>
+                          <label className="text-[9px] font-black uppercase text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md tracking-wider">JPG, PNG, WebP (Max 5MB)</label>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="pt-8 border-t border-slate-100">
                       <h4 className="text-[0.65rem] font-black uppercase text-slate-400 mb-6 tracking-[0.2em]">Security</h4>
                       <button
@@ -1674,71 +1775,102 @@ const Dashboard = () => {
         {/* Digital ID Card Modal */}
         {showIDCard && registration && (
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in print:bg-white print:p-0">
-            <div className="flex flex-col gap-6 max-w-md w-full animate-scale-in print:hidden">
-              <div className="bg-white p-6 rounded-3xl shadow-2xl overflow-hidden relative" id="printable-id-card">
+            <div className="flex flex-col gap-6 max-w-[28rem] w-full animate-scale-in print:hidden perspective-1000">
+              <div className="relative" id="printable-id-card">
                 {/* ID Card Front */}
-                <div className="border-[3px] border-indigo-600 rounded-2xl p-6 bg-white relative overflow-hidden">
-                  {/* Card Header */}
-                  <div className="flex justify-between items-start mb-6 pb-4 border-b-2 border-slate-100">
-                    <div>
-                      <h4 className="text-xl font-black text-slate-800 leading-none">CIETM <span className="text-indigo-600">2026</span></h4>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Conclave on Innovation</p>
-                    </div>
-                    <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 font-bold">C</div>
-                  </div>
+                <motion.div
+                  whileHover={{ scale: 1.02, rotateY: 5, rotateX: 5 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="rounded-[2.5rem] p-[3px] bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 relative overflow-hidden shadow-2xl"
+                  style={{ transformPerspective: 1000 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/10 backdrop-blur-md z-0"></div>
+                  <div className="bg-white/90 backdrop-blur-2xl rounded-[2.3rem] p-8 relative z-10 h-full flex flex-col justify-between border border-white/50">
 
-                  {/* Card Body */}
-                  <div className="flex gap-6 mb-6">
-                    <div className="w-24 h-24 bg-slate-50 border-2 border-slate-100 rounded-xl flex items-center justify-center text-slate-300 shrink-0 overflow-hidden">
-                      <User size={48} />
+                    {/* Decorative Background Elements */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-400/20 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+                      <Award size={200} />
                     </div>
-                    <div className="flex flex-col justify-center min-w-0">
-                      <h5 className="text-lg font-black text-slate-800 truncate leading-tight uppercase">{user.name}</h5>
-                      <span className="text-[10px] font-black text-indigo-600 uppercase tracking-tighter mb-2">{registration.personalDetails.category}</span>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5">
-                          <MapPin size={10} className="text-slate-400" />
-                          <span className="text-[10px] font-bold text-slate-500 truncate">{registration.personalDetails.institution}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Layers size={10} className="text-slate-400" />
-                          <span className="text-[10px] font-bold text-slate-500 truncate">{registration.paperDetails.track}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Card Footer */}
-                  <div className="flex justify-between items-end">
-                    <div className="flex bg-slate-50 p-3 rounded-2xl border border-slate-100 items-center gap-4">
-                      <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-100">
-                        <QRCode value={registration._id} size={80} viewBox={`0 0 256 256`} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />
-                      </div>
+                    {/* Card Header */}
+                    <div className="flex justify-between items-start mb-8 relative z-20">
                       <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Participant ID</p>
-                        <p className="text-xs font-black text-indigo-600 tracking-wider font-mono">
-                          {registration.authorId || `#CMP-26-${registration._id.slice(-6).toUpperCase()}`}
-                        </p>
+                        <h4 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-700 to-purple-700 leading-none tracking-tight">CIETM <span className="text-indigo-900">2026</span></h4>
+                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-2">Conclave on Innovation</p>
+                      </div>
+                      <div className="w-14 h-14 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl flex items-center justify-center text-indigo-700 font-bold shadow-inner border border-white">
+                        <span className="text-2xl">C</span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <CheckCircle size={24} className="text-blue-500 mb-1 inline-block" />
-                      <p className="text-[8px] font-black text-blue-600 uppercase tracking-widest">Official Entry</p>
+
+                    {/* Card Body */}
+                    <div className="flex gap-6 mb-8 relative z-20 items-center">
+                      <div className="w-28 h-28 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center text-slate-400 shrink-0 overflow-hidden shadow-inner border-2 border-white relative group">
+                        {registration?.personalDetails?.profilePicture ? (
+                          <img src={registration.personalDetails.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={56} className="group-hover:scale-110 transition-transform duration-500" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      </div>
+                      <div className="flex flex-col justify-center min-w-0 flex-1">
+                        <h5 className="text-2xl font-black text-slate-800 truncate leading-tight uppercase tracking-tight mb-2">{user.name}</h5>
+
+                        <div className="inline-flex mt-1 mb-4">
+                          <span className="px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-md">
+                            {registration.personalDetails.category}
+                          </span>
+                        </div>
+
+                        <div className="space-y-2.5 bg-white/50 p-3 rounded-xl border border-white/60">
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-indigo-50 rounded-md text-indigo-600"><MapPin size={12} /></div>
+                            <span className="text-[11px] font-bold text-slate-700 truncate">{registration.personalDetails.institution}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 bg-purple-50 rounded-md text-purple-600"><Layers size={12} /></div>
+                            <span className="text-[11px] font-bold text-slate-700 truncate">{registration.paperDetails.track}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card Footer */}
+                    <div className="flex justify-between items-end relative z-20 mt-auto pt-6 border-t border-slate-200/50">
+                      <div className="flex bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-white shadow-sm items-center gap-4">
+                        <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-100">
+                          <QRCode value={registration._id} size={70} viewBox={`0 0 256 256`} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Participant ID</p>
+                          <p className="text-sm font-black text-slate-800 tracking-wider font-mono bg-slate-100 px-2 py-1 rounded-md">
+                            {registration.authorId || `#CMP-26-${registration._id.slice(-6).toUpperCase()}`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right flex flex-col items-end">
+                        <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center mb-2 shadow-sm border border-green-100">
+                          <CheckCircle size={20} className="text-green-500" />
+                        </div>
+                        <p className="text-[9px] font-black text-green-600 uppercase tracking-widest bg-green-50 px-2 py-1 rounded-md">Official Entry</p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               </div>
 
               <div className="flex gap-4">
                 <button
                   onClick={() => window.print()}
-                  className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200"
+                  className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-95"
                 >
-                  <Download size={18} /> Print / Save PDF
+                  <Download size={18} /> Print pass
                 </button>
                 <button
                   onClick={() => setShowIDCard(false)}
-                  className="px-6 py-4 bg-white text-slate-600 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all"
+                  className="px-8 py-4 bg-white text-slate-600 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all active:scale-95"
                 >
                   Close
                 </button>
@@ -1757,8 +1889,12 @@ const Dashboard = () => {
                 </div>
 
                 <div className="flex gap-[4mm]">
-                  <div className="w-[18mm] h-[18mm] bg-slate-50 border-[0.3mm] border-slate-100 rounded-[2mm] flex items-center justify-center text-slate-300 overflow-hidden">
-                    <User size={32} />
+                  <div className="w-[18mm] h-[18mm] bg-slate-50 border-[0.3mm] border-slate-100 rounded-[2mm] flex items-center justify-center text-slate-300 overflow-hidden shrink-0">
+                    {registration?.personalDetails?.profilePicture ? (
+                      <img src={registration.personalDetails.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <User size={32} />
+                    )}
                   </div>
                   <div className="flex flex-col justify-center">
                     <h5 className="text-[4mm] font-black text-slate-800 truncate leading-tight uppercase">{user.name}</h5>
