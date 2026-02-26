@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   FileText, CheckCircle, Clock, AlertCircle,
-  Settings, Bell, Download, Menu, X, Search, ChevronRight, LogOut,
+  Settings, Bell, Download, Menu, X, Search, ChevronRight, LogOut, FileBadge, Lock,
   LayoutDashboard, Calendar, MapPin, ShieldCheck, Award, Layers,
   Upload, Home, Edit2, Camera, User, CreditCard
 } from 'lucide-react';
@@ -1341,6 +1341,45 @@ const Dashboard = () => {
     </motion.div>
   );
 
+  const renderCertificate = () => (
+    <div className="animate-fade-in max-w-4xl mx-auto h-full flex items-center justify-center pt-10">
+      <div className="bg-white/60 backdrop-blur-2xl p-8 md:p-12 rounded-[2.5rem] shadow-glass border border-white/80 relative overflow-hidden text-center w-full">
+        <div className="absolute -top-32 -right-32 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-amber-100">
+          <Lock size={40} />
+        </div>
+
+        <h3 className="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tight mb-4">
+          E-Certificate Locked
+        </h3>
+
+        <p className="text-slate-500 font-medium mb-8 max-w-md mx-auto">
+          Your participation E-certificate will be generated and made available here automatically upon the successful completion of the conference.
+        </p>
+
+        <div className="p-6 bg-slate-50/80 rounded-2xl border border-slate-100/50 mb-8 max-w-sm mx-auto">
+          <div className="flex items-center gap-4 opacity-50">
+            <div className="shrink-0 w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center text-slate-400">
+              <FileBadge size={24} />
+            </div>
+            <div className="text-left flex-1 min-w-0">
+              <h4 className="font-bold text-slate-700 truncate">Participation_Certificate.pdf</h4>
+              <p className="text-xs text-slate-500">Document ready after conference</p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          disabled
+          className="inline-flex items-center gap-2 px-8 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest cursor-not-allowed border-2 border-slate-200"
+        >
+          <Download size={16} /> Download Certificate
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex h-screen bg-slate-50 relative overflow-hidden font-sans">
       {/* Background Orbs */}
@@ -1423,23 +1462,13 @@ const Dashboard = () => {
         </div>
 
         <nav className="flex-1 px-4 flex flex-col gap-1.5 overflow-y-auto pt-2">
-          <Link
-            to="/"
-            className="flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-300 text-left group relative w-full text-slate-600 font-bold hover:bg-slate-100 hover:text-slate-900 hover:shadow-sm mb-2"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 to-indigo-500/0 group-hover:from-indigo-500/5 group-hover:to-transparent rounded-2xl transition-all duration-300 w-0 group-hover:w-full"></div>
-            <Home size={20} className="transition-transform duration-300 group-hover:scale-110 group-hover:text-indigo-600 relative z-10" />
-            <span className="text-sm tracking-tight relative z-10">Main Website</span>
-          </Link>
-
-          <div className="h-px bg-slate-100 mx-4 mb-4"></div>
-
           {[
             { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
             { id: 'paper', icon: FileText, label: 'Submission' },
             { id: 'payment', icon: CreditCard, label: 'Payments' },
             { id: 'notifications', icon: Bell, label: 'Updates' },
             { id: 'idcard', icon: Award, label: 'ID Card' },
+            { id: 'certificate', icon: FileBadge, label: 'E-Certificate' },
             { id: 'settings', icon: Settings, label: 'Settings' }
           ].map((item) => (
             <button
@@ -1524,6 +1553,15 @@ const Dashboard = () => {
                 {registration?.paperDetails?.reviewStatus || 'In Review'}
               </div>
             )}
+
+            <Link
+              to="/"
+              title="Main Website"
+              className="w-11 h-11 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-center text-slate-400 cursor-pointer hover:text-indigo-600 hover:border-indigo-200 transition-all hover:shadow-md active:scale-95 group"
+            >
+              <Home size={20} className="group-hover:scale-110 transition-transform" />
+            </Link>
+
             <div className="relative group">
               <div
                 className="w-11 h-11 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-center text-slate-400 cursor-pointer hover:text-indigo-600 hover:border-indigo-200 transition-all hover:shadow-md active:scale-95"
@@ -1544,6 +1582,7 @@ const Dashboard = () => {
             {activeTab === 'overview' && renderOverview()}
             {activeTab === 'paper' && renderSubmissionTab()}
             {activeTab === 'payment' && renderPayment()}
+            {activeTab === 'certificate' && renderCertificate()}
             {activeTab === 'notifications' && (
               <div className="animate-fade-in max-w-4xl mx-auto">
                 <div className="flex justify-between items-center mb-8">
