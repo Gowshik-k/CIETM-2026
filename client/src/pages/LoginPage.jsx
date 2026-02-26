@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogIn, Mail, Lock, ArrowRight, CheckCircle } from 'lucide-react';
@@ -9,14 +9,20 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   // Forgot Password State
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate(user.role === 'admin' ? '/admin/dashboard' : '/dashboard', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +45,7 @@ const LoginPage = () => {
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     if (!forgotEmail) return toast.error("Please enter your email");
-    
+
     setForgotLoading(true);
     try {
       await axios.post('/api/auth/forgot-password', { email: forgotEmail });
@@ -47,14 +53,18 @@ const LoginPage = () => {
       setShowForgotModal(false);
       setForgotEmail('');
     } catch (error) {
-        toast.error(error.response?.data?.message || "Failed to send reset link");
+      toast.error(error.response?.data?.message || "Failed to send reset link");
     } finally {
-        setForgotLoading(false);
+      setForgotLoading(false);
     }
   };
 
   const inputClass = "input-field text-sm bg-slate-50 focus:bg-white";
   const labelClass = "flex items-center gap-2 mb-1.5 font-bold text-slate-700 text-xs uppercase tracking-wide";
+
+  if (authLoading || user) {
+    return <div className="h-[calc(100vh-80px)] flex items-center justify-center bg-white"><div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div></div>;
+  }
 
   return (
     <div className="flex h-[calc(100vh-80px)] w-full bg-white overflow-hidden">
@@ -70,7 +80,7 @@ const LoginPage = () => {
           </div>
           <h1 className="text-5xl font-extrabold leading-tight mb-6 tracking-tight">Welcome Back to<br />Innovation</h1>
           <p className="text-lg opacity-90 leading-relaxed mb-10">Sign in to access your dashboard, manage submissions, and stay updated with conference news.</p>
-          
+
           <div className="flex flex-col gap-5">
             <div className="inline-flex items-center gap-4 text-base font-medium bg-white/10 px-4 py-3 rounded-xl backdrop-blur-sm w-fit max-w-full">
               <div className="w-6 h-6 bg-white text-indigo-600 rounded-full flex items-center justify-center shrink-0">
@@ -97,97 +107,97 @@ const LoginPage = () => {
       {/* Right Side - Form */}
       <div className="w-full lg:w-[65%] p-6 flex flex-col items-center justify-center bg-white h-full overflow-y-auto">
         <div className="w-full max-w-sm">
-            <div className="mb-6 text-center">
+          <div className="mb-6 text-center">
             <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600">
-                <LogIn size={32} />
+              <LogIn size={32} />
             </div>
             <h1 className="text-3xl font-bold text-slate-900 mb-1 tracking-tight">Sign In</h1>
             <p className="text-slate-500 text-sm">Welcome back! Please enter your details.</p>
-            </div>
+          </div>
 
-            <form onSubmit={handleSubmit} className="text-left">
+          <form onSubmit={handleSubmit} className="text-left">
             <div className="mb-4">
-                <label className={labelClass}><Mail size={16} /> Email Address</label>
-                <input 
-                type="email" 
-                placeholder="name@institution.edu" 
+              <label className={labelClass}><Mail size={16} /> Email Address</label>
+              <input
+                type="email"
+                placeholder="name@institution.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className={inputClass}
-                />
+              />
             </div>
             <div className="mb-4">
-                <label className={labelClass}><Lock size={16} /> Password</label>
-                <input 
-                type="password" 
-                placeholder="••••••••" 
+              <label className={labelClass}><Lock size={16} /> Password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className={inputClass}
-                />
+              />
             </div>
-            
+
             <div className="text-right mb-6 -mt-2">
-                <button 
-                    type="button" 
-                    onClick={() => setShowForgotModal(true)}
-                    className="bg-transparent border-none text-indigo-600 text-sm font-semibold cursor-pointer p-0 hover:text-indigo-700 hover:underline transition-colors"
-                >
-                    Forgot Password?
-                </button>
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(true)}
+                className="bg-transparent border-none text-indigo-600 text-sm font-semibold cursor-pointer p-0 hover:text-indigo-700 hover:underline transition-colors"
+              >
+                Forgot Password?
+              </button>
             </div>
 
             <button type="submit" className="btn btn-primary w-full py-3.5 mt-2 justify-center shadow-indigo-500/20" disabled={loading}>
-                {loading ? 'Logging in...' : 'Sign In'} <ArrowRight size={18} />
+              {loading ? 'Logging in...' : 'Sign In'} <ArrowRight size={18} />
             </button>
-            </form>
+          </form>
 
-            <div className="mt-6 flex flex-col gap-2 text-sm text-center text-slate-500">
+          <div className="mt-6 flex flex-col gap-2 text-sm text-center text-slate-500">
             <p>Don't have an account? <Link to="/register" className="text-indigo-600 font-bold hover:text-indigo-700 transition-colors">Register Now</Link></p>
             <Link to="/admin/login" className="text-xs uppercase tracking-wider opacity-60 hover:opacity-100 transition-opacity">Admin Login</Link>
-            </div>
+          </div>
         </div>
       </div>
 
-        {showForgotModal && (
-            <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
-                    <h3 className="mb-2 text-slate-900 text-2xl font-bold">Reset Password</h3>
-                    <p className="text-slate-500 text-sm mb-6 leading-relaxed">Enter your email address and we'll send you a link to reset your password.</p>
-                    <form onSubmit={handleForgotPassword}>
-                        <div className="mb-6">
-                            <label className="block mb-2 font-bold text-slate-800 text-sm">Email Address</label>
-                            <input 
-                                type="email" 
-                                value={forgotEmail}
-                                onChange={(e) => setForgotEmail(e.target.value)}
-                                placeholder="name@institution.edu"
-                                required
-                                className={inputClass}
-                            />
-                        </div>
-                        <div className="flex justify-end gap-3 mt-6">
-                            <button 
-                                type="button" 
-                                onClick={() => setShowForgotModal(false)}
-                                className="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors border-none cursor-pointer"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                type="submit" 
-                                disabled={forgotLoading}
-                                className="btn btn-primary px-6 py-2.5 rounded-xl text-sm"
-                            >
-                                {forgotLoading ? 'Sending...' : 'Send Link'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        )}
+      {showForgotModal && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
+            <h3 className="mb-2 text-slate-900 text-2xl font-bold">Reset Password</h3>
+            <p className="text-slate-500 text-sm mb-6 leading-relaxed">Enter your email address and we'll send you a link to reset your password.</p>
+            <form onSubmit={handleForgotPassword}>
+              <div className="mb-6">
+                <label className="block mb-2 font-bold text-slate-800 text-sm">Email Address</label>
+                <input
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="name@institution.edu"
+                  required
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(false)}
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors border-none cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="btn btn-primary px-6 py-2.5 rounded-xl text-sm"
+                >
+                  {forgotLoading ? 'Sending...' : 'Send Link'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

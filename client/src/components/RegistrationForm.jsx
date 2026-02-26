@@ -268,6 +268,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
 
         setShowVerification(true);
         setResendTimer(60);
+        sessionStorage.setItem('isRegistering', 'true');
         toast.success(response.data.message || "Verification code sent to your email!");
       } catch (error) {
         toast.error(error.response?.data?.message || "Account creation failed");
@@ -277,6 +278,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
     } else {
       // Save draft and move to next step
       await handleSaveDraft();
+      sessionStorage.setItem('isRegistering', 'true');
       setStep(step + 1);
     }
   };
@@ -353,6 +355,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
       });
 
       toast.success('Registration submitted successfully!');
+      sessionStorage.removeItem('isRegistering');
       if (onSuccess) {
         onSuccess();
       } else {
@@ -522,7 +525,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                     <div className={`w-2 h-2 bg-white rounded-full transition-all ${isHostInstitution ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`}></div>
                   </div>
                   <div className="flex flex-col">
-                    <span className={`font-bold text-sm mb-0.5 ${isHostInstitution ? 'text-indigo-700' : 'text-slate-800'}`}>Host Institution</span>
+                    <span className={`font-bold text-sm mb-0.5 ${isHostInstitution ? 'text-indigo-700' : 'text-slate-800'}`}>Internal</span>
                     <span className="text-xs text-slate-500">Select from CIET Institutions</span>
                   </div>
                 </div>
@@ -535,7 +538,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                     <div className={`w-2 h-2 bg-white rounded-full transition-all ${!isHostInstitution ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`}></div>
                   </div>
                   <div className="flex flex-col">
-                    <span className={`font-bold text-sm mb-0.5 ${!isHostInstitution ? 'text-indigo-700' : 'text-slate-800'}`}>External Institution</span>
+                    <span className={`font-bold text-sm mb-0.5 ${!isHostInstitution ? 'text-indigo-700' : 'text-slate-800'}`}>External</span>
                     <span className="text-xs text-slate-500">Other College or Organization</span>
                   </div>
                 </div>

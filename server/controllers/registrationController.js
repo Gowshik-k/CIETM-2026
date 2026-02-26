@@ -140,6 +140,10 @@ const reviewPaper = async (req, res) => {
             return res.status(404).json({ message: 'Registration not found' });
         }
 
+        if (status === 'Accepted' && !registration.paperDetails?.fileUrl) {
+            return res.status(400).json({ message: 'Manuscript cannot be accepted without a file upload.' });
+        }
+
         registration.status = status;
         registration.paperDetails.reviewStatus = status;
         registration.paperDetails.reviewerComments = remarks;
@@ -399,18 +403,27 @@ const downloadAllPapersZip = async (req, res) => {
 // @access  Admin
 const verifyEntry = async (req, res) => {
     try {
-        const registration = await Registration.findByIdAndUpdate(
-            req.params.id,
-            {
-                attended: true,
-                attendedAt: Date.now()
-            },
-            { returnDocument: 'after' }
-        ).populate('userId', 'name email phone');
+        const registration = await Registration.findById(req.params.id).populate('userId', 'name email phone');
 
         if (!registration) {
             return res.status(404).json({ message: 'Invalid ID Card or Registration not found' });
         }
+
+        if (registration.status !== 'Accepted') {
+            return res.status(400).json({
+                message: registration.status === 'Draft'
+                    ? 'Submission Incomplete. Author must submit paper details.'
+                    : `Manuscript status is ${registration.status}. It must be "Accepted" before verification.`,
+                status: registration.status,
+                personalDetails: registration.personalDetails,
+                paperDetails: registration.paperDetails // Sending this so frontend can show file existence
+            });
+        }
+
+        // Auto-mark as attended only if submission is complete
+        registration.attended = true;
+        registration.attendedAt = Date.now();
+        await registration.save();
 
         res.json(registration);
     } catch (error) {

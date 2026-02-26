@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  FileText, CheckCircle, Clock, AlertCircle, 
+import {
+  FileText, CheckCircle, Clock, AlertCircle,
   CreditCard, User, Settings, Bell, Download,
   Menu, X, Search, ChevronRight, LogOut, LayoutDashboard,
   Calendar, MapPin, ShieldCheck, Award, Layers, Upload, Home, Edit2
@@ -81,22 +81,22 @@ const Dashboard = () => {
       const paymentId = query.get('payment_id'); // Cashfree sends order_id as payment_id in redirect
       // or we might need to check order_id based on how we constructed return_url
       // Our return_url: ...?payment_id={order_id}&payment_status={order_status}
-      
+
       if (paymentId) {
         setPaymentLoading(true);
         try {
           // Verify with backend
           const { data } = await axios.post('/api/payments/verify', {
-             orderId: paymentId 
+            orderId: paymentId
           }, {
-              headers: { Authorization: `Bearer ${user?.token}` }
+            headers: { Authorization: `Bearer ${user?.token}` }
           });
 
           if (data.status === 'SUCCESS') {
-              toast.success("Payment verified successfully!");
-              fetchRegistration(); // Refresh status
+            toast.success("Payment verified successfully!");
+            fetchRegistration(); // Refresh status
           } else {
-              toast.error("Payment verification failed or pending.");
+            toast.error("Payment verification failed or pending.");
           }
           // Clear URL params
           navigate('/dashboard', { replace: true });
@@ -111,7 +111,7 @@ const Dashboard = () => {
     };
 
     if (location.search) {
-        verifyPayment();
+      verifyPayment();
     }
   }, [location.search, user, navigate, fetchRegistration]);
 
@@ -138,11 +138,11 @@ const Dashboard = () => {
     if (!file) return;
 
     const allowedTypes = [
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ];
     if (!allowedTypes.includes(file.type)) {
-        return toast.error("Please upload a Word document (.doc or .docx)");
+      return toast.error("Please upload a Word document (.doc or .docx)");
     }
 
     const confirmUpload = window.confirm("Are you sure you want to upload this full paper?");
@@ -153,31 +153,31 @@ const Dashboard = () => {
     uploadData.append('paper', file);
 
     try {
-        // First upload to Cloudinary via server
-        const { data: uploadRes } = await axios.post('/api/registrations/upload', uploadData, {
-            headers: { 
-                'Content-Type': 'multipart/form-data',
-                Authorization: `Bearer ${user?.token}`
-            }
-        });
+      // First upload to Cloudinary via server
+      const { data: uploadRes } = await axios.post('/api/registrations/upload', uploadData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${user?.token}`
+        }
+      });
 
-        // Then update the registration record with file details
-        await axios.post('/api/registrations/update-paper', {
-            fileUrl: uploadRes.url,
-            publicId: uploadRes.publicId,
-            resourceType: uploadRes.resourceType,
-            originalName: uploadRes.originalName
-        }, {
-            headers: { Authorization: `Bearer ${user.token}` }
-        });
+      // Then update the registration record with file details
+      await axios.post('/api/registrations/update-paper', {
+        fileUrl: uploadRes.url,
+        publicId: uploadRes.publicId,
+        resourceType: uploadRes.resourceType,
+        originalName: uploadRes.originalName
+      }, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
 
-        toast.success("Full paper uploaded successfully!");
-        fetchRegistration(); // Refresh registration data
+      toast.success("Full paper uploaded successfully!");
+      fetchRegistration(); // Refresh registration data
     } catch (error) {
-        toast.error("Paper upload failed. Please try again.");
-        console.error("Upload error", error);
+      toast.error("Paper upload failed. Please try again.");
+      console.error("Upload error", error);
     } finally {
-        setUploading(false);
+      setUploading(false);
     }
   };
 
@@ -306,7 +306,7 @@ const Dashboard = () => {
       <div className="flex items-center gap-2 text-[0.65rem] font-black uppercase tracking-[0.15em] text-slate-400">
         {crumbs.map((crumb, i) => (
           <React.Fragment key={i}>
-            <span 
+            <span
               className={`cursor-pointer hover:text-indigo-600 transition-colors ${i === crumbs.length - 1 ? 'text-slate-800' : ''}`}
               onClick={() => setActiveTab(crumb.tab)}
             >
@@ -344,348 +344,343 @@ const Dashboard = () => {
 
       {/* Header */}
       <motion.div variants={overviewItemVariants} className="flex items-center justify-between relative z-10">
-         <div>
-           <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight font-display">Overview</h1>
-           <p className="text-sm font-medium text-slate-500 mt-1">Welcome back, <span className="text-indigo-600 font-bold">{user.name}</span>.</p>
-         </div>
-         <div className="flex gap-2">
-            {!registration?.paperDetails?.fileUrl && registration?.status !== 'Accepted' && (
-              <button onClick={() => setActiveTab('paper')} className="btn btn-primary px-5 py-2.5 text-xs shadow-indigo-200 hover:-translate-y-0.5 group">
-                <Upload size={16} className="group-hover:animate-bounce-slow" /> Upload Paper
-              </button>
-            )}
-         </div>
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight font-display">Overview</h1>
+          <p className="text-sm font-medium text-slate-500 mt-1">Welcome back, <span className="text-indigo-600 font-bold">{user.name}</span>.</p>
+        </div>
+        <div className="flex gap-2">
+          {!registration?.paperDetails?.fileUrl && registration?.status !== 'Accepted' && (
+            <button onClick={() => setActiveTab('paper')} className="btn btn-primary px-5 py-2.5 text-xs shadow-indigo-200 hover:-translate-y-0.5 group">
+              <Upload size={16} className="group-hover:animate-bounce-slow" /> Upload Paper
+            </button>
+          )}
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
-         {/* Main Status Column */}
-         <div className="lg:col-span-2 space-y-6">
-            
-            {/* Minimal Status Card */}
-            <motion.div variants={overviewItemVariants} className={`rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden bg-white/60 backdrop-blur-2xl border border-white/60 shadow-glass transition-all duration-500 hover:shadow-2xl hover:shadow-slate-200/50 group`}>
-               <div className="absolute right-10 bottom-10 opacity-[0.03] rotate-12 group-hover:rotate-[24deg] transition-all duration-700 scale-[2.5] transform text-slate-800 pointer-events-none">
-                   {registration?.status === 'Accepted' ? <Award size={140} /> : <Layers size={140} />}
-               </div>
-               
-               <div className="relative z-10 flex flex-col h-full justify-between gap-8">
-                  <div className="flex items-start justify-between">
-                     <div>
-                        <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] mb-4 shadow-sm border ${
-                           registration?.status === 'Accepted' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                           registration?.status === 'Rejected' ? 'bg-red-50 text-red-600 border-red-100' :
-                           'bg-slate-50 text-slate-600 border-slate-200'
-                        }`}>
-                           {registration?.status === 'Accepted' ? <CheckCircle size={14} /> : <Clock size={14} />}
-                           {registration?.status || 'No Submission'}
-                        </span>
-                        <h2 className={`text-3xl md:text-5xl font-black tracking-tight leading-none ${
-                           registration?.status === 'Accepted' ? 'text-blue-600' :
-                           registration?.status === 'Rejected' ? 'text-red-500' :
-                           'text-slate-800'
-                        }`}>
-                           {registration?.status === 'Accepted' ? 'Paper Accepted!' :
-                            registration?.status === 'Under Review' ? 'Under Review' :
-                            registration?.paperDetails?.fileUrl ? 'Submission Received' :
-                            'Pending Submission'}
-                        </h2>
-                     </div>
-                     <div className="flex flex-col items-end hidden sm:flex bg-slate-50/50 px-4 py-3 rounded-2xl border border-slate-100">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tracking ID</p>
-                        <p className="font-mono text-xl font-black text-slate-700 tracking-wider">#{registration?._id?.slice(-4).toUpperCase() || '----'}</p>
-                     </div>
-                  </div>
+        {/* Main Status Column */}
+        <div className="lg:col-span-2 space-y-6">
 
-                  <div>
-                     {/* Visual Progress Bar */}
-                     <div className="bg-slate-100 rounded-full h-2 w-full mb-4 overflow-hidden border border-slate-200 relative">
-                        <div 
-                           className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out ${
-                              registration?.status === 'Accepted' ? 'bg-blue-500' :
-                              registration?.status === 'Rejected' ? 'bg-red-500' :
-                              'bg-slate-800'
-                           }`}
-                           style={{ width: `${
-                              registration?.status === 'Accepted' || registration?.status === 'Rejected' ? '100%' :
-                              registration?.paymentStatus === 'Completed' ? '100%' :
-                              ['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? '75%' :
-                              registration?.paperDetails?.fileUrl ? '50%' :
-                              registration?.paperDetails?.abstract ? '25%' : '5%'
-                           }`}}
-                        >
-                        </div>
-                     </div>
-                     
-                     <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
-                        <span className={registration?.paperDetails?.abstract ? 'text-slate-800' : ''}>Draft</span>
-                        <span className={registration?.paperDetails?.fileUrl ? 'text-slate-800' : ''}>Upload</span>
-                        <span className={['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? 'text-slate-800' : ''}>Review</span>
-                        <span className={['Accepted', 'Rejected'].includes(registration?.status) ? (registration?.status === 'Accepted' ? 'text-blue-600' : 'text-red-500') : ''}>Decision</span>
-                     </div>
-                  </div>
-               </div>
-            </motion.div>
+          {/* Minimal Status Card */}
+          <motion.div variants={overviewItemVariants} className={`rounded-[2.5rem] p-6 md:p-8 relative overflow-hidden bg-white/60 backdrop-blur-2xl border border-white/60 shadow-glass transition-all duration-500 hover:shadow-2xl hover:shadow-slate-200/50 group`}>
+            <div className="absolute right-10 bottom-10 opacity-[0.03] rotate-12 group-hover:rotate-[24deg] transition-all duration-700 scale-[2.5] transform text-slate-800 pointer-events-none">
+              {registration?.status === 'Accepted' ? <Award size={140} /> : <Layers size={140} />}
+            </div>
 
-            {/* Quick Stats Row */}
-            <motion.div variants={overviewItemVariants} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
-               <motion.div whileHover={{ y: -5, scale: 1.02 }} className="bg-white/60 backdrop-blur-2xl p-5 rounded-[2rem] border border-white/60 shadow-glass flex items-center sm:flex-col sm:items-start sm:justify-between gap-4 sm:gap-0 group hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 overflow-hidden relative">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-400/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-indigo-400/20 transition-colors"></div>
-                  <div className="w-12 h-12 shrink-0 sm:mb-4 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-inner relative z-10">
-                     <Layers size={22} className="group-hover:animate-bounce-slow" />
-                  </div>
-                  <div className="relative z-10">
-                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-1">Assigned Track</span>
-                     <p className="text-sm font-black text-slate-800 truncate" title={registration?.paperDetails?.track}>{registration?.paperDetails?.track?.split(' ')[0] || 'Unassigned'}</p>
-                  </div>
-               </motion.div>
-               
-               <motion.div whileHover={{ y: -5, scale: 1.02 }} className="bg-white/60 backdrop-blur-2xl p-5 rounded-[2rem] border border-white/60 shadow-glass flex items-center sm:flex-col sm:items-start sm:justify-between gap-4 sm:gap-0 group hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 overflow-hidden relative">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-blue-400/20 transition-colors"></div>
-                  <div className={`w-12 h-12 shrink-0 sm:mb-4 bg-gradient-to-br rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:-rotate-6 transition-transform shadow-inner relative z-10 ${
-                     registration?.paymentStatus === 'Completed' ? 'from-blue-50 to-cyan-50 text-blue-600' : 'from-amber-50 to-orange-50 text-amber-600'
-                  }`}>
-                     <CreditCard size={22} className="group-hover:animate-bounce-slow" />
-                  </div>
-                  <div className="relative z-10">
-                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-1">Fee Status</span>
-                     <p className={`text-sm font-black ${registration?.paymentStatus === 'Completed' ? 'text-blue-700' : 'text-slate-800'}`}>
-                        {registration?.paymentStatus || 'Pending Payment'}
-                     </p>
-                  </div>
-               </motion.div>
-               
-               <motion.div whileHover={{ y: -5, scale: 1.02 }} className="bg-white/60 backdrop-blur-2xl p-5 rounded-[2rem] border border-white/60 shadow-glass flex items-center sm:flex-col sm:items-start sm:justify-between gap-4 sm:gap-0 group hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 sm:col-span-2 md:col-span-1 overflow-hidden relative">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-purple-400/20 transition-colors"></div>
-                  <div className="w-12 h-12 shrink-0 sm:mb-4 bg-gradient-to-br from-purple-50 to-fuchsia-50 text-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-transform shadow-inner relative z-10">
-                     <Calendar size={22} className="group-hover:animate-bounce-slow" />
-                  </div>
-                  <div className="relative z-10">
-                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-1">Upcoming Deadline</span>
-                     <p className="text-sm font-bold text-slate-800">16 Mar 2026</p>
-                  </div>
-               </motion.div>
-            </motion.div>
-
-            {/* Deadlines List */}
-            <motion.div variants={overviewItemVariants} className="bg-white rounded-[2rem] border border-slate-100 p-6 md:p-8 shadow-sm relative overflow-hidden group/timeline transition-all duration-500">
-               <h3 className="text-sm font-extrabold text-slate-800 mb-8 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-indigo-50/80 text-indigo-600 rounded-2xl flex items-center justify-center shadow-sm border border-indigo-100/50">
-                    <Clock size={18} strokeWidth={2.5} />
-                  </div>
-                  Conference Timeline
-               </h3>
-               
-               <div className="relative space-y-0 mt-2">
-                  {/* Vertical Connector Line */}
-                  <div className="absolute left-[20px] top-6 bottom-6 w-[2px] bg-slate-100"></div>
-
-                  {[
-                     { label: 'Abstract Submission', date: '2026-03-08' },
-                     { label: 'Full Paper Submission', date: '2026-03-16' },
-                     { label: 'Acceptance Notification', date: '2026-03-24' },
-                     { label: 'Registration Deadline', date: '2026-04-10' },
-                     { label: 'Conference Date', date: '2026-04-29' }
-                  ].map((item, i, arr) => {
-                     const now = new Date();
-                     const isPast = (dateStr) => {
-                         const d = new Date(dateStr);
-                         d.setHours(23, 59, 59, 999);
-                         return now > d;
-                     };
-
-                     let currentActiveIndex = 0;
-                     if (isPast('2026-03-08')) currentActiveIndex = 1;
-                     if (isPast('2026-03-16')) currentActiveIndex = 2;
-                     if (isPast('2026-03-24')) currentActiveIndex = 3;
-                     if (isPast('2026-04-10')) currentActiveIndex = 4;
-                     if (isPast('2026-04-29')) currentActiveIndex = 5;
-
-                     const done = i < currentActiveIndex;
-                     const active = i === currentActiveIndex;
-
-                     return (
-                     <motion.div 
-                        key={i} 
-                        initial={{ opacity: 0, x: -10 }} 
-                        whileInView={{ opacity: 1, x: 0 }} 
-                        transition={{ delay: i * 0.1 + 0.3 }}
-                        viewport={{ once: true }}
-                        className="relative flex items-center justify-between py-5 group/item cursor-default bg-white z-10"
-                     >
-                        <div className="flex items-center gap-5 bg-white pr-4">
-                           {/* Status Icon Column */}
-                           <div className={`w-10 h-10 rounded-full flex items-center justify-center relative z-20 shrink-0 ${
-                              done ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20 ring-4 ring-white' : 
-                              active ? 'bg-white border-2 border-indigo-500 text-indigo-600 shadow-sm ring-4 ring-white' : 
-                              'bg-white border-2 border-slate-100 text-slate-300 ring-4 ring-white'
-                           }`}>
-                              {done ? <CheckCircle size={18} strokeWidth={2.5} /> : 
-                               active ? <Clock size={16} strokeWidth={2.5} /> : 
-                               <div className="w-2 h-2 bg-slate-300 rounded-full"></div>}
-                           </div>
-
-                           <div className="flex flex-col">
-                              <span className={`text-sm tracking-tight transition-colors ${
-                                 active ? 'text-indigo-600 font-bold' : 
-                                 done ? 'text-slate-400 font-semibold line-through decoration-slate-300' : 'text-slate-600 font-semibold'
-                              }`}>
-                                 {item.label}
-                              </span>
-                              <span className="text-[10px] font-bold text-slate-400 md:hidden uppercase tracking-widest mt-0.5">
-                                 {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
-                              </span>
-                           </div>
-                        </div>
-                        <div className="bg-white pl-4 relative z-10">
-                            <span className={`hidden md:flex items-center justify-center px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-300 ${
-                            active ? 'bg-indigo-50 border border-indigo-200/50 text-indigo-600' :
-                            done ? 'bg-slate-50 text-slate-400 border border-slate-100/50' :
-                            'bg-white border border-slate-100 text-slate-400'
-                            }`}>
-                            {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
-                            </span>
-                        </div>
-                     </motion.div>
-                  )})}
-               </div>
-            </motion.div>
-         </div>
-
-         {/* Sidebar */}
-         <div className="space-y-6">
-            {/* Next Action Card */}
-            <motion.div variants={overviewItemVariants} whileHover={{ y: -5 }} className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 p-6 md:p-8 shadow-glass relative overflow-hidden group transition-all duration-500">
-                <h3 className="text-[10px] font-black text-indigo-500 bg-indigo-50/50 py-1.5 px-3 rounded-xl uppercase tracking-[0.2em] mb-6 text-center relative z-10 border border-indigo-100/50 inline-block w-full">Action Required</h3>
-                
-                {/* Background Pattern */}
-                <div className="absolute -right-10 -top-10 opacity-[0.03] rotate-12 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-45 pointer-events-none text-indigo-900 drop-shadow-2xl">
-                  {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={180} /> :
-                   registration?.status === 'Accepted' ? <CreditCard size={180} /> :
-                   registration?.paperDetails?.fileUrl ? <Clock size={180} /> :
-                   <Upload size={180} />}
+            <div className="relative z-10 flex flex-col h-full justify-between gap-8">
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] mb-4 shadow-sm border ${registration?.status === 'Accepted' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                    registration?.status === 'Rejected' ? 'bg-red-50 text-red-600 border-red-100' :
+                      (registration?.status === 'Submitted' && !registration.paperDetails?.fileUrl) ? 'bg-slate-50 text-slate-600 border-slate-200' :
+                        'bg-slate-50 text-slate-600 border-slate-200'
+                    }`}>
+                    {registration?.status === 'Accepted' ? <CheckCircle size={14} /> : <Clock size={14} />}
+                    {registration?.status === 'Submitted' && !registration?.paperDetails?.fileUrl ? 'Pending Upload' : (registration?.status || 'No Submission')}
+                  </span>
+                  <h2 className={`text-3xl md:text-5xl font-black tracking-tight leading-none ${registration?.status === 'Accepted' ? 'text-blue-600' :
+                    registration?.status === 'Rejected' ? 'text-red-500' :
+                      'text-slate-800'
+                    }`}>
+                    {registration?.status === 'Accepted' ? 'Paper Accepted!' :
+                      registration?.status === 'Under Review' ? 'Under Review' :
+                        (registration?.status === 'Submitted' && registration?.paperDetails?.fileUrl) ? 'Submission Received' :
+                          'Pending Submission'}
+                  </h2>
                 </div>
-               
-               <div className="flex flex-col items-center text-center space-y-5 relative z-10">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-1 shadow-inner group-hover:-translate-y-1 transition-transform ${
-                      registration?.paymentStatus === 'Completed' ? 'bg-gradient-to-br from-blue-100 to-cyan-50 text-blue-600' :
-                      registration?.status === 'Accepted' ? 'bg-gradient-to-br from-indigo-100 to-blue-50 text-indigo-600 animate-bounce-slow' :
-                      registration?.paperDetails?.fileUrl ? 'bg-gradient-to-br from-slate-100 to-gray-50 text-slate-500' :
-                      'bg-gradient-to-br from-indigo-100 to-blue-50 text-indigo-600 animate-bounce-slow'
-                  }`}>
-                     {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={32} /> :
-                      registration?.status === 'Accepted' ? <CreditCard size={32} /> :
-                      registration?.paperDetails?.fileUrl ? <Clock size={32} /> :
-                      <Upload size={32} />}
-                  </div>
-                  
-                  <div>
-                     <h4 className="font-extrabold text-slate-900 text-lg mb-1 drop-shadow-sm">
-                        {registration?.paymentStatus === 'Completed' ? 'You\'re All Set!' :
-                         registration?.status === 'Accepted' ? 'Complete Registration' :
-                         registration?.paperDetails?.fileUrl ? 'Awaiting Review' :
-                         'Upload Full Paper'}
-                     </h4>
-                     <p className="text-xs text-slate-500 font-medium px-4">
-                        {registration?.paymentStatus === 'Completed' ? 'Access your digital ID below.' :
-                         registration?.status === 'Accepted' ? 'Secure your spot by paying the fee.' :
-                         registration?.paperDetails?.fileUrl ? 'Your paper is currently under evaluation.' :
-                         'Please upload your document.'}
-                     </p>
-                  </div>
+                <div className="flex flex-col items-end hidden sm:flex bg-slate-50/50 px-4 py-3 rounded-2xl border border-slate-100">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tracking ID</p>
+                  <p className="font-mono text-xl font-black text-slate-700 tracking-wider">#{registration?._id?.slice(-4).toUpperCase() || '----'}</p>
+                </div>
+              </div>
 
-                  {registration?.paymentStatus !== 'Completed' && (
-                     <button 
-                        onClick={() => {
-                           if (registration?.status === 'Accepted') {
-                              setActiveTab('payment');
-                              const scrollTarget = document.querySelector('.overflow-y-auto') || window;
-                              scrollTarget.scrollTo({ top: 0, behavior: 'smooth' });
-                           } else {
-                              setActiveTab('paper');
-                              const scrollTarget = document.querySelector('.overflow-y-auto') || window;
-                              scrollTarget.scrollTo({ top: 0, behavior: 'smooth' });
-                           }
-                        }}
-
-                        className="w-full btn btn-primary py-3 text-xs shadow-indigo-500/30 hover:shadow-indigo-500/50 mt-2 hover:-translate-y-0.5"
-                     >
-                        {registration?.status === 'Accepted' ? 'Pay Now' : 
-                         registration?.paperDetails?.fileUrl ? 'View Submission' : 'Upload Now'}
-                     </button>
-                  )}
-               </div>
-            </motion.div>
-
-            {/* ID Card / Verification */}
-            <motion.div variants={overviewItemVariants} className={`rounded-[2.5rem] p-6 md:p-8 border relative overflow-hidden transition-all duration-500 ${registration?.paymentStatus === 'Completed' ? 'bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white border-indigo-500/30 shadow-2xl shadow-indigo-900/50 hover:shadow-indigo-900/70' : 'bg-white/60 backdrop-blur-2xl border-white/60 text-slate-400 shadow-glass'} group hover:-translate-y-1`}>
-               {/* Background Icon */}
-               <div className={`absolute -right-6 -bottom-6 opacity-[0.05] rotate-12 transition-transform duration-700 group-hover:scale-125 ${registration?.paymentStatus === 'Completed' ? 'text-indigo-400' : 'text-slate-900'}`}>
-                  {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={140} /> : <ShieldCheck size={140} />}
-               </div>
-               
-               {registration?.paymentStatus === 'Completed' && (
-                   <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse"></div>
-               )}
-
-               <div className="flex items-center justify-between mb-6 relative z-10">
-                  <span className={`text-[10px] font-black uppercase tracking-[0.2em] text-blue-400`}>Digital Pass</span>
-                  <div className={`p-2 rounded-lg bg-white/10`}>
-                     <ShieldCheck size={18} className="text-blue-400" />
-                  </div>
-               </div>
-               <div className="mb-8 relative z-10">
-                  <p className="text-3xl font-black tracking-tight mb-1 drop-shadow-sm">
-                     ADMIT ONE
-                  </p>
-                  <p className={`text-xs font-semibold text-slate-400`}>Authorize Entry</p>
-               </div>
-               <button 
-                  onClick={() => setShowIDCard(true)}
-                  className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300 relative z-10 bg-white text-slate-900 hover:bg-slate-100 shadow-lg hover:shadow-xl hover:-translate-y-0.5`}
-               >
-                  View ID Card
-               </button>
-            </motion.div>
-
-            {/* Author Guidelines Card (Full Content) */}
-            <motion.div variants={overviewItemVariants} whileHover={{ y: -5 }} className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 p-6 md:p-8 shadow-glass relative overflow-hidden group hover:border-indigo-100/60 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10">
-               <div className="absolute -top-10 -right-10 text-slate-900 opacity-[0.02] group-hover:opacity-[0.04] transition-all duration-700 rotate-12 group-hover:rotate-45 group-hover:scale-125 pointer-events-none drop-shadow-xl">
-                  <FileText size={200} />
-               </div>
-               
-               <div className="flex items-center gap-4 mb-6 relative z-10">
-                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
-                     <FileText size={20} />
-                  </div>
-                  <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em] leading-tight flex-1">Author<br/>Guidelines</h3>
-               </div>
-
-               <div className="space-y-5 relative z-10">
-                  <ul className="space-y-4">
-                     <li className="flex gap-4 text-xs text-slate-600 font-medium leading-relaxed">
-                        <CheckCircle className="text-blue-500 shrink-0 mt-0.5 shadow-sm rounded-full bg-blue-50" size={16} />
-                        <span>Original work not published elsewhere and must follow IEEE formatting.</span>
-                     </li>
-                     <li className="flex gap-4 text-xs text-slate-600 font-medium leading-relaxed">
-                        <CheckCircle className="text-blue-500 shrink-0 mt-0.5 shadow-sm rounded-full bg-blue-50" size={16} />
-                        <span>Max 6 pages allowed with strict double-blind peer review.</span>
-                     </li>
-                     <li className="flex gap-4 text-xs text-slate-600 font-medium leading-relaxed">
-                        <CheckCircle className="text-blue-500 shrink-0 mt-0.5 shadow-sm rounded-full bg-blue-50" size={16} />
-                        <span>Plagiarism must be under 15% for evaluation.</span>
-                     </li>
-                  </ul>
-                  
-                  <a 
-                     href="https://www.ieee.org/content/dam/ieee-org/ieee/web/org/conferences/Conference-template-A4.doc" 
-                     target="_blank" 
-                     rel="noopener noreferrer"
-                     className="flex items-center justify-center gap-2 w-full py-3 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-700 rounded-xl text-xs font-bold border border-indigo-100 hover:border-indigo-200 transition-all duration-300 hover:shadow-sm"
+              <div>
+                {/* Visual Progress Bar */}
+                <div className="bg-slate-100 rounded-full h-2 w-full mb-4 overflow-hidden border border-slate-200 relative">
+                  <div
+                    className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out ${registration?.status === 'Accepted' ? 'bg-blue-500' :
+                      registration?.status === 'Rejected' ? 'bg-red-500' :
+                        'bg-slate-800'
+                      }`}
+                    style={{
+                      width: `${registration?.status === 'Accepted' || registration?.status === 'Rejected' ? '100%' :
+                        registration?.paymentStatus === 'Completed' ? '100%' :
+                          ['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? '75%' :
+                            registration?.paperDetails?.fileUrl ? '50%' :
+                              registration?.paperDetails?.abstract ? '25%' : '5%'
+                        }`
+                    }}
                   >
-                     <Download size={16} /> Download Template
-                  </a>
-               </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
+                  <span className={registration?.paperDetails?.abstract ? 'text-slate-800' : ''}>Draft</span>
+                  <span className={registration?.paperDetails?.fileUrl ? 'text-slate-800' : ''}>Upload</span>
+                  <span className={['Under Review', 'Accepted', 'Rejected'].includes(registration?.paperDetails?.reviewStatus) ? 'text-slate-800' : ''}>Review</span>
+                  <span className={['Accepted', 'Rejected'].includes(registration?.status) ? (registration?.status === 'Accepted' ? 'text-blue-600' : 'text-red-500') : ''}>Decision</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Quick Stats Row */}
+          <motion.div variants={overviewItemVariants} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+            <motion.div whileHover={{ y: -5, scale: 1.02 }} className="bg-white/60 backdrop-blur-2xl p-5 rounded-[2rem] border border-white/60 shadow-glass flex items-center sm:flex-col sm:items-start sm:justify-between gap-4 sm:gap-0 group hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-400/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-indigo-400/20 transition-colors"></div>
+              <div className="w-12 h-12 shrink-0 sm:mb-4 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-inner relative z-10">
+                <Layers size={22} className="group-hover:animate-bounce-slow" />
+              </div>
+              <div className="relative z-10">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-1">Assigned Track</span>
+                <p className="text-sm font-black text-slate-800 truncate" title={registration?.paperDetails?.track}>{registration?.paperDetails?.track?.split(' ')[0] || 'Unassigned'}</p>
+              </div>
             </motion.div>
-         </div>
+
+            <motion.div whileHover={{ y: -5, scale: 1.02 }} className="bg-white/60 backdrop-blur-2xl p-5 rounded-[2rem] border border-white/60 shadow-glass flex items-center sm:flex-col sm:items-start sm:justify-between gap-4 sm:gap-0 group hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-blue-400/20 transition-colors"></div>
+              <div className={`w-12 h-12 shrink-0 sm:mb-4 bg-gradient-to-br rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:-rotate-6 transition-transform shadow-inner relative z-10 ${registration?.paymentStatus === 'Completed' ? 'from-blue-50 to-cyan-50 text-blue-600' : 'from-amber-50 to-orange-50 text-amber-600'
+                }`}>
+                <CreditCard size={22} className="group-hover:animate-bounce-slow" />
+              </div>
+              <div className="relative z-10">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-1">Fee Status</span>
+                <p className={`text-sm font-black ${registration?.paymentStatus === 'Completed' ? 'text-blue-700' : 'text-slate-800'}`}>
+                  {registration?.paymentStatus || 'Pending Payment'}
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div whileHover={{ y: -5, scale: 1.02 }} className="bg-white/60 backdrop-blur-2xl p-5 rounded-[2rem] border border-white/60 shadow-glass flex items-center sm:flex-col sm:items-start sm:justify-between gap-4 sm:gap-0 group hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 sm:col-span-2 md:col-span-1 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400/10 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-purple-400/20 transition-colors"></div>
+              <div className="w-12 h-12 shrink-0 sm:mb-4 bg-gradient-to-br from-purple-50 to-fuchsia-50 text-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-transform shadow-inner relative z-10">
+                <Calendar size={22} className="group-hover:animate-bounce-slow" />
+              </div>
+              <div className="relative z-10">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-1">Upcoming Deadline</span>
+                <p className="text-sm font-bold text-slate-800">16 Mar 2026</p>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Deadlines List */}
+          <motion.div variants={overviewItemVariants} className="bg-white rounded-[2rem] border border-slate-100 p-6 md:p-8 shadow-sm relative overflow-hidden group/timeline transition-all duration-500">
+            <h3 className="text-sm font-extrabold text-slate-800 mb-8 flex items-center gap-3">
+              <div className="w-10 h-10 bg-indigo-50/80 text-indigo-600 rounded-2xl flex items-center justify-center shadow-sm border border-indigo-100/50">
+                <Clock size={18} strokeWidth={2.5} />
+              </div>
+              Conference Timeline
+            </h3>
+
+            <div className="relative space-y-0 mt-2">
+              {/* Vertical Connector Line */}
+              <div className="absolute left-[20px] top-6 bottom-6 w-[2px] bg-slate-100"></div>
+
+              {[
+                { label: 'Abstract Submission', date: '2026-03-08' },
+                { label: 'Full Paper Submission', date: '2026-03-16' },
+                { label: 'Acceptance Notification', date: '2026-03-24' },
+                { label: 'Registration Deadline', date: '2026-04-10' },
+                { label: 'Conference Date', date: '2026-04-29' }
+              ].map((item, i, arr) => {
+                const now = new Date();
+                const isPast = (dateStr) => {
+                  const d = new Date(dateStr);
+                  d.setHours(23, 59, 59, 999);
+                  return now > d;
+                };
+
+                let currentActiveIndex = 0;
+                if (isPast('2026-03-08')) currentActiveIndex = 1;
+                if (isPast('2026-03-16')) currentActiveIndex = 2;
+                if (isPast('2026-03-24')) currentActiveIndex = 3;
+                if (isPast('2026-04-10')) currentActiveIndex = 4;
+                if (isPast('2026-04-29')) currentActiveIndex = 5;
+
+                const done = i < currentActiveIndex;
+                const active = i === currentActiveIndex;
+
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 + 0.3 }}
+                    viewport={{ once: true }}
+                    className="relative flex items-center justify-between py-5 group/item cursor-default bg-white z-10"
+                  >
+                    <div className="flex items-center gap-5 bg-white pr-4">
+                      {/* Status Icon Column */}
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center relative z-20 shrink-0 ${done ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20 ring-4 ring-white' :
+                        active ? 'bg-white border-2 border-indigo-500 text-indigo-600 shadow-sm ring-4 ring-white' :
+                          'bg-white border-2 border-slate-100 text-slate-300 ring-4 ring-white'
+                        }`}>
+                        {done ? <CheckCircle size={18} strokeWidth={2.5} /> :
+                          active ? <Clock size={16} strokeWidth={2.5} /> :
+                            <div className="w-2 h-2 bg-slate-300 rounded-full"></div>}
+                      </div>
+
+                      <div className="flex flex-col">
+                        <span className={`text-sm tracking-tight transition-colors ${active ? 'text-indigo-600 font-bold' :
+                          done ? 'text-slate-400 font-semibold line-through decoration-slate-300' : 'text-slate-600 font-semibold'
+                          }`}>
+                          {item.label}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 md:hidden uppercase tracking-widest mt-0.5">
+                          {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="bg-white pl-4 relative z-10">
+                      <span className={`hidden md:flex items-center justify-center px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-300 ${active ? 'bg-indigo-50 border border-indigo-200/50 text-indigo-600' :
+                        done ? 'bg-slate-50 text-slate-400 border border-slate-100/50' :
+                          'bg-white border border-slate-100 text-slate-400'
+                        }`}>
+                        {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
+                      </span>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Next Action Card */}
+          <motion.div variants={overviewItemVariants} whileHover={{ y: -5 }} className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 p-6 md:p-8 shadow-glass relative overflow-hidden group transition-all duration-500">
+            <h3 className="text-[10px] font-black text-indigo-500 bg-indigo-50/50 py-1.5 px-3 rounded-xl uppercase tracking-[0.2em] mb-6 text-center relative z-10 border border-indigo-100/50 inline-block w-full">Action Required</h3>
+
+            {/* Background Pattern */}
+            <div className="absolute -right-10 -top-10 opacity-[0.03] rotate-12 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-45 pointer-events-none text-indigo-900 drop-shadow-2xl">
+              {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={180} /> :
+                registration?.status === 'Accepted' ? <CreditCard size={180} /> :
+                  registration?.paperDetails?.fileUrl ? <Clock size={180} /> :
+                    <Upload size={180} />}
+            </div>
+
+            <div className="flex flex-col items-center text-center space-y-5 relative z-10">
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-1 shadow-inner group-hover:-translate-y-1 transition-transform ${registration?.paymentStatus === 'Completed' ? 'bg-gradient-to-br from-blue-100 to-cyan-50 text-blue-600' :
+                registration?.status === 'Accepted' ? 'bg-gradient-to-br from-indigo-100 to-blue-50 text-indigo-600 animate-bounce-slow' :
+                  registration?.paperDetails?.fileUrl ? 'bg-gradient-to-br from-slate-100 to-gray-50 text-slate-500' :
+                    'bg-gradient-to-br from-indigo-100 to-blue-50 text-indigo-600 animate-bounce-slow'
+                }`}>
+                {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={32} /> :
+                  registration?.status === 'Accepted' ? <CreditCard size={32} /> :
+                    registration?.paperDetails?.fileUrl ? <Clock size={32} /> :
+                      <Upload size={32} />}
+              </div>
+
+              <div>
+                <h4 className="font-extrabold text-slate-900 text-lg mb-1 drop-shadow-sm">
+                  {registration?.paymentStatus === 'Completed' ? 'You\'re All Set!' :
+                    registration?.status === 'Accepted' ? 'Complete Registration' :
+                      registration?.paperDetails?.fileUrl ? 'Awaiting Review' :
+                        'Upload Full Paper'}
+                </h4>
+                <p className="text-xs text-slate-500 font-medium px-4">
+                  {registration?.paymentStatus === 'Completed' ? 'Access your digital ID below.' :
+                    registration?.status === 'Accepted' ? 'Secure your spot by paying the fee.' :
+                      registration?.paperDetails?.fileUrl ? 'Your paper is currently under evaluation.' :
+                        'Please upload your document.'}
+                </p>
+              </div>
+
+              {registration?.paymentStatus !== 'Completed' && (
+                <button
+                  onClick={() => {
+                    if (registration?.status === 'Accepted') {
+                      setActiveTab('payment');
+                      const scrollTarget = document.querySelector('.overflow-y-auto') || window;
+                      scrollTarget.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                      setActiveTab('paper');
+                      const scrollTarget = document.querySelector('.overflow-y-auto') || window;
+                      scrollTarget.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  }}
+
+                  className="w-full btn btn-primary py-3 text-xs shadow-indigo-500/30 hover:shadow-indigo-500/50 mt-2 hover:-translate-y-0.5"
+                >
+                  {registration?.status === 'Accepted' ? 'Pay Now' :
+                    registration?.paperDetails?.fileUrl ? 'View Submission' : 'Upload Now'}
+                </button>
+              )}
+            </div>
+          </motion.div>
+
+          {/* ID Card / Verification */}
+          <motion.div variants={overviewItemVariants} className={`rounded-[2.5rem] p-6 md:p-8 border relative overflow-hidden transition-all duration-500 ${registration?.paymentStatus === 'Completed' ? 'bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white border-indigo-500/30 shadow-2xl shadow-indigo-900/50 hover:shadow-indigo-900/70' : 'bg-white/60 backdrop-blur-2xl border-white/60 text-slate-400 shadow-glass'} group hover:-translate-y-1`}>
+            {/* Background Icon */}
+            <div className={`absolute -right-6 -bottom-6 opacity-[0.05] rotate-12 transition-transform duration-700 group-hover:scale-125 ${registration?.paymentStatus === 'Completed' ? 'text-indigo-400' : 'text-slate-900'}`}>
+              {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={140} /> : <ShieldCheck size={140} />}
+            </div>
+
+            {registration?.paymentStatus === 'Completed' && (
+              <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse"></div>
+            )}
+
+            <div className="flex items-center justify-between mb-6 relative z-10">
+              <span className={`text-[10px] font-black uppercase tracking-[0.2em] text-blue-400`}>Digital Pass</span>
+              <div className={`p-2 rounded-lg bg-white/10`}>
+                <ShieldCheck size={18} className="text-blue-400" />
+              </div>
+            </div>
+            <div className="mb-8 relative z-10">
+              <p className="text-3xl font-black tracking-tight mb-1 drop-shadow-sm">
+                ADMIT ONE
+              </p>
+              <p className={`text-xs font-semibold text-slate-400`}>Authorize Entry</p>
+            </div>
+            <button
+              onClick={() => setShowIDCard(true)}
+              className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300 relative z-10 bg-white text-slate-900 hover:bg-slate-100 shadow-lg hover:shadow-xl hover:-translate-y-0.5`}
+            >
+              View ID Card
+            </button>
+          </motion.div>
+
+          {/* Author Guidelines Card (Full Content) */}
+          <motion.div variants={overviewItemVariants} whileHover={{ y: -5 }} className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] border border-white/60 p-6 md:p-8 shadow-glass relative overflow-hidden group hover:border-indigo-100/60 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10">
+            <div className="absolute -top-10 -right-10 text-slate-900 opacity-[0.02] group-hover:opacity-[0.04] transition-all duration-700 rotate-12 group-hover:rotate-45 group-hover:scale-125 pointer-events-none drop-shadow-xl">
+              <FileText size={200} />
+            </div>
+
+            <div className="flex items-center gap-4 mb-6 relative z-10">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                <FileText size={20} />
+              </div>
+              <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em] leading-tight flex-1">Author<br />Guidelines</h3>
+            </div>
+
+            <div className="space-y-5 relative z-10">
+              <ul className="space-y-4">
+                <li className="flex gap-4 text-xs text-slate-600 font-medium leading-relaxed">
+                  <CheckCircle className="text-blue-500 shrink-0 mt-0.5 shadow-sm rounded-full bg-blue-50" size={16} />
+                  <span>Original work not published elsewhere and must follow IEEE formatting.</span>
+                </li>
+                <li className="flex gap-4 text-xs text-slate-600 font-medium leading-relaxed">
+                  <CheckCircle className="text-blue-500 shrink-0 mt-0.5 shadow-sm rounded-full bg-blue-50" size={16} />
+                  <span>Max 6 pages allowed with strict double-blind peer review.</span>
+                </li>
+                <li className="flex gap-4 text-xs text-slate-600 font-medium leading-relaxed">
+                  <CheckCircle className="text-blue-500 shrink-0 mt-0.5 shadow-sm rounded-full bg-blue-50" size={16} />
+                  <span>Plagiarism must be under 15% for evaluation.</span>
+                </li>
+              </ul>
+
+              <a
+                href="https://www.ieee.org/content/dam/ieee-org/ieee/web/org/conferences/Conference-template-A4.doc"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-700 rounded-xl text-xs font-bold border border-indigo-100 hover:border-indigo-200 transition-all duration-300 hover:shadow-sm"
+              >
+                <Download size={16} /> Download Template
+              </a>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </motion.div>
   );
@@ -701,27 +696,35 @@ const Dashboard = () => {
   };
 
   const renderSubmissionTab = () => {
-    if (!registration || registration.status === 'Draft' || !registration.status) {
-        return (
-            <motion.div variants={overviewContainerVariants} initial="hidden" animate="visible">
-                 <motion.div variants={overviewItemVariants} className="bg-white/60 backdrop-blur-2xl p-8 md:p-10 rounded-[2.5rem] shadow-glass border border-white/60 max-w-5xl mx-auto relative cursor-default overflow-hidden">
-                    <div className="absolute -top-32 -left-32 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-                    <div className="flex justify-between items-center mb-8 border-b border-indigo-100/50 pb-6 relative z-10">
-                        <h2 className="text-3xl font-bold text-slate-800">
-                            {registration && registration.status === 'Draft' ? 'Continue Submission' : 'Start Submission'}
-                        </h2>
-                    </div>
-                    <RegistrationForm 
-                        startStep={getInitialStep()} 
-                        showAccountCreation={false} 
-                        onSuccess={() => {
-                            fetchRegistration();
-                            toast.success("Submission Completed!");
-                        }} 
-                    />
-                 </motion.div>
-            </motion.div>
-        );
+    const isMissingDetails = registration && (!registration.personalDetails?.institution || !registration.paperDetails?.abstract);
+
+    if (!registration || registration.status === 'Draft' || !registration.status || isMissingDetails) {
+      return (
+        <motion.div variants={overviewContainerVariants} initial="hidden" animate="visible">
+          <motion.div variants={overviewItemVariants} className="bg-white/60 backdrop-blur-2xl p-8 md:p-10 rounded-[2.5rem] shadow-glass border border-white/60 max-w-5xl mx-auto relative cursor-default overflow-hidden">
+            <div className="absolute -top-32 -left-32 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="flex justify-between items-center mb-8 border-b border-indigo-100/50 pb-6 relative z-10">
+              <h2 className="text-3xl font-bold text-slate-800">
+                {registration && (registration.status === 'Draft' || isMissingDetails) ? 'Continue Submission' : 'Start Submission'}
+              </h2>
+            </div>
+            {isMissingDetails && registration?.status !== 'Draft' && (
+              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3">
+                <AlertCircle size={20} className="text-amber-500 shrink-0" />
+                <p className="text-sm font-semibold text-amber-800">Please complete all required registration details before proceeding to upload your manuscript.</p>
+              </div>
+            )}
+            <RegistrationForm
+              startStep={getInitialStep()}
+              showAccountCreation={false}
+              onSuccess={() => {
+                fetchRegistration();
+                toast.success("Submission Completed!");
+              }}
+            />
+          </motion.div>
+        </motion.div>
+      );
     }
     return renderMyPaper();
   };
@@ -729,438 +732,492 @@ const Dashboard = () => {
 
   const renderMyPaper = () => {
     const handleEditDetails = () => {
-        setEditData({
-            title: registration?.paperDetails?.title || '',
-            abstract: registration?.paperDetails?.abstract || '',
-            mobile: registration?.personalDetails?.mobile || user?.phone || '',
-            institution: registration?.personalDetails?.institution || '',
-            department: registration?.personalDetails?.department || '',
-            areaOfSpecialization: registration?.personalDetails?.areaOfSpecialization || '',
-            category: registration?.personalDetails?.category || 'UG/PG STUDENTS',
-            yearOfStudy: registration?.personalDetails?.yearOfStudy || '',
-            designation: registration?.personalDetails?.designation || '',
-            track: registration?.paperDetails?.track || 'CIDT',
-            teamMembers: registration?.teamMembers ? JSON.parse(JSON.stringify(registration.teamMembers)) : [],
-            keywords: registration?.paperDetails?.keywords?.join(', ') || ''
-        });
+      setEditData({
+        title: registration?.paperDetails?.title || '',
+        abstract: registration?.paperDetails?.abstract || '',
+        mobile: registration?.personalDetails?.mobile || user?.phone || '',
+        institution: registration?.personalDetails?.institution || '',
+        department: registration?.personalDetails?.department || '',
+        areaOfSpecialization: registration?.personalDetails?.areaOfSpecialization || '',
+        category: registration?.personalDetails?.category || 'UG/PG STUDENTS',
+        yearOfStudy: registration?.personalDetails?.yearOfStudy || '',
+        designation: registration?.personalDetails?.designation || '',
+        track: registration?.paperDetails?.track || 'CIDT',
+        teamMembers: registration?.teamMembers ? JSON.parse(JSON.stringify(registration.teamMembers)) : [],
+        keywords: registration?.paperDetails?.keywords?.join(', ') || ''
+      });
     };
 
     const handleSaveDetails = async () => {
-        try {
-            setIsSavingDetails(true);
-            const submitPayload = {
-                personalDetails: { ...registration.personalDetails, mobile: editData.mobile, institution: editData.institution, department: editData.department, areaOfSpecialization: editData.areaOfSpecialization, yearOfStudy: editData.yearOfStudy, designation: editData.designation, category: editData.category },
-                teamMembers: editData.teamMembers,
-                paperDetails: { ...registration.paperDetails, title: editData.title, abstract: editData.abstract, keywords: editData.keywords.split(',').map(k => k.trim()).filter(k => k), track: editData.track }
-            };
-            await axios.post('/api/registrations/draft', submitPayload, { headers: { Authorization: `Bearer ${user.token}` } });
-            await fetchRegistration();
-            setEditData(null);
-            toast.success("Details updated successfully!");
-        } catch (error) {
-            toast.error("Failed to update details");
-        } finally {
-            setIsSavingDetails(false);
+      // Basic core validation
+      if (!editData.title?.trim() || !editData.abstract?.trim() || !editData.keywords?.trim()) {
+        return toast.error("Paper title, abstract, and keywords are required!");
+      }
+      if (!editData.mobile?.trim() || !editData.institution?.trim() || !editData.department?.trim()) {
+        return toast.error("Mobile, institution, and department are required!");
+      }
+      if (editData.category === 'UG/PG STUDENTS' && !editData.yearOfStudy?.trim()) {
+        return toast.error("Year of study is required for students!");
+      }
+      if ((editData.category === 'FACULTY/RESEARCH SCHOLARS' || editData.category === 'INDUSTRY PERSONNEL') && !editData.designation?.trim()) {
+        return toast.error("Designation is required!");
+      }
+
+      // Team / Co-author validation
+      for (let i = 0; i < editData.teamMembers.length; i++) {
+        const m = editData.teamMembers[i];
+        if (!m.name?.trim() || !m.email?.trim() || !m.mobile?.trim() || !(m.affiliation?.trim() || m.institution?.trim()) || !m.department?.trim()) {
+          return toast.error(`Please fill in all core details for co-author ${i + 1}`);
         }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(m.email)) {
+          return toast.error(`Invalid email format for co-author ${i + 1}`);
+        }
+        if (m.mobile.length < 10) {
+          return toast.error(`Invalid mobile number for co-author ${i + 1}`);
+        }
+        if (m.category === 'UG/PG STUDENTS' && !m.yearOfStudy?.trim()) {
+          return toast.error(`Year/Course is required for co-author ${i + 1}`);
+        }
+        if ((m.category === 'FACULTY/RESEARCH SCHOLARS' || m.category === 'INDUSTRY PERSONNEL') && !m.designation?.trim()) {
+          return toast.error(`Designation is required for co-author ${i + 1}`);
+        }
+      }
+
+      try {
+        setIsSavingDetails(true);
+        const submitPayload = {
+          personalDetails: { ...registration.personalDetails, mobile: editData.mobile, institution: editData.institution, department: editData.department, areaOfSpecialization: editData.areaOfSpecialization, yearOfStudy: editData.yearOfStudy, designation: editData.designation, category: editData.category },
+          teamMembers: editData.teamMembers,
+          paperDetails: { ...registration.paperDetails, title: editData.title, abstract: editData.abstract, keywords: editData.keywords.split(',').map(k => k.trim()).filter(k => k), track: editData.track }
+        };
+        await axios.post('/api/registrations/draft', submitPayload, { headers: { Authorization: `Bearer ${user.token}` } });
+        await fetchRegistration();
+        setEditData(null);
+        toast.success("Details updated successfully!");
+      } catch (error) {
+        toast.error("Failed to update details");
+      } finally {
+        setIsSavingDetails(false);
+      }
     };
 
     const updateEditTeamMember = (index, field, value) => {
-        const newMembers = [...editData.teamMembers];
-        newMembers[index][field] = value;
-        setEditData({ ...editData, teamMembers: newMembers });
+      const newMembers = [...editData.teamMembers];
+      newMembers[index][field] = value;
+      setEditData({ ...editData, teamMembers: newMembers });
     };
 
     const paperDetailsSection = (
       <>
         {/* Registration Details Group */}
         {editData ? (
-            <motion.div variants={overviewItemVariants} className="bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-glass border border-white/80 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500">
-               <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-slate-100/50 pb-6">
-                   <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em]">Edit Registration Details</h3>
-               </div>
-               
-               <div className="space-y-6">
-                   <div>
-                      <h4 className="text-sm font-bold text-slate-800 mb-3">Paper Details</h4>
-                      <div className="grid grid-cols-1 gap-4 mb-6">
-                         <div>
-                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Title</label>
-                             <input value={editData.title} onChange={e => setEditData({...editData, title: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Paper Title" />
-                         </div>
-                         <div>
-                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Abstract</label>
-                             <textarea rows="4" value={editData.abstract} onChange={e => setEditData({...editData, abstract: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Paper Abstract" />
-                         </div>
-                         <div>
-                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Track</label>
-                             <select value={editData.track} onChange={e => setEditData({...editData, track: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
-                                 <option value="CIDT">Track 1: Computing, Intelligence & Digital Technologies</option>
-                                 <option value="ESSI">Track 2: Engineering, Science & Sustainable Innovations</option>
-                                 <option value="EAHSS">Track 3: Education, Arts, Humanities & Social Sciences</option>
-                                 <option value="MBHSD">Track 4: Management, Business & Health Sciences</option>
-                             </select>
-                         </div>
-                      </div>
-                      
-                      <h4 className="text-sm font-bold text-slate-800 mb-3">Principal Author Details</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                         <div>
-                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Category</label>
-                             <select value={editData.category} onChange={e => setEditData({...editData, category: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
-                                 <option value="UG/PG STUDENTS">UG/PG STUDENTS</option>
-                                 <option value="FACULTY/RESEARCH SCHOLARS">FACULTY/RESEARCH SCHOLARS</option>
-                                 <option value="EXTERNAL / ONLINE PRESENTATION">EXTERNAL / ONLINE PRESENTATION</option>
-                                 <option value="INDUSTRY PERSONNEL">INDUSTRY PERSONNEL</option>
-                             </select>
-                         </div>
-                         <div>
-                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Mobile</label>
-                             <input value={editData.mobile} onChange={e => setEditData({...editData, mobile: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Mobile number" />
-                         </div>
-                         <div>
-                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Institution</label>
-                             <select 
-                                value={
-                                    ["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(editData.institution) 
-                                    ? editData.institution 
-                                    : 'External'
-                                } 
-                                onChange={e => {
-                                    if(e.target.value !== 'External') setEditData({...editData, institution: e.target.value});
-                                    else setEditData({...editData, institution: ''});
-                                }} 
-                                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all mb-2"
-                             >
-                                 <option value="Coimbatore Institute of Engineering and Technology">Coimbatore Institute of Engineering and Technology</option>
-                                 <option value="Coimbatore Institute of Management and Technology">Coimbatore Institute of Management and Technology</option>
-                                 <option value="Kovai Kalaimagal Arts and Science College">Kovai Kalaimagal Arts and Science College</option>
-                                 <option value="External">External Institution...</option>
-                             </select>
-                             {!["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(editData.institution) && (
-                                <input autoFocus value={editData.institution} onChange={e => setEditData({...editData, institution: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-indigo-200 bg-white ring-2 ring-indigo-500/10 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all mt-1" placeholder="Enter External Institution" />
-                             )}
-                         </div>
-                         <div>
-                             <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Department</label>
-                             <input value={editData.department} onChange={e => setEditData({...editData, department: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Department" />
-                         </div>
-                         {(editData.category === 'UG/PG STUDENTS') && (
-                            <div>
-                                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Year of Study</label>
-                                <input value={editData.yearOfStudy} onChange={e => setEditData({...editData, yearOfStudy: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Year of Study" />
+          <motion.div variants={overviewItemVariants} className="bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-glass border border-white/80 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-slate-100/50 pb-6">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em]">Edit Registration Details</h3>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <h4 className="text-sm font-bold text-slate-800 mb-3">Paper Details</h4>
+                <div className="grid grid-cols-1 gap-4 mb-6">
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Title</label>
+                    <input value={editData.title} onChange={e => setEditData({ ...editData, title: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Paper Title" />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Abstract</label>
+                    <textarea rows="4" value={editData.abstract} onChange={e => setEditData({ ...editData, abstract: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Paper Abstract" />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Track</label>
+                    <select value={editData.track} onChange={e => setEditData({ ...editData, track: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all">
+                      <option value="CIDT">Track 1: Computing, Intelligence & Digital Technologies</option>
+                      <option value="ESSI">Track 2: Engineering, Science & Sustainable Innovations</option>
+                      <option value="EAHSS">Track 3: Education, Arts, Humanities & Social Sciences</option>
+                      <option value="MBHSD">Track 4: Management, Business & Health Sciences</option>
+                    </select>
+                  </div>
+                </div>
+
+                <h4 className="text-sm font-bold text-slate-800 mb-3">Principal Author Details</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-3 mb-2">
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Select Participant Category</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      {Object.entries({
+                        'UG/PG STUDENTS': { fee: 500 },
+                        'FACULTY/RESEARCH SCHOLARS': { fee: 750 },
+                        'EXTERNAL / ONLINE PRESENTATION': { fee: 300 },
+                        'INDUSTRY PERSONNEL': { fee: 900 }
+                      }).map(([key, data]) => (
+                        <div
+                          key={key}
+                          className={`border-2 rounded-xl p-3 cursor-pointer transition-all duration-200 flex flex-col gap-1 bg-white hover:border-slate-300 hover:bg-slate-50 relative overflow-hidden group ${editData.category === key ? 'border-indigo-600 bg-indigo-50/50 shadow-sm shadow-indigo-500/5' : 'border-slate-200'}`}
+                          onClick={() => setEditData({ ...editData, category: key })}
+                        >
+                          <div className="flex items-start gap-2">
+                            <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${editData.category === key ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 group-hover:border-slate-400 font-black'}`}>
+                              <div className={`w-1.5 h-1.5 bg-white rounded-full transition-all ${editData.category === key ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`}></div>
                             </div>
-                         )}
-                         {(editData.category === 'FACULTY/RESEARCH SCHOLARS' || editData.category === 'INDUSTRY PERSONNEL') && (
-                            <div>
-                                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Designation</label>
-                                <input value={editData.designation} onChange={e => setEditData({...editData, designation: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Designation" />
-                            </div>
-                         )}
+                            <span className={`font-black text-[0.6rem] uppercase tracking-wider leading-tight ${editData.category === key ? 'text-indigo-700' : 'text-slate-700'}`}>{key}</span>
+                          </div>
+                          <div className="pl-5 flex items-baseline gap-1 mt-0.5">
+                            <span className="text-sm font-black text-slate-900 font-mono tracking-tighter">₹{data.fee}</span>
+                            <span className="text-[0.55rem] text-slate-400 font-bold uppercase tracking-tight">Fee</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Mobile</label>
+                    <input value={editData.mobile} onChange={e => setEditData({ ...editData, mobile: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Mobile number" />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Institution</label>
+                    <select
+                      value={
+                        ["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(editData.institution)
+                          ? editData.institution
+                          : 'External'
+                      }
+                      onChange={e => {
+                        if (e.target.value !== 'External') setEditData({ ...editData, institution: e.target.value });
+                        else setEditData({ ...editData, institution: '' });
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all mb-2"
+                    >
+                      <option value="Coimbatore Institute of Engineering and Technology">Coimbatore Institute of Engineering and Technology</option>
+                      <option value="Coimbatore Institute of Management and Technology">Coimbatore Institute of Management and Technology</option>
+                      <option value="Kovai Kalaimagal Arts and Science College">Kovai Kalaimagal Arts and Science College</option>
+                      <option value="External">External Institution...</option>
+                    </select>
+                    {!["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(editData.institution) && (
+                      <input autoFocus value={editData.institution} onChange={e => setEditData({ ...editData, institution: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-indigo-200 bg-white ring-2 ring-indigo-500/10 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all mt-1" placeholder="Enter External Institution" />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Department</label>
+                    <input value={editData.department} onChange={e => setEditData({ ...editData, department: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Department" />
+                  </div>
+                  {(editData.category === 'UG/PG STUDENTS') && (
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Year of Study</label>
+                      <input value={editData.yearOfStudy} onChange={e => setEditData({ ...editData, yearOfStudy: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Year of Study" />
+                    </div>
+                  )}
+                  {(editData.category === 'FACULTY/RESEARCH SCHOLARS' || editData.category === 'INDUSTRY PERSONNEL') && (
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Designation</label>
+                      <input value={editData.designation} onChange={e => setEditData({ ...editData, designation: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Designation" />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Area of Specialization</label>
+                    <input value={editData.areaOfSpecialization} onChange={e => setEditData({ ...editData, areaOfSpecialization: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Area of Specialization" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-slate-50">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-sm font-bold text-slate-800">Co-Authors</h4>
+                  {editData.teamMembers.length < 3 && (
+                    <button onClick={() => setEditData({ ...editData, teamMembers: [...editData.teamMembers, { name: '', email: '', mobile: '', affiliation: '', category: 'UG/PG STUDENTS' }] })} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 px-3 py-1.5 bg-indigo-50 rounded-lg transition-colors border border-indigo-100">+ Add Co-author</button>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  {editData.teamMembers.length === 0 && <p className="text-xs text-slate-400 italic">No co-authors added yet.</p>}
+                  {editData.teamMembers.map((m, idx) => (
+                    <div key={idx} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative group">
+                      <button onClick={() => {
+                        const newM = [...editData.teamMembers]; newM.splice(idx, 1); setEditData({ ...editData, teamMembers: newM })
+                      }} className="absolute top-4 right-4 text-red-400 hover:text-red-600 text-[10px] font-bold uppercase tracking-widest transition-colors">Remove</button>
+                      <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Co-author {idx + 1}</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Full Name *</label><input value={m.name} onChange={e => updateEditTeamMember(idx, 'name', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Name" /></div>
+                        <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Email *</label><input value={m.email} onChange={e => updateEditTeamMember(idx, 'email', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Email" /></div>
+                        <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Mobile *</label><input value={m.mobile} onChange={e => updateEditTeamMember(idx, 'mobile', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Mobile" /></div>
                         <div>
-                            <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Area of Specialization</label>
-                            <input value={editData.areaOfSpecialization} onChange={e => setEditData({...editData, areaOfSpecialization: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="Area of Specialization" />
+                          <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Category *</label>
+                          <select value={m.category} onChange={e => updateEditTeamMember(idx, 'category', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-[10px] font-semibold text-slate-700 bg-white focus:border-indigo-500 outline-none">
+                            <option value="UG/PG STUDENTS">UG/PG STUDENTS</option>
+                            <option value="FACULTY/RESEARCH SCHOLARS">FACULTY/RESEARCH SCHOLARS</option>
+                            <option value="EXTERNAL / ONLINE PRESENTATION">EXTERNAL / ONLINE PRESENTATION</option>
+                            <option value="INDUSTRY PERSONNEL">INDUSTRY PERSONNEL</option>
+                          </select>
+                        </div>
+                        <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="flex flex-col gap-1">
+                            <label className="block text-[9px] font-bold text-slate-400 uppercase ml-1">Institution</label>
+                            <select
+                              value={
+                                ["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(m.affiliation || m.institution)
+                                  ? (m.affiliation || m.institution)
+                                  : 'External'
+                              }
+                              onChange={e => {
+                                if (e.target.value !== 'External') {
+                                  updateEditTeamMember(idx, 'affiliation', e.target.value);
+                                } else if (!(m.affiliation || m.institution) || ["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(m.affiliation || m.institution)) {
+                                  updateEditTeamMember(idx, 'affiliation', '');
+                                }
+                              }}
+                              className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none mb-1"
+                            >
+                              <option value="Coimbatore Institute of Engineering and Technology">Coimbatore Institute of Engineering and Technology</option>
+                              <option value="Coimbatore Institute of Management and Technology">Coimbatore Institute of Management and Technology</option>
+                              <option value="Kovai Kalaimagal Arts and Science College">Kovai Kalaimagal Arts and Science College</option>
+                              <option value="External">External Institution...</option>
+                            </select>
+                            {!["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(m.affiliation || m.institution) && (
+                              <input value={m.affiliation || m.institution} onChange={e => updateEditTeamMember(idx, 'affiliation', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-indigo-200 ring-2 ring-indigo-500/10 text-xs focus:border-indigo-500 outline-none" placeholder="External Institution Name" />
+                            )}
+                          </div>
+                          {(m.category === 'FACULTY/RESEARCH SCHOLARS' || m.category === 'INDUSTRY PERSONNEL') && (
+                            <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Designation</label><input value={m.designation} onChange={e => updateEditTeamMember(idx, 'designation', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Designation" /></div>
+                          )}
+                          <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Area of Specialization</label><input value={m.areaOfSpecialization} onChange={e => updateEditTeamMember(idx, 'areaOfSpecialization', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Specialization" /></div>
                         </div>
                       </div>
-                   </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-                   <div className="pt-6 border-t border-slate-50">
-                      <div className="flex items-center justify-between mb-4">
-                         <h4 className="text-sm font-bold text-slate-800">Co-Authors</h4>
-                         {editData.teamMembers.length < 3 && (
-                             <button onClick={() => setEditData({...editData, teamMembers: [...editData.teamMembers, {name: '', email: '', mobile: '', affiliation: '', category: 'UG/PG STUDENTS'}]})} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 px-3 py-1.5 bg-indigo-50 rounded-lg transition-colors border border-indigo-100">+ Add Co-author</button>
-                         )}
-                      </div>
-                      <div className="space-y-4">
-                          {editData.teamMembers.length === 0 && <p className="text-xs text-slate-400 italic">No co-authors added yet.</p>}
-                          {editData.teamMembers.map((m, idx) => (
-                              <div key={idx} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 relative group">
-                                  <button onClick={() => {
-                                      const newM = [...editData.teamMembers]; newM.splice(idx, 1); setEditData({...editData, teamMembers: newM})
-                                  }} className="absolute top-4 right-4 text-red-400 hover:text-red-600 text-[10px] font-bold uppercase tracking-widest transition-colors">Remove</button>
-                                  <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Co-author {idx + 1}</h5>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                      <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Full Name *</label><input value={m.name} onChange={e => updateEditTeamMember(idx, 'name', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Name"/></div>
-                                      <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Email *</label><input value={m.email} onChange={e => updateEditTeamMember(idx, 'email', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Email"/></div>
-                                      <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Mobile *</label><input value={m.mobile} onChange={e => updateEditTeamMember(idx, 'mobile', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Mobile"/></div>
-                                      <div>
-                                          <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Category *</label>
-                                          <select value={m.category} onChange={e => updateEditTeamMember(idx, 'category', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-[10px] font-semibold text-slate-700 bg-white focus:border-indigo-500 outline-none">
-                                             <option value="UG/PG STUDENTS">UG/PG STUDENTS</option>
-                                             <option value="FACULTY/RESEARCH SCHOLARS">FACULTY/RESEARCH SCHOLARS</option>
-                                             <option value="EXTERNAL / ONLINE PRESENTATION">EXTERNAL / ONLINE PRESENTATION</option>
-                                             <option value="INDUSTRY PERSONNEL">INDUSTRY PERSONNEL</option>
-                                          </select>
-                                      </div>
-                                      <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                          <div className="flex flex-col gap-1">
-                                            <label className="block text-[9px] font-bold text-slate-400 uppercase ml-1">Institution</label>
-                                            <select 
-                                                value={
-                                                    ["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(m.affiliation || m.institution) 
-                                                    ? (m.affiliation || m.institution) 
-                                                    : 'External'
-                                                } 
-                                                onChange={e => {
-                                                    if(e.target.value !== 'External') {
-                                                        updateEditTeamMember(idx, 'affiliation', e.target.value);
-                                                    } else if (!(m.affiliation || m.institution) || ["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(m.affiliation || m.institution)) {
-                                                        updateEditTeamMember(idx, 'affiliation', '');
-                                                    }
-                                                }}
-                                                className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none mb-1"
-                                            >
-                                                <option value="Coimbatore Institute of Engineering and Technology">Coimbatore Institute of Engineering and Technology</option>
-                                                <option value="Coimbatore Institute of Management and Technology">Coimbatore Institute of Management and Technology</option>
-                                                <option value="Kovai Kalaimagal Arts and Science College">Kovai Kalaimagal Arts and Science College</option>
-                                                <option value="External">External Institution...</option>
-                                            </select>
-                                            {!["Coimbatore Institute of Engineering and Technology", "Coimbatore Institute of Management and Technology", "Kovai Kalaimagal Arts and Science College"].includes(m.affiliation || m.institution) && (
-                                                <input value={m.affiliation || m.institution} onChange={e => updateEditTeamMember(idx, 'affiliation', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-indigo-200 ring-2 ring-indigo-500/10 text-xs focus:border-indigo-500 outline-none" placeholder="External Institution Name"/>
-                                            )}
-                                          </div>
-                                        {(m.category === 'FACULTY/RESEARCH SCHOLARS' || m.category === 'INDUSTRY PERSONNEL') && (
-                                            <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Designation</label><input value={m.designation} onChange={e => updateEditTeamMember(idx, 'designation', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Designation"/></div>
-                                        )}
-                                        <div><label className="block text-[9px] font-bold text-slate-400 uppercase mb-1 ml-1">Area of Specialization</label><input value={m.areaOfSpecialization} onChange={e => updateEditTeamMember(idx, 'areaOfSpecialization', e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 outline-none" placeholder="Specialization"/></div>
-                                      </div>
-                                  </div>
-                              </div>
-                          ))}
-                      </div>
-                   </div>
+              <div className="pt-6 border-t border-slate-50">
+                <h4 className="text-sm font-bold text-slate-800 mb-2">Paper Keywords</h4>
+                <p className="text-[10px] text-slate-400 font-medium mb-3">Comma separated keywords relevant to your paper.</p>
+                <input value={editData.keywords} onChange={e => setEditData({ ...editData, keywords: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="e.g. AI, Machine Learning, Robotics" />
+              </div>
 
-                   <div className="pt-6 border-t border-slate-50">
-                      <h4 className="text-sm font-bold text-slate-800 mb-2">Paper Keywords</h4>
-                      <p className="text-[10px] text-slate-400 font-medium mb-3">Comma separated keywords relevant to your paper.</p>
-                      <input value={editData.keywords} onChange={e => setEditData({...editData, keywords: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all" placeholder="e.g. AI, Machine Learning, Robotics" />
-                   </div>
-                   
-                   <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
-                       <button onClick={() => setEditData(null)} disabled={isSavingDetails} className="px-5 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 shadow-sm">Cancel</button>
-                       <button onClick={handleSaveDetails} disabled={isSavingDetails} className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg hover:shadow-indigo-500/20 disabled:opacity-50">
-                           {isSavingDetails ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <CheckCircle size={16}/>} 
-                           {isSavingDetails ? 'Saving...' : 'Save Changes'}
-                       </button>
-                   </div>
-               </div>
-            </motion.div>
+              <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
+                <button onClick={() => setEditData(null)} disabled={isSavingDetails} className="px-5 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 shadow-sm">Cancel</button>
+                <button onClick={handleSaveDetails} disabled={isSavingDetails} className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg hover:shadow-indigo-500/20 disabled:opacity-50">
+                  {isSavingDetails ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <CheckCircle size={16} />}
+                  {isSavingDetails ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
         ) : (
-        <motion.div variants={overviewItemVariants} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-lg transition-all duration-300">
-           <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-slate-50 pb-6">
-               <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em]">Registration Details</h3>
-               <div className="flex items-center gap-3">
-                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 flex items-center gap-2">
-                     <Clock size={12} className="text-slate-400" /> Submitted: {registration?.createdAt ? new Date(registration.createdAt).toLocaleDateString() : 'N/A'}
-                 </span>
-                 {registration?.status !== 'Accepted' && registration?.status !== 'Rejected' && (
-                     <button
-                         onClick={handleEditDetails}
-                         className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors border border-indigo-100/50 hover:border-indigo-200"
-                     >
-                         <Edit2 size={12} /> Edit Details
-                     </button>
-                 )}
-               </div>
-           </div>
-           
+          <motion.div variants={overviewItemVariants} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-lg transition-all duration-300">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-slate-50 pb-6">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em]">Registration Details</h3>
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 flex items-center gap-2">
+                  <Clock size={12} className="text-slate-400" /> Submitted: {registration?.createdAt ? new Date(registration.createdAt).toLocaleDateString() : 'N/A'}
+                </span>
+                {registration?.status !== 'Accepted' && registration?.status !== 'Rejected' && (
+                  <button
+                    onClick={handleEditDetails}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors border border-indigo-100/50 hover:border-indigo-200"
+                  >
+                    <Edit2 size={12} /> Edit Details
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="space-y-8">
               {/* Paper Details Display */}
               <div className="bg-white rounded-3xl overflow-hidden px-2 sm:px-4">
                 <div className="pb-4 border-b border-slate-50 pt-2">
-                    <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 leading-tight mb-4">{registration?.paperDetails?.title || 'Untitled Research Submission'}</h2>
-                    <div className="flex flex-wrap gap-2">
-                        <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold uppercase tracking-wider">{registration?.paperDetails?.track || 'General track'}</span>
-                        <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wider">{registration?.personalDetails?.category || 'Student'}</span>
-                    </div>
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 leading-tight mb-4">{registration?.paperDetails?.title || 'Untitled Research Submission'}</h2>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold uppercase tracking-wider">{registration?.paperDetails?.track || 'General track'}</span>
+                    <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wider">{registration?.personalDetails?.category || 'Student'}</span>
+                  </div>
                 </div>
                 <div className="py-6">
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Abstract Overview</h3>
-                    <div className="text-slate-600 text-base leading-relaxed font-serif italic text-justify">
-                        <p>{registration?.paperDetails?.abstract || 'No abstract content available at this moment.'}</p>
-                    </div>
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Abstract Overview</h3>
+                  <div className="text-slate-600 text-base leading-relaxed font-serif italic text-justify">
+                    <p>{registration?.paperDetails?.abstract || 'No abstract content available at this moment.'}</p>
+                  </div>
                 </div>
               </div>
 
               {/* Principal Author Details */}
               <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 relative overflow-hidden group/author">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-bl-[100px] -z-10 group-hover/author:scale-110 transition-transform duration-500"></div>
-                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
-                    <div className="flex items-center gap-4">
-                       <div className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-200 shrink-0">{registration?.personalDetails?.name?.charAt(0) || user?.name?.charAt(0)}</div>
-                       <div>
-                         <span className="font-extrabold text-slate-800 text-lg block">{registration?.personalDetails?.name || user?.name}</span>
-                         <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest rounded-md mt-0.5 inline-block bg-indigo-50 px-2 py-0.5">Principal Author</span>
-                       </div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-bl-[100px] -z-10 group-hover/author:scale-110 transition-transform duration-500"></div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-200 shrink-0">{registration?.personalDetails?.name?.charAt(0) || user?.name?.charAt(0)}</div>
+                    <div>
+                      <span className="font-extrabold text-slate-800 text-lg block">{registration?.personalDetails?.name || user?.name}</span>
+                      <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest rounded-md mt-0.5 inline-block bg-indigo-50 px-2 py-0.5">Principal Author</span>
                     </div>
-                 </div>
-                 
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
+                  <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Email</span>
+                    <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.email || user?.email}>{registration?.personalDetails?.email || user?.email}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Mobile</span>
+                    <p className="text-xs font-semibold text-slate-700 truncate">{registration?.personalDetails?.mobile || user?.phone || 'N/A'}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Institution</span>
+                    <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.institution}>{registration?.personalDetails?.institution || 'N/A'}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Department</span>
+                    <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.department}>{registration?.personalDetails?.department || 'N/A'}</p>
+                  </div>
+                  {(registration?.personalDetails?.category === 'UG/PG STUDENTS') && (
                     <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Email</span>
-                       <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.email || user?.email}>{registration?.personalDetails?.email || user?.email}</p>
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Year of Study</span>
+                      <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.yearOfStudy}>{registration?.personalDetails?.yearOfStudy || 'N/A'}</p>
                     </div>
+                  )}
+                  {(registration?.personalDetails?.category === 'FACULTY/RESEARCH SCHOLARS' || registration?.personalDetails?.category === 'INDUSTRY PERSONNEL') && (
                     <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Mobile</span>
-                       <p className="text-xs font-semibold text-slate-700 truncate">{registration?.personalDetails?.mobile || user?.phone || 'N/A'}</p>
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Designation</span>
+                      <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.designation}>{registration?.personalDetails?.designation || 'N/A'}</p>
                     </div>
-                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Institution</span>
-                       <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.institution}>{registration?.personalDetails?.institution || 'N/A'}</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Department</span>
-                       <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.department}>{registration?.personalDetails?.department || 'N/A'}</p>
-                    </div>
-                    {(registration?.personalDetails?.category === 'UG/PG STUDENTS') && (
-                        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Year of Study</span>
-                           <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.yearOfStudy}>{registration?.personalDetails?.yearOfStudy || 'N/A'}</p>
-                        </div>
-                    )}
-                    {(registration?.personalDetails?.category === 'FACULTY/RESEARCH SCHOLARS' || registration?.personalDetails?.category === 'INDUSTRY PERSONNEL') && (
-                        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Designation</span>
-                           <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.designation}>{registration?.personalDetails?.designation || 'N/A'}</p>
-                        </div>
-                    )}
-                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Specialization</span>
-                       <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.areaOfSpecialization}>{registration?.personalDetails?.areaOfSpecialization || 'N/A'}</p>
-                    </div>
-                 </div>
+                  )}
+                  <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Specialization</span>
+                    <p className="text-xs font-semibold text-slate-700 truncate" title={registration?.personalDetails?.areaOfSpecialization}>{registration?.personalDetails?.areaOfSpecialization || 'N/A'}</p>
+                  </div>
+                </div>
               </div>
 
               {/* Co-Authors Details */}
               {registration?.teamMembers && registration.teamMembers.length > 0 && (
-                 <div className="space-y-4 pt-2">
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-2 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div> Co-Authors
-                    </h4>
-                    <div className="grid grid-cols-1 gap-4">
-                        {registration.teamMembers.map((member, idx) => (
-                           <div key={idx} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col xl:flex-row gap-5 items-start xl:items-center justify-between hover:shadow-md transition-shadow">
-                              <div className="flex items-center gap-3.5 min-w-[220px]">
-                                 <div className="w-10 h-10 bg-slate-50 text-slate-500 border border-slate-100 rounded-xl flex items-center justify-center font-bold text-base shrink-0">{member.name?.charAt(0)}</div>
-                                 <div>
-                                   <span className="font-extrabold text-slate-700 text-sm block">{member.name}</span>
-                                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{member.category}</span>
-                                 </div>
-                              </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 flex-1 w-full border-t border-slate-50 xl:border-t-0 pt-4 xl:pt-0">
-                                 <div>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Email</span>
-                                    <p className="text-xs font-semibold text-slate-600 truncate" title={member.email}>{member.email}</p>
-                                 </div>
-                                 <div>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Mobile</span>
-                                    <p className="text-xs font-semibold text-slate-600">{member.mobile}</p>
-                                 </div>
-                                 <div>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Institution</span>
-                                    <p className="text-xs font-semibold text-slate-600 truncate" title={member.affiliation || member.institution}>{member.affiliation || member.institution || 'N/A'}</p>
-                                 </div>
-                                 <div>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Department</span>
-                                    <p className="text-xs font-semibold text-slate-600 truncate" title={member.department}>{member.department || 'N/A'}</p>
-                                 </div>
-                                 {(member.category === 'UG/PG STUDENTS') && (
-                                     <div>
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Year of Study</span>
-                                        <p className="text-xs font-semibold text-slate-600 truncate" title={member.yearOfStudy}>{member.yearOfStudy || 'N/A'}</p>
-                                     </div>
-                                 )}
-                                 {(member.category === 'FACULTY/RESEARCH SCHOLARS' || member.category === 'INDUSTRY PERSONNEL') && (
-                                     <div>
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Designation</span>
-                                        <p className="text-xs font-semibold text-slate-600 truncate" title={member.designation}>{member.designation || 'N/A'}</p>
-                                     </div>
-                                 )}
-                                 <div>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Specialization</span>
-                                    <p className="text-xs font-semibold text-slate-600 truncate" title={member.areaOfSpecialization}>{member.areaOfSpecialization || 'N/A'}</p>
-                                 </div>
-                              </div>
-                           </div>
-                        ))}
-                    </div>
-                 </div>
+                <div className="space-y-4 pt-2">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] ml-2 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div> Co-Authors
+                  </h4>
+                  <div className="grid grid-cols-1 gap-4">
+                    {registration.teamMembers.map((member, idx) => (
+                      <div key={idx} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col xl:flex-row gap-5 items-start xl:items-center justify-between hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3.5 min-w-[220px]">
+                          <div className="w-10 h-10 bg-slate-50 text-slate-500 border border-slate-100 rounded-xl flex items-center justify-center font-bold text-base shrink-0">{member.name?.charAt(0)}</div>
+                          <div>
+                            <span className="font-extrabold text-slate-700 text-sm block">{member.name}</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{member.category}</span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 flex-1 w-full border-t border-slate-50 xl:border-t-0 pt-4 xl:pt-0">
+                          <div>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Email</span>
+                            <p className="text-xs font-semibold text-slate-600 truncate" title={member.email}>{member.email}</p>
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Mobile</span>
+                            <p className="text-xs font-semibold text-slate-600">{member.mobile}</p>
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Institution</span>
+                            <p className="text-xs font-semibold text-slate-600 truncate" title={member.affiliation || member.institution}>{member.affiliation || member.institution || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Department</span>
+                            <p className="text-xs font-semibold text-slate-600 truncate" title={member.department}>{member.department || 'N/A'}</p>
+                          </div>
+                          {(member.category === 'UG/PG STUDENTS') && (
+                            <div>
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Year of Study</span>
+                              <p className="text-xs font-semibold text-slate-600 truncate" title={member.yearOfStudy}>{member.yearOfStudy || 'N/A'}</p>
+                            </div>
+                          )}
+                          {(member.category === 'FACULTY/RESEARCH SCHOLARS' || member.category === 'INDUSTRY PERSONNEL') && (
+                            <div>
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Designation</span>
+                              <p className="text-xs font-semibold text-slate-600 truncate" title={member.designation}>{member.designation || 'N/A'}</p>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Specialization</span>
+                            <p className="text-xs font-semibold text-slate-600 truncate" title={member.areaOfSpecialization}>{member.areaOfSpecialization || 'N/A'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
-              
+
               {/* Keywords Metadata */}
               <div className="pt-6 border-t border-slate-50">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] block mb-3 pl-2">Paper Keywords</span>
-                  <div className="flex flex-wrap gap-2 px-2">
-                     {registration?.paperDetails?.keywords?.map((keyword, i) => (
-                         <span key={i} className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-lg text-xs font-semibold border border-slate-100">{keyword}</span>
-                     )) || <span className="text-sm font-medium text-slate-400 italic">No keywords specified</span>}
-                  </div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] block mb-3 pl-2">Paper Keywords</span>
+                <div className="flex flex-wrap gap-2 px-2">
+                  {registration?.paperDetails?.keywords?.map((keyword, i) => (
+                    <span key={i} className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-lg text-xs font-semibold border border-slate-100">{keyword}</span>
+                  )) || <span className="text-sm font-medium text-slate-400 italic">No keywords specified</span>}
+                </div>
               </div>
-           </div>
-        </motion.div>
+            </div>
+          </motion.div>
         )}
       </>
     );
 
     const actionSection = (
       <motion.div variants={overviewItemVariants} className="bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-glass border border-white/80 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-500">
-         <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-6 flex items-center gap-2">
-            <Layers size={14} className="text-slate-400" /> Manuscript Actions
-         </h3>
-         
-         {registration?.status !== 'Accepted' && registration?.status !== 'Rejected' && (
-            <div className="flex flex-col gap-4">
-               {!registration?.paperDetails?.fileUrl ? (
-                 <div className="relative">
-                    <input 
-                        type="file" 
-                        accept=".doc,.docx" 
-                        onChange={handleFullPaperUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait z-10"
-                        disabled={uploading}
-                    />
-                    <button className="w-full relative z-0 flex items-center justify-center gap-3 bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 pointer-events-none">
-                        {uploading ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        ) : <Upload size={18} />}
-                        {uploading ? 'Uploading...' : 'Upload Manuscript (Word)'}
-                    </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
-                    <Download size={18} />
-                    Download Manuscript
-                  </button>
-                  <div className="relative">
-                    <input 
-                        type="file" 
-                        accept=".doc,.docx" 
-                        onChange={handleFullPaperUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait z-10"
-                        disabled={uploading}
-                    />
-                    <button className="w-full h-full flex items-center justify-center gap-2 bg-slate-50 text-slate-500 border border-slate-200 px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-100 transition-all pointer-events-none">
-                        {uploading ? 'Updating...' : 'Update Manuscript'}
-                    </button>
-                  </div>
-                 </div>
-              )}
-            </div>
-          )}
+        <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.15em] mb-6 flex items-center gap-2">
+          <Layers size={14} className="text-slate-400" /> Manuscript Actions
+        </h3>
 
-          {(registration?.status === 'Accepted' || registration?.status === 'Rejected') && registration?.paperDetails?.fileUrl && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-               <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
+        {registration?.status !== 'Accepted' && registration?.status !== 'Rejected' && (
+          <div className="flex flex-col gap-4">
+            {!registration?.paperDetails?.fileUrl ? (
+              <div className="relative">
+                <input
+                  type="file"
+                  accept=".doc,.docx"
+                  onChange={handleFullPaperUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait z-10"
+                  disabled={uploading}
+                />
+                <button className="w-full relative z-0 flex items-center justify-center gap-3 bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 pointer-events-none">
+                  {uploading ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : <Upload size={18} />}
+                  {uploading ? 'Uploading...' : 'Upload Manuscript (Word)'}
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
                   <Download size={18} />
                   Download Manuscript
                 </button>
-                <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-center justify-center">
-                  <p className="text-xs font-bold text-amber-700 flex items-center gap-2">
-                    <ShieldCheck size={14} /> Editing locked after {registration.status.toLowerCase()}
-                  </p>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept=".doc,.docx"
+                    onChange={handleFullPaperUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-wait z-10"
+                    disabled={uploading}
+                  />
+                  <button className="w-full h-full flex items-center justify-center gap-2 bg-slate-50 text-slate-500 border border-slate-200 px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-100 transition-all pointer-events-none">
+                    {uploading ? 'Updating...' : 'Update Manuscript'}
+                  </button>
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {(registration?.status === 'Accepted' || registration?.status === 'Rejected') && registration?.paperDetails?.fileUrl && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
+              <Download size={18} />
+              Download Manuscript
+            </button>
+            <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-center justify-center">
+              <p className="text-xs font-bold text-amber-700 flex items-center gap-2">
+                <ShieldCheck size={14} /> Editing locked after {registration.status.toLowerCase()}
+              </p>
             </div>
-          )}
+          </div>
+        )}
       </motion.div>
     );
 
@@ -1178,10 +1235,10 @@ const Dashboard = () => {
   const renderPayment = () => (
     <motion.div variants={overviewContainerVariants} initial="hidden" animate="visible">
       <motion.div variants={overviewItemVariants} className="mb-8 flex items-center gap-3">
-         <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"><CreditCard size={24} /></div>
-         <h3 className="text-2xl font-bold text-slate-800">Billing Dashboard</h3>
+        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"><CreditCard size={24} /></div>
+        <h3 className="text-2xl font-bold text-slate-800">Billing Dashboard</h3>
       </motion.div>
-      
+
       <div className="flex flex-col gap-6 relative z-10">
         <div className="bg-white/70 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] shadow-glass border border-white/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/5">
           <div>
@@ -1191,7 +1248,7 @@ const Dashboard = () => {
           <div className="sm:text-right w-full sm:w-auto mt-2 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-100">
             <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Verification</p>
             <div className={`px-4 py-1.5 rounded-lg text-xs font-extrabold uppercase tracking-wide inline-block ${registration?.paymentStatus === 'Completed' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
-               {registration?.paymentStatus || 'Awaiting'}
+              {registration?.paymentStatus || 'Awaiting'}
             </div>
           </div>
         </div>
@@ -1214,16 +1271,16 @@ const Dashboard = () => {
               <span className="font-bold text-slate-700">₹ 0</span>
             </div>
             <div className="flex justify-between pt-6 mt-2">
-               <span className="font-extrabold text-slate-400 uppercase tracking-widest text-xs">Total Amount</span>
-               <p className="text-xl font-black text-slate-900">₹ {currentFee}</p>
+              <span className="font-extrabold text-slate-400 uppercase tracking-widest text-xs">Total Amount</span>
+              <p className="text-xl font-black text-slate-900">₹ {currentFee}</p>
             </div>
           </div>
 
           <div className="rounded-[2.5rem] p-6 md:p-10 bg-indigo-50/40 backdrop-blur-md border border-indigo-100/50 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-glass transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10">
-             {/* Decor */}
-             <div className="absolute -top-10 -right-10 w-48 h-48 bg-indigo-300/20 rounded-full blur-3xl pointer-events-none"></div>
-             <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-blue-300/20 rounded-full blur-3xl pointer-events-none"></div>
-             
+            {/* Decor */}
+            <div className="absolute -top-10 -right-10 w-48 h-48 bg-indigo-300/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-blue-300/20 rounded-full blur-3xl pointer-events-none"></div>
+
             {registration?.paymentStatus === 'Completed' ? (
               <div className="relative z-10">
                 <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
@@ -1235,17 +1292,17 @@ const Dashboard = () => {
             ) : registration?.status === 'Accepted' ? (
               <div className="relative z-10 w-full">
                 <h4 className="text-xl font-bold text-slate-800 mb-2">Checkout Ready</h4>
-                
+
                 {settings?.onlinePaymentEnabled === false ? (
                   <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center shadow-inner my-6">
-                     <AlertCircle size={32} className="text-amber-500 mx-auto mb-3" />
-                     <p className="text-amber-800 font-bold text-sm mb-1">Online Payments Unavailable</p>
-                     <p className="text-amber-700 text-xs">Please pay the registration fee at the venue during verification.</p>
+                    <AlertCircle size={32} className="text-amber-500 mx-auto mb-3" />
+                    <p className="text-amber-800 font-bold text-sm mb-1">Online Payments Unavailable</p>
+                    <p className="text-amber-700 text-xs">Please pay the registration fee at the venue during verification.</p>
                   </div>
                 ) : (
                   <>
                     <p className="text-slate-500 mb-8 text-sm font-medium">Securely pay using UPI, Card or Internet Banking.</p>
-                    <button 
+                    <button
                       onClick={handlePayment}
                       disabled={paymentLoading}
                       className="w-full btn btn-primary py-3.5 rounded-xl shadow-lg shadow-indigo-200 font-bold flex items-center justify-center gap-2"
@@ -1289,7 +1346,7 @@ const Dashboard = () => {
       {/* Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1309,14 +1366,14 @@ const Dashboard = () => {
             </div>
             <span>CIETM <span className="text-indigo-600">2026</span></span>
           </Link>
-          <button 
+          <button
             onClick={() => setIsSidebarOpen(false)}
             className="lg:hidden p-2 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all"
           >
             <X size={20} />
           </button>
         </div>
-        
+
         {/* User Card */}
         <div className="px-4 mb-6">
           <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100/50 flex items-center gap-3">
@@ -1332,10 +1389,10 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-        
+
         <nav className="flex-1 px-4 flex flex-col gap-1.5 overflow-y-auto pt-2">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-300 text-left group relative w-full text-slate-600 font-bold hover:bg-slate-100 hover:text-slate-900 hover:shadow-sm mb-2"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 to-indigo-500/0 group-hover:from-indigo-500/5 group-hover:to-transparent rounded-2xl transition-all duration-300 w-0 group-hover:w-full"></div>
@@ -1353,39 +1410,38 @@ const Dashboard = () => {
             { id: 'idcard', icon: Award, label: 'ID Card' },
             { id: 'settings', icon: Settings, label: 'Settings' }
           ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => { 
-                      if (item.id === 'idcard') {
-                        if (registration) {
-                          setShowIDCard(true);
-                        } else {
-                          toast.error("Please start your registration to access the ID Card");
-                        }
-                      } else {
-                        setActiveTab(item.id); 
-                      }
-                      setIsSidebarOpen(false); 
-                    }}
-                    className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-300 text-left group relative w-full overflow-hidden ${
-                      activeTab === item.id 
-                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 font-black' 
-                        : 'text-slate-600 font-bold hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm'
-                    }`}
-                  >
-                    <div className={`absolute inset-0 transition-all duration-500 ${activeTab === item.id ? 'bg-[length:200%_200%] bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 animate-gradient' : 'bg-transparent group-hover:bg-gradient-to-r group-hover:from-indigo-500/5 group-hover:to-transparent w-0 group-hover:w-full'}`}></div>
-                    <item.icon size={20} className={`relative z-10 transition-transform duration-300 ${activeTab !== item.id && 'group-hover:scale-110 group-hover:text-indigo-600 shrink-0'}`} />
-                    <span className="text-sm tracking-tight relative z-10">{item.label}</span>
-                    {activeTab === item.id && (
-                      <div className="absolute right-3 w-1.5 h-1.5 bg-white rounded-full relative z-10"></div>
-                    )}
-                  </button>
+            <button
+              key={item.id}
+              onClick={() => {
+                if (item.id === 'idcard') {
+                  if (registration) {
+                    setShowIDCard(true);
+                  } else {
+                    toast.error("Please start your registration to access the ID Card");
+                  }
+                } else {
+                  setActiveTab(item.id);
+                }
+                setIsSidebarOpen(false);
+              }}
+              className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-300 text-left group relative w-full overflow-hidden ${activeTab === item.id
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 font-black'
+                : 'text-slate-600 font-bold hover:bg-slate-50 hover:text-slate-900 hover:shadow-sm'
+                }`}
+            >
+              <div className={`absolute inset-0 transition-all duration-500 ${activeTab === item.id ? 'bg-[length:200%_200%] bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 animate-gradient' : 'bg-transparent group-hover:bg-gradient-to-r group-hover:from-indigo-500/5 group-hover:to-transparent w-0 group-hover:w-full'}`}></div>
+              <item.icon size={20} className={`relative z-10 transition-transform duration-300 ${activeTab !== item.id && 'group-hover:scale-110 group-hover:text-indigo-600 shrink-0'}`} />
+              <span className="text-sm tracking-tight relative z-10">{item.label}</span>
+              {activeTab === item.id && (
+                <div className="absolute right-3 w-1.5 h-1.5 bg-white rounded-full relative z-10"></div>
+              )}
+            </button>
           ))}
         </nav>
 
         <div className="p-4 mt-auto border-t border-slate-50/50">
-          <button 
-            className="w-full flex items-center justify-center gap-3 px-5 py-4 rounded-xl text-slate-500 font-black text-[0.7rem] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all group" 
+          <button
+            className="w-full flex items-center justify-center gap-3 px-5 py-4 rounded-xl text-slate-500 font-black text-[0.7rem] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all group"
             onClick={() => setShowLogoutModal(true)}
           >
             <LogOut size={16} className="transition-transform group-hover:-translate-x-1" /> Logout Account
@@ -1398,15 +1454,15 @@ const Dashboard = () => {
         {/* Header */}
         <header className="px-4 md:px-10 py-4 md:py-5 shrink-0 flex justify-between items-center bg-white/60 backdrop-blur-2xl border-b border-white shadow-sm sticky top-0 z-30 transition-all duration-500">
           <div className="flex items-center gap-3 md:gap-4">
-            <button 
-              className="lg:hidden p-2 text-slate-600 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors" 
+            <button
+              className="lg:hidden p-2 text-slate-600 bg-white border border-slate-200 rounded-xl shadow-sm hover:bg-slate-50 transition-colors"
               onClick={() => setIsSidebarOpen(true)}
             >
               <Menu size={20} />
             </button>
             <div className="flex flex-col">
               <div className="hidden md:block mb-1">
-                 {renderBreadcrumbs()}
+                {renderBreadcrumbs()}
               </div>
               <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">
                 {activeTab === 'paper' ? 'Submission details' : activeTab}
@@ -1419,30 +1475,34 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3 md:gap-5">
-             {/* Small Logo for mobile right side if needed, or just stay as is */}
-             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-100 md:hidden">
-                <div className="w-5 h-5 bg-indigo-600 rounded flex items-center justify-center text-[0.5rem] text-white font-bold">C</div>
-                <span className="text-[0.6rem] font-bold text-slate-800">CIETM</span>
-             </div>
-             
-             {activeTab === 'paper' && registration && (
-               <div className={`px-4 py-1.5 rounded-full text-[0.6rem] font-black uppercase tracking-widest hidden sm:flex items-center gap-2 shadow-sm border ${
-                 registration?.paperDetails?.reviewStatus === 'Accepted' 
-                 ? 'bg-blue-50 text-blue-600 border-blue-100' 
-                 : 'bg-amber-50 text-amber-600 border-amber-100'
-               }`}>
-                 <div className={`w-1.5 h-1.5 rounded-full ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'bg-blue-500' : 'bg-amber-500 animate-pulse'}`}></div>
-                 {registration?.paperDetails?.reviewStatus || 'In Review'}
-               </div>
-             )}
-             <div className="relative group">
-               <div className="w-11 h-11 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-center text-slate-400 cursor-pointer hover:text-indigo-600 hover:border-indigo-200 transition-all hover:shadow-md active:scale-95">
-                  <Bell size={20} />
+            {/* Small Logo for mobile right side if needed, or just stay as is */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-100 md:hidden">
+              <div className="w-5 h-5 bg-indigo-600 rounded flex items-center justify-center text-[0.5rem] text-white font-bold">C</div>
+              <span className="text-[0.6rem] font-bold text-slate-800">CIETM</span>
+            </div>
+
+            {activeTab === 'paper' && registration && (
+              <div className={`px-4 py-1.5 rounded-full text-[0.6rem] font-black uppercase tracking-widest hidden sm:flex items-center gap-2 shadow-sm border ${registration?.paperDetails?.reviewStatus === 'Accepted'
+                ? 'bg-blue-50 text-blue-600 border-blue-100'
+                : 'bg-amber-50 text-amber-600 border-amber-100'
+                }`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${registration?.paperDetails?.reviewStatus === 'Accepted' ? 'bg-blue-500' : 'bg-amber-500 animate-pulse'}`}></div>
+                {registration?.paperDetails?.reviewStatus || 'In Review'}
+              </div>
+            )}
+            <div className="relative group">
+              <div
+                className="w-11 h-11 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-center text-slate-400 cursor-pointer hover:text-indigo-600 hover:border-indigo-200 transition-all hover:shadow-md active:scale-95"
+                onClick={() => setActiveTab('notifications')}
+              >
+                <Bell size={20} />
+                {notifications.some(n => !n.isRead) && (
                   <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
-               </div>
-             </div>
+                )}
+              </div>
+            </div>
           </div>
         </header>
 
@@ -1460,23 +1520,22 @@ const Dashboard = () => {
                     <button onClick={handleMarkAllAsRead} className="text-xs font-bold text-indigo-600 hover:text-indigo-700">Mark all as read</button>
                   )}
                 </div>
-                
+
                 {notificationsLoading ? (
                   <div className="flex justify-center p-12"><div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div></div>
                 ) : notifications.length > 0 ? (
                   <div className="space-y-4">
                     {notifications.map((n) => (
-                      <div 
-                        key={n._id} 
+                      <div
+                        key={n._id}
                         className={`p-6 rounded-2xl border transition-all cursor-pointer ${n.isRead ? 'bg-white border-slate-100' : 'bg-indigo-50/50 border-indigo-100 shadow-sm'}`}
                         onClick={() => !n.isRead && handleMarkAsRead(n._id)}
                       >
                         <div className="flex gap-4">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                            n.type === 'success' ? 'bg-blue-100 text-blue-600' : 
-                            n.type === 'error' ? 'bg-red-100 text-red-600' : 
-                            n.type === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'
-                          }`}>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${n.type === 'success' ? 'bg-blue-100 text-blue-600' :
+                            n.type === 'error' ? 'bg-red-100 text-red-600' :
+                              n.type === 'warning' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'
+                            }`}>
                             <Bell size={20} />
                           </div>
                           <div>
@@ -1525,7 +1584,7 @@ const Dashboard = () => {
                     </div>
                     <div className="pt-8 border-t border-slate-100">
                       <h4 className="text-[0.65rem] font-black uppercase text-slate-400 mb-6 tracking-[0.2em]">Security</h4>
-                      <button 
+                      <button
                         onClick={() => setShowPasswordModal(true)}
                         className="px-8 py-4 rounded-xl border-2 border-slate-100 text-slate-600 font-bold hover:border-indigo-600 hover:text-indigo-600 transition-all active:scale-95 shadow-sm hover:shadow-md"
                       >
@@ -1542,64 +1601,64 @@ const Dashboard = () => {
         {/* Change Password Modal */}
         {showPasswordModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               className="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden"
             >
-               {/* Decor */}
-               <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl opacity-60"></div>
-               
-              <button 
+              {/* Decor */}
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl opacity-60"></div>
+
+              <button
                 onClick={() => setShowPasswordModal(false)}
                 className="absolute top-8 right-8 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all z-20"
               >
                 <X size={20} />
               </button>
-              
+
               <div className="relative z-10">
                 <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
                   <ShieldCheck size={28} />
                 </div>
                 <h3 className="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tight">Security Update</h3>
                 <p className="text-slate-500 text-sm font-medium mb-8">Ensure your account remains secure with a strong password.</p>
-                
+
                 <form onSubmit={handlePasswordChange} className="space-y-5">
                   <div className="space-y-2">
                     <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
-                    <input 
-                      type="password" 
+                    <input
+                      type="password"
                       required
                       placeholder="••••••••"
                       className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-sm"
                       value={passwordData.currentPassword}
-                      onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
-                    <input 
-                      type="password" 
+                    <input
+                      type="password"
                       required
                       placeholder="Min. 6 characters"
                       className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-sm"
                       value={passwordData.newPassword}
-                      onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[0.65rem] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New Password</label>
-                    <input 
-                      type="password" 
+                    <input
+                      type="password"
                       required
                       placeholder="Repeat new password"
                       className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-sm"
                       value={passwordData.confirmPassword}
-                      onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                     />
                   </div>
-                  
-                  <button 
+
+                  <button
                     disabled={changingPassword}
                     className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all mt-4 flex items-center justify-center gap-2 shadow-lg shadow-indigo-100 active:scale-[0.98]"
                   >
@@ -1671,13 +1730,13 @@ const Dashboard = () => {
               </div>
 
               <div className="flex gap-4">
-                <button 
+                <button
                   onClick={() => window.print()}
                   className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200"
                 >
                   <Download size={18} /> Print / Save PDF
                 </button>
-                <button 
+                <button
                   onClick={() => setShowIDCard(false)}
                   className="px-6 py-4 bg-white text-slate-600 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all"
                 >
@@ -1688,43 +1747,43 @@ const Dashboard = () => {
 
             {/* Print-only version (cleaner for PDF export) */}
             <div className="hidden print:block bg-white p-10">
-               <div className="w-[85.6mm] h-[53.98mm] border-[1px] border-slate-300 rounded-[3mm] p-[5mm] bg-white flex flex-col justify-between shadow-none mx-auto mb-10">
-                  <div className="flex justify-between items-start border-b-[0.5mm] border-slate-100 pb-[2mm]">
+              <div className="w-[85.6mm] h-[53.98mm] border-[1px] border-slate-300 rounded-[3mm] p-[5mm] bg-white flex flex-col justify-between shadow-none mx-auto mb-10">
+                <div className="flex justify-between items-start border-b-[0.5mm] border-slate-100 pb-[2mm]">
+                  <div>
+                    <h4 className="text-[5mm] font-black text-slate-800 leading-none">CIETM <span className="text-indigo-600">2026</span></h4>
+                    <p className="text-[2.5mm] font-bold text-slate-400 uppercase tracking-widest mt-[0.5mm]">Conclave on Innovation</p>
+                  </div>
+                  <div className="w-[8mm] h-[8mm] bg-indigo-50 rounded-[1.5mm] flex items-center justify-center text-indigo-600 font-bold text-[3mm]">C</div>
+                </div>
+
+                <div className="flex gap-[4mm]">
+                  <div className="w-[18mm] h-[18mm] bg-slate-50 border-[0.3mm] border-slate-100 rounded-[2mm] flex items-center justify-center text-slate-300 overflow-hidden">
+                    <User size={32} />
+                  </div>
+                  <div className="flex flex-col justify-center">
+                    <h5 className="text-[4mm] font-black text-slate-800 truncate leading-tight uppercase">{user.name}</h5>
+                    <span className="text-[2.5mm] font-black text-indigo-600 uppercase tracking-tighter mb-[1mm]">{registration.personalDetails.category}</span>
+                    <p className="text-[2.5mm] font-bold text-slate-500">{registration.personalDetails.institution}</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-end">
+                  <div className="flex items-center gap-[3mm]">
+                    <div className="bg-white p-[1mm] border-[0.2mm] border-slate-100 rounded-[1.5mm]">
+                      <QRCode value={registration._id} size={45} style={{ height: "12mm", width: "12mm" }} />
+                    </div>
                     <div>
-                      <h4 className="text-[5mm] font-black text-slate-800 leading-none">CIETM <span className="text-indigo-600">2026</span></h4>
-                      <p className="text-[2.5mm] font-bold text-slate-400 uppercase tracking-widest mt-[0.5mm]">Conclave on Innovation</p>
-                    </div>
-                    <div className="w-[8mm] h-[8mm] bg-indigo-50 rounded-[1.5mm] flex items-center justify-center text-indigo-600 font-bold text-[3mm]">C</div>
-                  </div>
-
-                  <div className="flex gap-[4mm]">
-                    <div className="w-[18mm] h-[18mm] bg-slate-50 border-[0.3mm] border-slate-100 rounded-[2mm] flex items-center justify-center text-slate-300 overflow-hidden">
-                      <User size={32} />
-                    </div>
-                    <div className="flex flex-col justify-center">
-                      <h5 className="text-[4mm] font-black text-slate-800 truncate leading-tight uppercase">{user.name}</h5>
-                      <span className="text-[2.5mm] font-black text-indigo-600 uppercase tracking-tighter mb-[1mm]">{registration.personalDetails.category}</span>
-                      <p className="text-[2.5mm] font-bold text-slate-500">{registration.personalDetails.institution}</p>
+                      <p className="text-[2mm] font-black text-slate-400 uppercase tracking-widest mb-[0.5mm]">Participant ID</p>
+                      <p className="text-[3mm] font-black text-slate-800 tracking-wider font-mono">
+                        {registration.authorId || `#CMP-26-${registration._id.slice(-6).toUpperCase()}`}
+                      </p>
                     </div>
                   </div>
-
-                  <div className="flex justify-between items-end">
-                    <div className="flex items-center gap-[3mm]">
-                      <div className="bg-white p-[1mm] border-[0.2mm] border-slate-100 rounded-[1.5mm]">
-                         <QRCode value={registration._id} size={45} style={{ height: "12mm", width: "12mm" }} />
-                      </div>
-                      <div>
-                        <p className="text-[2mm] font-black text-slate-400 uppercase tracking-widest mb-[0.5mm]">Participant ID</p>
-                        <p className="text-[3mm] font-black text-slate-800 tracking-wider font-mono">
-                          {registration.authorId || `#CMP-26-${registration._id.slice(-6).toUpperCase()}`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right pb-[1mm]">
-                      <p className="text-[2.5mm] font-black text-blue-600 uppercase tracking-widest">Verified Delegate</p>
-                    </div>
+                  <div className="text-right pb-[1mm]">
+                    <p className="text-[2.5mm] font-black text-blue-600 uppercase tracking-widest">Verified Delegate</p>
                   </div>
-               </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -1734,37 +1793,37 @@ const Dashboard = () => {
       <AnimatePresence>
         {showLogoutModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative overflow-hidden"
             >
-               {/* Decor */}
-               <div className="absolute -top-10 -right-10 w-32 h-32 bg-red-50 rounded-full blur-3xl opacity-50"></div>
-               
-               <div className="relative z-10 text-center">
-                  <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <LogOut size={32} />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">Sign Out?</h3>
-                  <p className="text-slate-500 text-sm font-medium mb-8">Are you sure you want to end your current session?</p>
-                  
-                  <div className="flex flex-col gap-3">
-                    <button 
-                      onClick={logout}
-                      className="w-full py-4 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all shadow-lg shadow-red-100 flex items-center justify-center gap-2"
-                    >
-                      Confirm Logout
-                    </button>
-                    <button 
-                      onClick={() => setShowLogoutModal(false)}
-                      className="w-full py-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all"
-                    >
-                      Keep Session
-                    </button>
-                  </div>
-               </div>
+              {/* Decor */}
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-red-50 rounded-full blur-3xl opacity-50"></div>
+
+              <div className="relative z-10 text-center">
+                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <LogOut size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">Sign Out?</h3>
+                <p className="text-slate-500 text-sm font-medium mb-8">Are you sure you want to end your current session?</p>
+
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={logout}
+                    className="w-full py-4 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all shadow-lg shadow-red-100 flex items-center justify-center gap-2"
+                  >
+                    Confirm Logout
+                  </button>
+                  <button
+                    onClick={() => setShowLogoutModal(false)}
+                    className="w-full py-4 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-all"
+                  >
+                    Keep Session
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}
