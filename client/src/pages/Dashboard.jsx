@@ -1013,7 +1013,7 @@ const Dashboard = () => {
                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 flex items-center gap-2">
                   <Clock size={12} className="text-slate-400" /> Submitted: {registration?.createdAt ? new Date(registration.createdAt).toLocaleDateString() : 'N/A'}
                 </span>
-                {registration?.status !== 'Accepted' && registration?.status !== 'Rejected' && (
+                {registration?.status !== 'Accepted' && (
                   <button
                     onClick={handleEditDetails}
                     className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors border border-indigo-100/50 hover:border-indigo-200"
@@ -1168,7 +1168,7 @@ const Dashboard = () => {
           <Layers size={14} className="text-slate-400" /> Manuscript Actions
         </h3>
 
-        {registration?.status !== 'Accepted' && registration?.status !== 'Rejected' && (
+        {registration?.status !== 'Accepted' && (
           <div className="flex flex-col gap-4">
             {!registration?.paperDetails?.fileUrl ? (
               <div className="relative">
@@ -1209,7 +1209,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        {(registration?.status === 'Accepted' || registration?.status === 'Rejected') && registration?.paperDetails?.fileUrl && (
+        {registration?.status === 'Accepted' && registration?.paperDetails?.fileUrl && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button onClick={handleDownload} className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg hover:shadow-slate-200">
               <Download size={18} />

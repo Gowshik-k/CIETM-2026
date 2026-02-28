@@ -4,6 +4,7 @@ const { cloudinary } = require('../config/cloudinary');
 const { createNotification } = require('./notificationController');
 const archiver = require('archiver');
 const axios = require('axios');
+const User = require('../models/User');
 
 // @desc    Create or Update a draft registration
 // @route   POST /api/registrations/draft
@@ -252,10 +253,12 @@ const updatePaper = async (req, res) => {
             return res.status(404).json({ message: 'Registration not found' });
         }
 
-        // Prevent updates if already reviewed (Accepted/Rejected)
-        if (['Accepted', 'Rejected'].includes(registration.status)) {
+        // Prevent updates if already reviewed (Accepted)
+        if (registration.status === 'Accepted') {
             return res.status(403).json({ message: `Cannot update paper as it has already been ${registration.status.toLowerCase()}.` });
         }
+
+        const wasRejected = registration.status === 'Rejected';
 
         // If there's an existing file, and the new file has a different public ID (e.g., different extension), delete the old one
         const oldPublicId = registration.paperDetails.publicId;
@@ -274,7 +277,26 @@ const updatePaper = async (req, res) => {
         registration.paperDetails.originalName = originalName;
         registration.updatedAt = Date.now();
 
+        if (wasRejected) {
+            registration.status = 'Submitted';
+            registration.paperDetails.reviewStatus = 'Submitted';
+        }
+
         await registration.save();
+
+        if (wasRejected) {
+            const admins = await User.find({ role: 'admin' });
+            for (const admin of admins) {
+                await createNotification(
+                    admin._id,
+                    'New Manuscript Upload',
+                    `Author ${req.user.name} has re-uploaded a new manuscript after being rejected.`,
+                    'info',
+                    '/admin'
+                );
+            }
+        }
+
         res.json(registration);
     } catch (error) {
         res.status(400).json({ message: error.message });
