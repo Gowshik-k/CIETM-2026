@@ -5,7 +5,7 @@ import {
   Calendar, MapPin, FileText, ArrowRight,
   Globe, Users, Award, Sparkles,
   GraduationCap, BookOpen, CheckCircle, Download, FileCheck, Layers,
-  Linkedin, Twitter, ChevronLeft, ChevronRight, ChevronUp, User
+  Linkedin, Twitter, ChevronLeft, ChevronRight, ChevronUp, User, Github
 } from 'lucide-react';
 
 const CountdownTimer = ({ targetDate }) => {
@@ -51,6 +51,7 @@ const CountdownTimer = ({ targetDate }) => {
 const HomePage = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [themePage, setThemePage] = useState(0);
+  const [activeDev, setActiveDev] = useState(null);
 
   const [itemsPerPage, setItemsPerPage] = useState(window.innerWidth < 768 ? 3 : 6);
 
@@ -72,6 +73,19 @@ const HomePage = () => {
       window.removeEventListener('resize', handleResize);
     };
   }, [itemsPerPage]);
+
+  // Global click handler to dismiss developer popovers
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      if (activeDev !== null) {
+        setActiveDev(null);
+      }
+    };
+    window.addEventListener('click', handleGlobalClick);
+    return () => {
+      window.removeEventListener('click', handleGlobalClick);
+    };
+  }, [activeDev]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -752,20 +766,25 @@ const HomePage = () => {
       {/* About College Section */}
       <section id="about" className="py-16 md:py-24">
         <div className="w-full max-w-7xl mx-auto px-6">
-          <div className="w-full mb-14 group">
-            <div className="relative w-full max-w-7xl min-h-[500px] md:min-h-[650px] rounded-[40px] md:rounded-[60px] overflow-hidden shadow-2xl flex items-center justify-center border border-slate-200">
-              <img src="/assets/ciet.jpeg" alt="College Campus" className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-[2s] group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/20 to-transparent z-10 transition-opacity group-hover:opacity-60"></div>
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5">Host Institution</span>
+            <p className="text-lg text-slate-500 font-medium max-w-2xl mx-auto">An autonomous institution driving academic excellence and professional development since 2001.</p>
+          </div>
 
-              <div className="relative z-20 p-8 md:p-20 max-w-4xl text-center text-white">
+          <div className="w-full mb-14 group">
+            <div className="relative w-full max-w-7xl min-h-[500px] md:min-h-[500px] rounded-[40px] md:rounded-[60px] overflow-hidden shadow-2xl flex items-center justify-center border border-slate-200">
+              <img src="/assets/ciet.jpeg" alt="College Campus" className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-[2s] group-hover:scale-110" />
+              <div className="absolute inset-0 bg-black/50 z-10 transition-opacity group-hover:opacity-80"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/60 to-transparent z-10"></div>
+
+              <div className="relative z-20 p-8 pt-10 pb-28 md:p-20 max-w-4xl text-center text-white">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  className="mb-8"
+                  className="mb-6 md:mb-8"
                 >
-                  <span className="inline-block px-6 py-2 rounded-full bg-sky-500/20 text-sky-300 font-black text-xs tracking-[0.2em] uppercase mb-4 backdrop-blur-xl border border-sky-500/30">Host Institution</span>
-                  <h2 className="text-4xl md:text-7xl font-black mb-8 leading-[1.1] tracking-tighter text-white drop-shadow-2xl">
+                  <h2 className="text-3xl sm:text-4xl md:text-7xl font-black mb-4 md:mb-6 leading-[1.1] tracking-tighter text-white drop-shadow-2xl">
                     Coimbatore Institute <br /> of <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">Engineering and Technology</span>
                   </h2>
                 </motion.div>
@@ -774,7 +793,7 @@ const HomePage = () => {
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.3 }}
-                  className="text-lg md:text-2xl font-medium leading-relaxed opacity-90 mb-0 text-slate-200"
+                  className="text-base sm:text-lg md:text-2xl font-medium leading-relaxed opacity-90 mb-0 text-slate-200"
                 >
                   The Coimbatore Institute of Engineering and Technology (CIET), Coimbatore, Tamil Nadu, is an autonomous institution established in 2001 by the Kovai Kalaimagal Educational Trust (KKET). The institute is dedicated to providing high-quality education in the fields of Engineering, Technology, and Management, fostering academic excellence and professional development. CIET is affiliated with Anna University, approved by AICTE, and accredited with an ‘A’ Grade by NAAC.
                 </motion.p>
@@ -783,7 +802,7 @@ const HomePage = () => {
                 href="https://www.google.com/maps/place/Coimbatore+Institute+of+Engineering+and+Technology/@10.998811,76.7731654,1217m/data=!3m1!1e3!4m6!3m5!1s0x3ba86104b8f60b01:0x75c28a0ddc379a9d!8m2!3d10.9957852!4d76.7716835!16s%2Fm%2F03y8_13?entry=ttu&g_ep=EgoyMDI2MDIxMS4wIKXMDSoASAFQAw%3D%3D"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="absolute bottom-10 left-10 md:left-20 bg-white/10 backdrop-blur-md border border-white/20 py-3 px-6 rounded-2xl z-20 flex items-center gap-3 font-black text-sm shadow-2xl text-white hover:bg-white/20 transition-all group/loc"
+                className="absolute bottom-6 md:bottom-10 left-6 right-6 sm:left-10 sm:right-auto md:left-20 bg-white/10 backdrop-blur-md border border-white/20 py-3 px-6 rounded-2xl z-20 flex items-center justify-center sm:justify-start gap-3 font-black text-sm shadow-2xl text-white hover:bg-white/20 transition-all group/loc"
               >
                 <MapPin size={20} className="text-sky-400 group-hover/loc:scale-110 transition-transform" /> CIET COIMBATORE
               </a>
@@ -829,22 +848,41 @@ const HomePage = () => {
       </section>
 
       {/* Developers Section */}
-      <section id="developers" className="py-16 md:py-24 bg-slate-50 relative overflow-hidden border-t border-slate-100">
+      <section id="developers" className="pt-4 pb-16 md:pt-8 md:pb-24 bg-slate-50 relative overflow-hidden border-t border-slate-100">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-50/60 rounded-full blur-[80px] pointer-events-none -mt-20 -mr-40"></div>
         <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-50/60 rounded-full blur-[80px] pointer-events-none -mb-20 -ml-40"></div>
 
         <div className="w-full max-w-7xl mx-auto px-6 relative z-10">
+          {/* Section Header */}
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5">Innovation Hub</span>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 tracking-tight">Meet the <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Developers</span></h2>
+            <p className="text-lg text-slate-500 font-medium">The visionary student team behind the digital architecture of CIETM 2026.</p>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             
             {/* Left Side: Developers Image */}
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
               className="relative w-full max-w-md mx-auto lg:mx-0 lg:max-w-none"
             >
+              <motion.div
+                animate={{ y: [-10, 10, -10] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              >
               <div className="absolute -inset-4 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 rounded-[3rem] blur-xl opacity-50 group-hover:opacity-100 transition duration-1000"></div>
               <div className="relative rounded-[2.5rem] overflow-hidden border-[8px] border-white shadow-2xl bg-white group aspect-[4/5] md:aspect-[3/4]">
+                {/* Click outside overlay */}
+                {activeDev !== null && (
+                  <div 
+                    className="absolute inset-0 z-10 cursor-default" 
+                    onClick={() => setActiveDev(null)} 
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-10 opacity-70 group-hover:opacity-50 transition-opacity duration-500"></div>
                 <img
                   src="/assets/developers.jpg"
@@ -853,11 +891,65 @@ const HomePage = () => {
                     e.target.onerror = null; 
                     e.target.src = "/assets/developers.png"; 
                   }}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-full object-cover"
                 />
+
+                {/* Interactive Area Hitboxes for Developers */}
+                {[
+                  { id: 1, name: "Vijaya Prasath", quote: "Dreaming in Code", pos: { top: '20%', left: '9%', width: '40%', height: '40%' }, align: 'right', linkedin: "#", github: "#", portfolio: "#" },
+                  { id: 2, name: "Gowshik K", quote: "Crafting Experiences", pos: { top: '20%', right: '13%', width: '45%', height: '50%' }, align: 'left', linkedin: "#", github: "#", portfolio: "#" },
+                  { id: 3, name: "Jenisha J", quote: "Designing the Web", pos: { bottom: '15%', left: '0', width: '35%', height: '45%' }, align: 'right', linkedin: "#", github: "#", portfolio: "#" },
+                  { id: 4, name: "Rithika R", quote: "Breaking Boundaries", pos: { bottom: '20%', right: '0', width: '30%', height: '45%' }, align: 'left', linkedin: "#", github: "#", portfolio: "#" }
+                ].map((dev, idx) => {
+                  const isActive = activeDev === dev.id;
+                  const isOtherActive = activeDev !== null && activeDev !== dev.id;
+
+                  return (
+                    <div key={idx} className={`absolute group/hotspot ${isActive ? 'z-40' : 'z-30'}`} style={dev.pos}>
+                      {/* Invisible Hitbox Area */}
+                      <button 
+                        tabIndex="0" 
+                        className={`absolute inset-0 w-full h-full cursor-pointer outline-none transition-colors duration-300 rounded-[2.5rem] z-20 ${
+                          isActive ? 'bg-white/10' : 
+                          'focus:bg-white/10 hover:bg-white/10'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveDev(isActive ? null : dev.id);
+                        }}
+                        aria-label={`View ${dev.name}'s profile`}
+                      ></button>
+                      
+                      {/* Popover Card */}
+                      <div className={`absolute transition-all duration-300 transform z-50 w-40 md:w-48 bg-white/95 backdrop-blur-xl rounded-2xl p-4 shadow-[0_10px_40px_rgba(0,0,0,0.4)] border border-white/40 top-1/2 -translate-y-1/2 ${dev.align === 'right' ? 'left-full ml-2 md:ml-4' : 'right-full mr-2 md:mr-4'} ${
+                        isActive ? 'opacity-100 pointer-events-auto scale-100' :
+                        isOtherActive ? 'opacity-0 pointer-events-none scale-95' :
+                        'opacity-0 pointer-events-none scale-95 group-hover/hotspot:opacity-100 group-hover/hotspot:pointer-events-auto group-hover/hotspot:scale-100'
+                      }`}>
+                        {/* Arrow */}
+                        <div className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white/95 rotate-45 ${dev.align === 'right' ? '-left-2 border-b border-l border-white/40' : '-right-2 border-t border-r border-white/40'}`}></div>
+                        <div className="relative text-center">
+                          <h5 className="font-bold text-slate-800 text-sm mb-0.5">{dev.name}</h5>
+                          <p className="text-[0.65rem] font-bold tracking-wider uppercase text-indigo-500 mb-3 hover:text-indigo-600 transition-colors">"{dev.quote}"</p>
+                          <div className="flex gap-2 justify-center">
+                            <a href={dev.github} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-900 hover:text-white transition-colors border border-slate-200" title="GitHub">
+                              <Github size={14} />
+                            </a>
+                            <a href={dev.linkedin} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-indigo-600 hover:text-white transition-colors border border-slate-200" title="LinkedIn">
+                              <Linkedin size={14} />
+                            </a>
+                            <a href={dev.portfolio} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-sky-500 hover:text-white transition-colors border border-slate-200" title="Portfolio">
+                              <Globe size={14} />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
                 
                 {/* Floating Badge */}
-                <div className="absolute top-6 right-6 z-20 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg border border-white/50 flex items-center gap-2 transform translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 delay-100">
+                <div className="absolute top-6 right-6 z-20 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg border border-white/50 flex items-center gap-2">
                   <span className="relative flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
@@ -865,13 +957,14 @@ const HomePage = () => {
                   <span className="text-xs font-black text-slate-800 tracking-wider">IT BATCH '27</span>
                 </div>
 
-                <div className="absolute bottom-0 left-0 right-0 z-20 p-6 md:p-8 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-5 border border-white/20 shadow-xl">
-                    <p className="text-white font-black text-center uppercase tracking-[0.2em] text-sm md:text-base mb-1 drop-shadow-md">Creative Minds</p>
-                    <p className="text-indigo-200 text-xs md:text-sm text-center font-bold tracking-wider">Department of Information Technology</p>
+                <div className="absolute bottom-0 left-0 right-0 z-20 p-6 md:p-8">
+                  <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 md:p-5 border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+                    <p className="text-white font-black text-center uppercase tracking-[0.2em] text-sm md:text-base mb-1 drop-shadow-lg">Creative Minds</p>
+                    <p className="text-indigo-200 text-xs md:text-sm text-center font-bold tracking-widest uppercase">Dept. of Information Technology</p>
                   </div>
                 </div>
               </div>
+              </motion.div>
             </motion.div>
 
             {/* Right Side: Content */}
@@ -879,36 +972,50 @@ const HomePage = () => {
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
               className="flex flex-col text-center lg:text-left"
             >
               <div className="mb-4 lg:mb-6">
-                <span className="inline-block px-5 py-2 rounded-full bg-indigo-100 text-indigo-700 font-extrabold text-xs tracking-widest uppercase mb-4 border border-indigo-200">
-                  Who We Are
+                <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-50/80 backdrop-blur-sm border border-indigo-100 mb-6 shadow-sm overflow-hidden relative group">
+                  <span className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></div>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 font-extrabold text-xs tracking-[0.2em] uppercase">
+                    Who We Are
+                  </span>
                 </span>
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-tight mb-6">
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-tight mb-6 relative">
                   Engineered by <br className="hidden lg:block"/>
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">IT Students</span>
+                  <span className="relative inline-block">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 animate-gradient-x">IT Students</span>
+                    <svg className="absolute w-full h-3 -bottom-1 left-0 text-indigo-400/30" viewBox="0 0 100 10" preserveAspectRatio="none">
+                      <path d="M0 5 Q 50 -5 100 5" stroke="currentColor" strokeWidth="3" fill="none" />
+                    </svg>
+                  </span>
                 </h2>
-                <div className="w-20 h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full mx-auto lg:mx-0 mb-8"></div>
+                <div className="w-20 h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full mx-auto lg:mx-0 mb-8 shadow-md"></div>
               </div>
 
-              <div className="space-y-6 text-base md:text-lg text-slate-600 font-medium leading-relaxed mb-6">
-                <p>
-                  We are a passionate team of student developers from the <strong className="text-indigo-700 font-bold">Department of Information Technology</strong> at the Coimbatore Institute of Engineering and Technology.
+              <div className="space-y-6 text-base md:text-lg text-slate-600 font-medium leading-relaxed mb-8">
+                <p className="border-l-4 border-indigo-500 pl-4 py-1 italic text-slate-700 bg-gradient-to-r from-indigo-50/50 to-transparent pr-4">
+                  We are a passionate team of student developers from the <strong className="text-indigo-700 font-extrabold tracking-wide">Department of Information Technology</strong> at the Coimbatore Institute of Engineering and Technology.
                 </p>
-                <p>
+                <p className="px-4 border-l-4 border-transparent">
                   Driven by innovation and a shared enthusiasm for building modern digital experiences, this entire platform was architected, designed, and deployed from the ground up by our department's students to comprehensively support CIETM-2026.
                 </p>
               </div>
 
-              <div className="bg-white border border-slate-100 p-6 md:p-8 rounded-[2rem] shadow-sm mb-10 hover:shadow-lg hover:border-indigo-100 transition-all duration-300 group text-left">
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                  <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
-                    <Layers className="w-7 h-7 text-indigo-600" />
-                  </div>
-                  <div className="text-center sm:text-left">
-                    <h4 className="text-xl font-bold text-slate-900 mb-2">Built with Purpose</h4>
-                    <p className="text-sm md:text-base text-slate-500">From intuitive UI/UX design to robust backend architecture, this platform stands as a testament to the practical skills and technological excellence cultured within the IT department.</p>
+              <div className="relative group perspective-1000">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <div className="relative bg-white/80 backdrop-blur-xl border border-white p-6 md:p-8 rounded-[2rem] shadow-xl text-left transform transition-transform duration-500 group-hover:-translate-y-1">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                    <div className="relative w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden group-hover:shadow-inner">
+                      <div className="absolute inset-0 bg-indigo-600/10 scale-0 group-hover:scale-150 transition-transform duration-500 rounded-full"></div>
+                      <Layers className="w-7 h-7 text-indigo-600 relative z-10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300" />
+                    </div>
+                    <div className="text-center sm:text-left">
+                      <h4 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">Built with Purpose</h4>
+                      <p className="text-sm md:text-base text-slate-500 leading-relaxed">From intuitive UI/UX design to robust backend architecture, this platform stands as a testament to the practical skills and technological excellence cultured within the IT department.</p>
+                    </div>
                   </div>
                 </div>
               </div>

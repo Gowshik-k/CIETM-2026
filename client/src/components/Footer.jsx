@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Mail, Phone, MapPin, 
-  Facebook, Twitter, Linkedin, Instagram,
+  Facebook, Twitter, Linkedin, Instagram, Youtube,
   ChevronRight, Sparkles 
 } from 'lucide-react';
 
@@ -45,10 +45,10 @@ const Footer = () => {
               Driving innovation through multidisciplinary excellence.
             </p>
             <div className="flex gap-4 justify-center lg:justify-start">
-              <a href="#" aria-label="Facebook" className={socialLinkClass}><Facebook size={20} /></a>
-              <a href="#" aria-label="Twitter" className={socialLinkClass}><Twitter size={20} /></a>
-              <a href="#" aria-label="LinkedIn" className={socialLinkClass}><Linkedin size={20} /></a>
-              <a href="#" aria-label="Instagram" className={socialLinkClass}><Instagram size={20} /></a>
+              <a href="https://www.facebook.com/cietinfo" aria-label="Facebook" className={socialLinkClass}><Facebook size={20} /></a>
+              <a href="https://www.youtube.com/channel/UCcbWp_-En0k8YhLeJW6JeqA" aria-label="Youtube" className={socialLinkClass}><Youtube size={20} /></a>
+              <a href="https://www.linkedin.com/in/ciet-coimbatore/" aria-label="LinkedIn" className={socialLinkClass}><Linkedin size={20} /></a>
+              <a href="https://www.instagram.com/cietinfo/" aria-label="Instagram" className={socialLinkClass}><Instagram size={20} /></a>
             </div>
           </div>
     

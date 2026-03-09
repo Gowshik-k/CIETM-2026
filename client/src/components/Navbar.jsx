@@ -26,7 +26,7 @@ const Navbar = () => {
 
     // Intersection Observer for highlighting sections
     // We use IDs directly for observation
-    const sectionIds = ['hero', 'about-conference', 'conference', 'tracks', 'speakers', 'about'];
+    const sectionIds = ['hero', 'about-conference', 'conference', 'tracks', 'speakers', 'about', 'developers'];
     
     const observerOptions = {
       root: null,
@@ -103,7 +103,8 @@ const Navbar = () => {
     { name: 'Conference', href: '#conference' },
     { name: 'Tracks', href: '#tracks' },
     { name: 'Speakers', href: '#speakers' },
-    { name: 'About College', href: '#about' }
+    { name: 'About College', href: '#about' },
+    { name: 'Developers', href: '#developers' }
   ];
 
   return (
@@ -223,11 +224,11 @@ const Navbar = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-2xl md:hidden overflow-hidden z-50"
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-2xl md:hidden z-50 transform-gpu"
           >
             <div className="p-6 flex flex-col gap-2 bg-white">
               <div className="flex flex-col gap-1 mb-6">
