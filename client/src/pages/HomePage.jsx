@@ -144,6 +144,7 @@ const HomePage = () => {
     { name: "Dr.N.Mohan Raj", affiliation: "Professor & Head - MCT", img: "/advisory/mohan.jpeg" },
     { name: "Mrs. K. Velumani", affiliation: "Dean, Head - S&H", img: "/advisory/velumani.png" },
     { name: "Dr. E. Gomathi", affiliation: "Associate Professor & Head - AI&DS", img: "/advisory/gomathi.jpeg" },
+    { name: "Dr. D. Seenivasan", affiliation: "Professor & Head - MECH", img: "/advisory/seenivasan.jpg" },
   ];
 
   // Calculate duration based on total width to maintain constant velocity (80px/s)
@@ -171,7 +172,7 @@ const HomePage = () => {
           {/* Lighter, more vibrant overlays */}
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/40 via-transparent to-slate-950/60"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.15),transparent_70%)]"></div>
-          <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px]"></div>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px]"></div>
         </div>
 
         <div className="w-full max-w-7xl mx-auto px-6 text-center relative z-20">
@@ -222,7 +223,7 @@ const HomePage = () => {
           transition={{ delay: 2, duration: 1 }}
           className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
         >
-          <span className="text-[0.6rem] font-bold text-slate-400 uppercase tracking-widest">Scroll to explore</span>
+          <span className="text-[0.6rem] font-bold text-slate-400 uppercase tracking-widest text-white">Scroll to explore</span>
           <div className="w-px h-12 bg-gradient-to-b from-indigo-500 to-transparent"></div>
         </motion.div>
       </section>
@@ -679,7 +680,7 @@ const HomePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-3xl mx-auto justify-center">
               {[
                 { name: "Dr. P. Magudeaswaran", role: "Head Of the Department - Civil Engineering", img: "/convenor/magudeaswaran.jpg" },
-                { name: "Dr. V. Rajkumar", role: "Associate Professor - Mechanical Engineering", img: null }
+                { name: "Dr. V. Rajkumar", role: "Associate Professor - Mechanical Engineering", img: "/convenor/rajkumar.jpeg" }
               ].map((p, i) => (
                 <motion.div
                   key={i}
@@ -823,6 +824,96 @@ const HomePage = () => {
                 <p className="text-slate-500 text-base leading-relaxed font-medium text-justify">{pillar.desc}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Developers Section */}
+      <section id="developers" className="py-16 md:py-24 bg-slate-50 relative overflow-hidden border-t border-slate-100">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-50/60 rounded-full blur-[80px] pointer-events-none -mt-20 -mr-40"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-50/60 rounded-full blur-[80px] pointer-events-none -mb-20 -ml-40"></div>
+
+        <div className="w-full max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            
+            {/* Left Side: Developers Image */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative w-full max-w-md mx-auto lg:mx-0 lg:max-w-none"
+            >
+              <div className="absolute -inset-4 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 rounded-[3rem] blur-xl opacity-50 group-hover:opacity-100 transition duration-1000"></div>
+              <div className="relative rounded-[2.5rem] overflow-hidden border-[8px] border-white shadow-2xl bg-white group aspect-[4/5] md:aspect-[3/4]">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-10 opacity-70 group-hover:opacity-50 transition-opacity duration-500"></div>
+                <img
+                  src="/assets/developers.jpg"
+                  alt="IT Department Developers"
+                  onError={(e) => { 
+                    e.target.onerror = null; 
+                    e.target.src = "/assets/developers.png"; 
+                  }}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                
+                {/* Floating Badge */}
+                <div className="absolute top-6 right-6 z-20 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg border border-white/50 flex items-center gap-2 transform translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 delay-100">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                  </span>
+                  <span className="text-xs font-black text-slate-800 tracking-wider">IT BATCH '27</span>
+                </div>
+
+                <div className="absolute bottom-0 left-0 right-0 z-20 p-6 md:p-8 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                  <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-5 border border-white/20 shadow-xl">
+                    <p className="text-white font-black text-center uppercase tracking-[0.2em] text-sm md:text-base mb-1 drop-shadow-md">Creative Minds</p>
+                    <p className="text-indigo-200 text-xs md:text-sm text-center font-bold tracking-wider">Department of Information Technology</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Right Side: Content */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="flex flex-col text-center lg:text-left"
+            >
+              <div className="mb-4 lg:mb-6">
+                <span className="inline-block px-5 py-2 rounded-full bg-indigo-100 text-indigo-700 font-extrabold text-xs tracking-widest uppercase mb-4 border border-indigo-200">
+                  Who We Are
+                </span>
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-tight mb-6">
+                  Engineered by <br className="hidden lg:block"/>
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">IT Students</span>
+                </h2>
+                <div className="w-20 h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full mx-auto lg:mx-0 mb-8"></div>
+              </div>
+
+              <div className="space-y-6 text-base md:text-lg text-slate-600 font-medium leading-relaxed mb-6">
+                <p>
+                  We are a passionate team of student developers from the <strong className="text-indigo-700 font-bold">Department of Information Technology</strong> at the Coimbatore Institute of Engineering and Technology.
+                </p>
+                <p>
+                  Driven by innovation and a shared enthusiasm for building modern digital experiences, this entire platform was architected, designed, and deployed from the ground up by our department's students to comprehensively support CIETM-2026.
+                </p>
+              </div>
+
+              <div className="bg-white border border-slate-100 p-6 md:p-8 rounded-[2rem] shadow-sm mb-10 hover:shadow-lg hover:border-indigo-100 transition-all duration-300 group text-left">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                  <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+                    <Layers className="w-7 h-7 text-indigo-600" />
+                  </div>
+                  <div className="text-center sm:text-left">
+                    <h4 className="text-xl font-bold text-slate-900 mb-2">Built with Purpose</h4>
+                    <p className="text-sm md:text-base text-slate-500">From intuitive UI/UX design to robust backend architecture, this platform stands as a testament to the practical skills and technological excellence cultured within the IT department.</p>
+                  </div>
+                </div>
+              </div>
+
+            </motion.div>
           </div>
         </div>
       </section>
