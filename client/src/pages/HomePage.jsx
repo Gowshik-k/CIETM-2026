@@ -154,10 +154,10 @@ const HomePage = () => {
     { name: "Dr. S. Gokul", affiliation: "Associate Professor and Head - EEE, Dean - Affiliations and Approvals", img: "/advisory/Gokul Shanmugan.jpeg" },
     { name: "Dr. N. R. Deepa", affiliation: "Associate Professor and Head - IT", img: "/advisory/dheepa.jpeg" },
     { name: "Dr. S. Priyadharshini", affiliation: "Associate Professor and Head - Management Studies", img: "/advisory/priyadharshini.jpg" },
-    { name: "Dr. K. Pushpalatha", affiliation: "Dean, Associate Professor and Head - CSE", img: "/advisory/pushpalatha.png" },
+    { name: "Dr. K. Pushpalatha", affiliation: "Dean - School of computing", img: "/advisory/pushpalatha.png" },
     { name: "Dr. A. Umaamaheshvari", affiliation: "Associate Professor and Head - ECE", img: "/advisory/umaamaheshvari.png" },
     { name: "Dr.N.Mohan Raj", affiliation: "Professor & Head - MCT", img: "/advisory/mohan.jpeg" },
-    { name: "Mrs. K. Velumani", affiliation: "Dean, Head - S&H", img: "/advisory/velumani.png" },
+    { name: "Mrs. K. Velumani", affiliation: "Dean - S&H", img: "/advisory/velumani.png" },
     { name: "Dr. E. Gomathi", affiliation: "Associate Professor & Head - AI&DS", img: "/advisory/gomathi.jpeg" },
     { name: "Dr. D. Seenivasan", affiliation: "Professor & Head - MECH", img: "/advisory/seenivasan.jpg" },
   ];
@@ -738,7 +738,7 @@ const HomePage = () => {
                 { name: "Dr. M. Arunmozhi", role: "Associate Professor", dept: "Master of Business Administration", img: "/organizing team/Arunmozhi.jpeg" },
                 { name: "Ms. S. R. Sarvada", role: "Assistant Professor", dept: "Science & Humanities - English", img: "/organizing team/S.R.Sarvada.jpeg" },
                 { name: "Ms. V. Mohana Priya", role: "Assistant Professor", dept: "Science & Humanities - Mathematics", img: "/organizing team/Mohana-Priya .jpeg" },
-                { name: "Ms. Sangavi", role: "Assistant Professor", dept: "Science & Humanities - Mathematics", img: "/organizing team/Sangavi.jpeg" },
+                { name: "Ms. K. Sangavi", role: "Assistant Professor", dept: "Science & Humanities - Mathematics", img: "/organizing team/Sangavi.jpeg" },
               ].map((m, idx, arr) => (
                 <motion.div
                   key={idx}
