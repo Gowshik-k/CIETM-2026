@@ -1,5 +1,6 @@
-const mongoose = require('mongoose');
-const MONGO_URI = 'mongodb+srv://admin:admin123@cietm.nvoipw2.mongodb.net/?appName=CIETM';
+const dotenv = require('dotenv');
+dotenv.config();
+const MONGO_URI = process.env.MONGO_URI;
 
 async function checkIndices() {
   try {
