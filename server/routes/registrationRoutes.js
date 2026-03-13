@@ -13,8 +13,6 @@ const {
     downloadAllPapersZip,
     verifyEntry,
     updateProfilePicture,
-    requestReupload,
-    handleReuploadRequest,
     assignReviewer,
     autoAssignReviewers
 } = require('../controllers/registrationController');
@@ -33,8 +31,7 @@ router.put('/:id/review', protect, authorize('admin', 'chair', 'reviewer'), revi
 router.put('/:id/status', protect, authorize('admin', 'chair'), updateRegistrationStatus);
 router.post('/update-paper', protect, updatePaper);
 router.put('/profile-picture', protect, updateProfilePicture);
-router.post('/:id/request-reupload', protect, requestReupload);
-router.post('/:id/handle-reupload-request', protect, authorize('admin', 'chair'), handleReuploadRequest);
+
 router.put('/:id/assign', protect, authorize('admin', 'chair'), assignReviewer);
 router.post('/auto-assign', protect, authorize('admin', 'chair'), autoAssignReviewers);
 

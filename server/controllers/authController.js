@@ -526,6 +526,33 @@ const adminCreateUser = async (req, res) => {
     }
 };
 
+const deleteUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Prevent admin from deleting themselves
+        if (user._id.toString() === req.user._id.toString()) {
+            return res.status(400).json({ message: 'Administrators cannot delete their own accounts' });
+        }
+
+        // 1. Delete associated registrations
+        const Registration = require('../models/Registration');
+        await Registration.deleteMany({ userId: user._id });
+
+        // 2. Delete the user
+        await User.findByIdAndDelete(req.params.id);
+        
+        res.json({ message: 'User and all associated data removed successfully' });
+    } catch (error) {
+        console.error('Delete User error:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -539,5 +566,6 @@ module.exports = {
     adminCreateUser,
     updateUserRole,
     updateReviewerTracks,
-    updateUserProfile
+    updateUserProfile,
+    deleteUser
 };

@@ -228,16 +228,6 @@ const reviewPaper = async (req, res) => {
     }
 };
 
-const sanitizeFilename = (text) => {
-    return text
-        .toString()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, '_')
-        .replace(/[^a-z0-9_-]/gi, '')
-        .replace(/_{2,}/g, '_')
-        .toLowerCase();
-};
 
 const downloadPaper = async (req, res) => {
     try {
@@ -401,19 +391,8 @@ const getAdminAnalytics = async (req, res) => {
     }
 };
 
-// @desc    Request paper re-upload after rejection
-// @route   POST /api/registrations/:id/request-reupload
-// @access  Private
-const requestReupload = async (req, res) => {
-    res.status(403).json({ message: 'Re-submission is no longer supported for rejected papers.' });
-};
-
-// @desc    Handle paper re-upload request (Admin)
-// @route   POST /api/registrations/:id/handle-reupload-request
-// @access  Admin
-const handleReuploadRequest = async (req, res) => {
-    res.status(403).json({ message: 'Re-submission functionality has been disabled.' });
-};
+// Re-submission functionality is currently disabled in the current workflow
+// If needed in future, implement with appropriate audit trails
 
 const updateRegistrationStatus = async (req, res) => {
     const { status, paymentStatus, transactionId, amount, attended } = req.body;
@@ -669,16 +648,19 @@ async function performAutoAssignment(allowFallback = false) {
         let assignedCount = 0;
         const results = [];
 
-        // Fetch all current assignments to calculate current workload exactly
-        const allRegistrations = await Registration.find({ 'paperDetails.assignedReviewer': { $exists: true, $ne: null } });
+        // Efficiently calculate current workload for all reviewers using aggregation
+        const reviewerLoads = await Registration.aggregate([
+            { $match: { 'paperDetails.assignedReviewer': { $exists: true, $ne: null } } },
+            { $group: { _id: "$paperDetails.assignedReviewer", count: { $sum: 1 } } }
+        ]);
         
-        // Map reviewerId to their current active load (number of papers assigned)
+        // Map reviewerId to their current active load
         const reviewerLoadMap = {};
         reviewers.forEach(r => reviewerLoadMap[r._id.toString()] = 0);
-        allRegistrations.forEach(r => {
-            const revId = r.paperDetails.assignedReviewer.toString();
+        reviewerLoads.forEach(load => {
+            const revId = load._id.toString();
             if (reviewerLoadMap[revId] !== undefined) {
-                reviewerLoadMap[revId]++;
+                reviewerLoadMap[revId] = load.count;
             }
         });
 
@@ -767,8 +749,6 @@ module.exports = {
     downloadAllPapersZip,
     verifyEntry,
     updateProfilePicture,
-    requestReupload,
-    handleReuploadRequest,
     assignReviewer,
     autoAssignReviewers,
     performAutoAssignment

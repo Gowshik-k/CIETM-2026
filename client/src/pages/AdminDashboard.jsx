@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -21,12 +21,17 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import { ShieldCheck, QrCode, ScanLine, Menu, X, CheckSquare, Square } from 'lucide-react';
 import { CONFERENCE_TRACKS, CATEGORY_AMOUNTS } from '../constants/conferenceData';
 
-const QRScanner = ({ onScan }) => {
+const QRScanner = React.memo(({ onScan }) => {
   useEffect(() => {
     let scanner = null;
+    let isMounted = true;
 
     // Slight delay to ensure DOM element is ready
     const timer = setTimeout(() => {
+      if (!isMounted) return;
+      const readerElement = document.getElementById("reader");
+      if (!readerElement) return;
+
       try {
         scanner = new Html5QrcodeScanner("reader", {
           fps: 10,
@@ -38,7 +43,7 @@ const QRScanner = ({ onScan }) => {
 
         scanner.render(
           (decodedText) => {
-            onScan(decodedText);
+            if (isMounted) onScan(decodedText);
           },
           (err) => { /* ignore per-frame errors */ }
         );
@@ -48,6 +53,7 @@ const QRScanner = ({ onScan }) => {
     }, 500);
 
     return () => {
+      isMounted = false;
       clearTimeout(timer);
       if (scanner) {
         scanner.clear().catch(err => console.error("Scanner Clear Error:", err));
@@ -93,7 +99,7 @@ const QRScanner = ({ onScan }) => {
       </div>
     </div>
   );
-};
+});
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -125,6 +131,7 @@ const AdminDashboard = () => {
   const [selectedTracks, setSelectedTracks] = useState([]);
   const [promoteEmail, setPromoteEmail] = useState('');
   const [userFilter, setUserFilter] = useState('All');
+  const verifyingRef = useRef(false);
 
 
   const categoryAmounts = {
@@ -145,11 +152,7 @@ const AdminDashboard = () => {
     return total;
   };
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     setRefreshing(true);
     try {
       const config = { headers: { Authorization: `Bearer ${user?.token}` } };
@@ -172,10 +175,15 @@ const AdminDashboard = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [user?.token]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const handleVerifyQR = useCallback(async (decodedText) => {
-    if (isVerifying) return;
+    if (verifyingRef.current) return;
+    verifyingRef.current = true;
     setIsVerifying(true);
     const loadingToast = toast.loading("Verifying Identity...");
     try {
@@ -188,16 +196,16 @@ const AdminDashboard = () => {
       const message = error.response?.data?.message || "Invalid QR Code";
       toast.error(message, { id: loadingToast });
 
-      // Still show the card if we found a record so the admin can see details and reason
       if (error.response?.data?.personalDetails) {
         setScannedResult(error.response.data);
       } else {
         setScannedResult(null);
       }
     } finally {
+      verifyingRef.current = false;
       setIsVerifying(false);
     }
-  }, [isVerifying, user?.token]);
+  }, [user?.token, fetchAllData]);
 
   const handleUpdateSettings = async (e) => {
     e.preventDefault();
@@ -343,6 +351,23 @@ const AdminDashboard = () => {
       fetchAllData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update account credentials', { id: loadingToast });
+    }
+  };
+
+  const handleDeleteUser = async (u) => {
+    if (u._id === user._id) return toast.error("You cannot delete your own account.");
+    
+    const confirmation = prompt(`Are you sure you want to PERMANENTLY delete user "${u.name}"? This action cannot be undone. Type "${u.email}" to confirm:`);
+    if (confirmation !== u.email) return toast.error("Account deletion cancelled (confirmation mismatch).");
+
+    const loadingToast = toast.loading(`Deleting account for ${u.name}...`);
+    try {
+      const config = { headers: { Authorization: `Bearer ${user?.token}` } };
+      await axios.delete(`/api/auth/users/${u._id}`, config);
+      toast.success('User account removed permanently', { id: loadingToast });
+      fetchAllData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to remove user account', { id: loadingToast });
     }
   };
 
@@ -1145,6 +1170,15 @@ const AdminDashboard = () => {
                                   <span className="flex items-center gap-1.5 text-xs font-black text-amber-500 uppercase tracking-tighter">
                                     <Clock size={14} /> Pending
                                   </span>
+                                )}
+                                {u._id !== user._id && (
+                                  <button
+                                    onClick={() => handleDeleteUser(u)}
+                                    className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                                    title="Remove User"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
                                 )}
                               </div>
                             </td>

@@ -13,7 +13,8 @@ const {
     adminCreateUser,
     updateUserRole,
     updateReviewerTracks,
-    updateUserProfile
+    updateUserProfile,
+    deleteUser
 } = require('../controllers/authController');
 const { protect, admin, authorize } = require('../middleware/authMiddleware');
 
@@ -28,6 +29,7 @@ router.put('/profile', protect, updateUserProfile);
 router.get('/users', protect, authorize('admin', 'chair'), getUsers);
 router.put('/users/:id/role', protect, admin, updateUserRole);
 router.put('/users/:id/tracks', protect, authorize('admin', 'chair'), updateReviewerTracks);
+router.delete('/users/:id', protect, admin, deleteUser);
 router.put('/update-password', protect, updatePassword);
 router.post('/admin/create-user', protect, admin, adminCreateUser);
 

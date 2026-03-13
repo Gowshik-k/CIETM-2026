@@ -435,6 +435,7 @@ const ChairDashboard = () => {
             {[
               { id: 'overview', label: 'Monitor Board', icon: LayoutDashboard },
               { id: 'submissions', label: 'Paper Submissions', icon: FileCheck },
+              { id: 'reviewers', label: 'Reviewer Board', icon: Users },
               { id: 'notifications', label: 'Inbox', icon: Bell, count: notifications.filter(n => !n.isRead).length },
               { id: 'settings', label: 'Settings', icon: Settings },
             ].map(item => (
@@ -1053,7 +1054,114 @@ const ChairDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'settings' && (
+            {activeTab === 'reviewers' && (
+              <motion.div
+                key="reviewers"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="max-w-7xl mx-auto"
+              >
+                <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="p-8 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-slate-50/50">
+                    <div>
+                      <h3 className="text-lg font-black text-slate-800">Reviewer Board</h3>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Manage peer evaluation expertise</p>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                          {reviewers.length} Peer Reviewers
+                        </span>
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-slate-100 uppercase tracking-[0.1em] text-[10px] font-black text-slate-400">
+                          <th className="px-8 py-5">Reviewer Profile</th>
+                          <th className="px-8 py-5">Contact Details</th>
+                          <th className="px-8 py-5">Specialized Tracks</th>
+                          <th className="px-8 py-5">Review Load</th>
+                          <th className="px-8 py-5 text-right">Verification</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {reviewers.map(u => (
+                          <tr key={u._id} className="hover:bg-slate-50/50 transition-colors group">
+                            <td className="px-8 py-6">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center font-black text-xs group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                                  {u.name?.charAt(0)}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-black text-slate-800 mb-0.5">{u.name}</p>
+                                  <p className="text-[10px] font-bold text-indigo-600 font-mono tracking-tighter uppercase">{u.delegateId || `#REV-${u._id.slice(-6).toUpperCase()}`}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <p className="text-xs font-bold text-slate-700">{u.email}</p>
+                              <p className="text-[10px] font-bold text-slate-400 mt-0.5">{u.phone || 'No phone provided'}</p>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="flex flex-col items-start gap-3">
+                                <div className="flex flex-wrap gap-1.5 max-w-[240px]">
+                                  {(u.assignedTracks || []).length > 0 ? (
+                                    u.assignedTracks.map(t => (
+                                      <span key={t} className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[9px] font-black uppercase tracking-tighter border border-indigo-100/30">{t}</span>
+                                    ))
+                                  ) : (
+                                    <span className="text-[9px] font-bold text-slate-300 italic uppercase tracking-widest">General (All Tracks)</span>
+                                  )}
+                                </div>
+                                <button 
+                                  onClick={() => {
+                                    setTrackTargetUser(u);
+                                    setSelectedTracks(u.assignedTracks || []);
+                                    setIsTrackModalOpen(true);
+                                  }}
+                                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all flex items-center gap-2 shadow-sm"
+                                >
+                                  <ShieldCheck size={12} /> Configure Expertise
+                                </button>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="flex flex-col gap-1.5">
+                                <span className="text-[10px] font-black text-slate-600 flex items-center gap-1.5">
+                                  <FileCheck size={14} className="text-indigo-500" />
+                                  {registrations.filter(r => (r.paperDetails?.assignedReviewer?._id || r.paperDetails?.assignedReviewer) === u._id).length} Active Assignments
+                                </span>
+                                <div className="h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-indigo-500" 
+                                    style={{ width: `${Math.min(100, (registrations.filter(r => (r.paperDetails?.assignedReviewer?._id || r.paperDetails?.assignedReviewer) === u._id).length / 5) * 100)}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6 text-right">
+                              {u.isEmailVerified ? (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-blue-100">
+                                  <CheckCircle size={12} /> Verified
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-amber-100">
+                                  <Clock size={12} /> Pending
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'settings' && (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto space-y-8 pb-10">
               <div className="bg-white rounded-[2.5rem] border border-slate-200 p-6 md:p-10 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-[100px] -z-0"></div>
@@ -1119,7 +1227,91 @@ const ChairDashboard = () => {
           )}
 
         </div>
-      </main>      {/* Registration Inspector Modal */}
+      </main>
+
+      {/* Expertise Management Modal */}
+      <AnimatePresence>
+        {isTrackModalOpen && trackTargetUser && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsTrackModalOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            ></motion.div>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden"
+            >
+              <div className="p-10">
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-800 tracking-tight">Expertise Domains</h3>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Reviewer: {trackTargetUser.name}</p>
+                  </div>
+                  <button onClick={() => setIsTrackModalOpen(false)} className="p-3 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-2xl transition-all">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-10 overflow-y-auto max-h-[40vh] pr-2 custom-scrollbar">
+                  {CONFERENCE_TRACKS.map(track => {
+                    const isSelected = selectedTracks.includes(track.id);
+                    return (
+                      <button
+                        key={track.id}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedTracks(selectedTracks.filter(t => t !== track.id));
+                          } else {
+                            setSelectedTracks([...selectedTracks, track.id]);
+                          }
+                        }}
+                        className={`flex items-start gap-4 p-4 rounded-2xl border-2 transition-all text-left group ${
+                          isSelected 
+                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' 
+                            : 'bg-white border-slate-100 text-slate-600 hover:border-indigo-100 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className={`mt-0.5 shrink-0 w-5 h-5 rounded-md flex items-center justify-center border-2 transition-all ${
+                          isSelected ? 'bg-white border-white text-indigo-600' : 'bg-white border-slate-200 text-transparent'
+                        }`}>
+                          <CheckCircle size={14} strokeWidth={3} />
+                        </div>
+                        <div>
+                          <p className={`text-[10px] font-black uppercase tracking-tight leading-none mb-1.5 ${isSelected ? 'text-indigo-100' : 'text-slate-400'}`}>0{CONFERENCE_TRACKS.indexOf(track) + 1}</p>
+                          <p className="text-xs font-bold leading-tight line-clamp-2">{track.label.split(': ')[1]}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setIsTrackModalOpen(false)}
+                    className="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleUpdateReviewerTracks(trackTargetUser._id, selectedTracks);
+                      setIsTrackModalOpen(false);
+                    }}
+                    className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 hover:-translate-y-1 transition-all"
+                  >
+                    Apply Expertise Board
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Registration Inspector Modal */}
       <AnimatePresence>
         {selectedReg && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12 overflow-hidden">

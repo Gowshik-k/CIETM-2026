@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const helmet = require('helmet');
 const compression = require('compression');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 // Cache NODE_ENV before dotenv loads so we can force production testing locally
 const envNodeEnv = process.env.NODE_ENV;
@@ -26,6 +28,23 @@ app.use(helmet({
     contentSecurityPolicy: false,
 }));
 app.use(compression());
+
+// Request logging
+if (process.env.NODE_ENV === 'development') {
+    app.use(morgan('dev'));
+} else {
+    app.use(morgan('combined'));
+}
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 500, // Increased for conference apps as users might refresh many times
+    message: { message: 'Too many requests from this IP, please try again after 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api/', limiter);
 
 const allowedOrigins = [
     process.env.FRONTEND_URL,
