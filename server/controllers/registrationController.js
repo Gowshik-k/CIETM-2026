@@ -130,6 +130,46 @@ const getMyRegistration = async (req, res) => {
     }
 };
 
+const deleteRegistration = async (req, res) => {
+    try {
+        const registration = await Registration.findById(req.params.id);
+
+        if (!registration) {
+            return res.status(404).json({ message: 'Registration not found' });
+        }
+
+        // Authentication & Authorization
+        const isOwner = registration.userId.toString() === req.user._id.toString();
+        const isAdminOrChair = req.user.role === 'admin' || req.user.role === 'chair';
+
+        if (!isOwner && !isAdminOrChair) {
+            return res.status(401).json({ message: 'Not authorized to delete this submission' });
+        }
+
+        // Business Rule: Authors cannot delete accepted/rejected papers
+        if (['Accepted', 'Rejected'].includes(registration.status) && !isAdminOrChair) {
+            return res.status(403).json({ message: `Cannot delete this submission because it has already been ${registration.status.toLowerCase()}.` });
+        }
+
+        // Cleanup: Delete file from Cloudinary if it exists
+        if (registration.paperDetails?.publicId) {
+            try {
+                const resType = registration.paperDetails.resourceType || 'raw';
+                await cloudinary.uploader.destroy(registration.paperDetails.publicId, { resource_type: resType });
+            } catch (err) {
+                console.error("Cloudinary Cleanup Error:", err);
+            }
+        }
+
+        await Registration.findByIdAndDelete(req.params.id);
+
+        res.status(200).json({ message: 'Submission deleted successfully' });
+    } catch (error) {
+        console.error("Delete Registration Error:", error);
+        res.status(500).json({ message: 'Server error while deleting submission' });
+    }
+};
+
 // @desc    Get all registrations (Admin)
 // @route   GET /api/registrations
 // @access  Admin
@@ -258,50 +298,39 @@ const downloadPaper = async (req, res) => {
             await registration.save();
         }
 
-        // Construct dynamic filename - Use Paper ID for everyone as requested
-        const paperID = registration.authorId || `CIETM-${registration._id.toString().slice(-6).toUpperCase()}`;
+        const paperID = registration.paperId || `CIETM-${registration._id.toString().slice(-6).toUpperCase()}`;
         const basename = paperID;
 
         // Get extension from originalName or default to docx
         const originalName = registration.paperDetails.originalName || '';
         const extension = originalName.split('.').pop() || 'docx';
 
-        // Determine resource type - force 'raw' for word docs to be safe
-        // Cloudinary private_download_url uses 'image' by default if not specified
+        // Determine resource type
         const isWordDoc = ['doc', 'docx'].includes(extension.toLowerCase());
         const resourceType = isWordDoc ? 'raw' : (registration.paperDetails.resourceType || 'raw');
 
-        // For raw files, format should be empty if extension is in publicId
-        const format = (resourceType === 'raw' && registration.paperDetails.publicId.endsWith(`.${extension}`)) ? '' : extension;
+        // Generate the URL to fetch from Cloudinary
+        const secureUrl = registration.paperDetails.fileUrl.replace('http://', 'https://');
 
-        const downloadUrl = cloudinary.utils.private_download_url(
-            registration.paperDetails.publicId,
-            format,
-            {
-                resource_type: resourceType,
-                type: 'upload'
-            }
-        );
+        // Fetch and stream to guarantee filename (browser redirects often lose filename context)
+        const response = await axios({
+            method: 'get',
+            url: secureUrl,
+            responseType: 'stream',
+            timeout: 20000
+        });
 
-        // Best practice: Path the stream to the response to strictly control the download filename
-        // This avoids issues where browsers ignore the redirect's content-disposition
-        try {
-            const response = await axios({
-                url: downloadUrl,
-                method: 'GET',
-                responseType: 'stream'
-            });
-
-            res.setHeader('Content-Type', response.headers['content-type'] || 'application/octet-stream');
-            res.setHeader('Content-Disposition', `attachment; filename="${basename}.${extension}"`);
-            
-            response.data.pipe(res);
-        } catch (downloadError) {
-            console.error("Download Stream Error:", downloadError);
-            res.status(500).json({ message: "Failed to stream file for download" });
+        if (response.status !== 200) {
+            return res.status(404).send('Resource not available on storage server');
         }
+
+        res.setHeader('Content-Type', response.headers['content-type'] || 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${basename}.${extension}"`);
+        
+        response.data.pipe(res);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error('Download Error:', error);
+        res.status(500).json({ message: 'Error processing download request' });
     }
 };
 
@@ -431,47 +460,83 @@ const downloadAllPapersZip = async (req, res) => {
             'status': { $in: ['Submitted', 'Under Review', 'Accepted'] }
         });
 
-        if (!registrations || registrations.length === 0) {
-            return res.status(404).send('No papers found to download');
+        const paperCount = registrations?.length || 0;
+        console.log(`[ZIP] Request by ${req.user.email} (${req.user.role}). Papers found: ${paperCount}`);
+
+        if (paperCount === 0) {
+            return res.status(404).json({ message: 'No research papers found to package (requires Submitted/Accepted status).' });
         }
 
-        const archive = archiver('zip', { zlib: { level: 9 } });
+        // Auto-update all 'Submitted' papers to 'Under Review' as they are being fetched for processing
+        try {
+            await Registration.updateMany(
+                { 
+                    _id: { $in: registrations.map(r => r._id) },
+                    status: 'Submitted'
+                },
+                { status: 'Under Review' }
+            );
+            console.log(`[ZIP] Transitioned ${registrations.filter(r => r.status === 'Submitted').length} papers to Under Review.`);
+        } catch (updateErr) {
+            console.error('[ZIP Status Update Error]', updateErr);
+        }
 
-        // Error handling for the archive
+        // Set headers immediately to tell the browser/proxy this is a streaming download
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', `attachment; filename=CIETM_Archive_${new Date().toISOString().split('T')[0]}.zip`);
+        res.setHeader('X-Accel-Buffering', 'no'); 
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+
+        const archive = archiver('zip', { zlib: { level: 1 } }); // Minimum compression = Maximum speed
+
         archive.on('error', (err) => {
-            throw err;
+            console.error('[ZIP Archiver Error]', err);
+            if (!res.headersSent) {
+                res.status(500).json({ message: 'Internal server error during archiving' });
+            }
         });
 
-        res.attachment(`CIETM_All_Manuscripts_${new Date().toISOString().split('T')[0]}.zip`);
+        // If compression middleware is used, it often adds res.flush()
+        if (typeof res.flush === 'function') {
+            res.flush();
+        }
+
         archive.pipe(res);
 
         for (const reg of registrations) {
-            const originalName = reg.paperDetails?.originalName || '';
-            const extension = originalName.split('.').pop() || 'docx';
-            const authorId = reg.authorId ? reg.authorId : `anonymous_${Date.now()}`;
-            const fileName = `${authorId}.${extension}`;
-
             try {
+                const url = reg.paperDetails.fileUrl;
+                if (!url) continue;
+
+                const secureUrl = url.replace('http://', 'https://');
+                const originalName = reg.paperDetails?.originalName || '';
+                const extension = originalName.split('.').pop() || 'docx';
+                const paperId = reg.paperId || `PAPER-${reg._id.toString().slice(-6).toUpperCase()}`;
+                const fileName = `${paperId}.${extension}`;
+
                 const response = await axios({
                     method: 'get',
-                    url: reg.paperDetails.fileUrl,
+                    url: secureUrl,
                     responseType: 'stream',
-                    timeout: 30000
+                    timeout: 20000 
                 });
 
                 if (response.status === 200) {
                     archive.append(response.data, { name: fileName });
                 }
             } catch (err) {
-                console.error(`Skipping file due to error: ${fileName}`, err.message);
+                console.error(`[ZIP Progress] Skipping ${reg.paperId || reg._id}: ${err.message}`);
             }
         }
 
         await archive.finalize();
+        console.log(`[ZIP] Archive finalized successfully for ${req.user.email}`);
     } catch (error) {
-        console.error('ZIP Error:', error);
+        console.error('[ZIP Fatal Error]', error);
         if (!res.headersSent) {
-            res.status(500).send('Error creating workspace archive');
+            res.status(500).json({ message: 'Critical failure generating archive' });
         }
     }
 };
@@ -561,6 +626,12 @@ const verifyEntry = async (req, res) => {
 // @access  Private
 const updateProfilePicture = async (req, res) => {
     try {
+        // Update all registrations for this user to keep avatar consistent
+        await Registration.updateMany(
+            { userId: req.user._id },
+            { $set: { 'personalDetails.profilePicture': req.body.profilePicture } }
+        );
+
         let registration = await Registration.findOne({ userId: req.user._id });
 
         if (!registration) {
@@ -575,11 +646,8 @@ const updateProfilePicture = async (req, res) => {
                 },
                 status: 'Draft'
             });
-        } else {
-            registration.personalDetails.profilePicture = req.body.profilePicture;
+            await registration.save();
         }
-
-        await registration.save();
 
         res.json({ message: 'Profile picture updated successfully', profilePicture: req.body.profilePicture });
     } catch (error) {
@@ -740,6 +808,7 @@ module.exports = {
     saveDraft,
     submitRegistration,
     getMyRegistration,
+    deleteRegistration,
     getAllRegistrations,
     reviewPaper,
     downloadPaper,

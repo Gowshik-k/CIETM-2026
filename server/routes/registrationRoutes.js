@@ -14,13 +14,15 @@ const {
     verifyEntry,
     updateProfilePicture,
     assignReviewer,
-    autoAssignReviewers
+    autoAssignReviewers,
+    deleteRegistration
 } = require('../controllers/registrationController');
 const { protect, admin, authorize } = require('../middleware/authMiddleware');
 const { upload, uploadProfilePic } = require('../config/cloudinary');
 
+router.delete('/:id', protect, deleteRegistration);
 router.get('/download/:id', protect, downloadPaper);
-router.get('/download-all', protect, admin, downloadAllPapersZip);
+router.get('/download-all', protect, authorize('admin', 'chair'), downloadAllPapersZip);
 router.get('/verify/:id', protect, authorize('admin', 'chair'), verifyEntry);
 router.post('/draft', protect, saveDraft);
 router.post('/submit', protect, submitRegistration);
@@ -56,6 +58,7 @@ router.post('/upload', protect, upload.single('paper'), (req, res) => {
 // Profile Picture upload route
 router.post('/upload-profile-picture', protect, uploadProfilePic.single('image'), (req, res) => {
     if (req.file) {
+        console.log('Profile picture uploaded successfully:', req.file.path);
         res.json({
             url: req.file.path,
             publicId: req.file.filename

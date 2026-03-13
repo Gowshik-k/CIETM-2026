@@ -12,6 +12,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
   const [loading, setLoading] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
+  const [registrationId, setRegistrationId] = useState(null);
   const [errors, setErrors] = useState({});
   const [resendTimer, setResendTimer] = useState(0);
   const navigate = useNavigate();
@@ -45,23 +46,25 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
           const { data } = await axios.get('/api/registrations/my', {
             headers: { Authorization: `Bearer ${user.token}` }
           });
-          if (data) {
+          if (data && data.length > 0) {
+            const latest = data[0];
+            setRegistrationId(latest._id);
             setFormData(prev => ({
               ...prev,
-              name: data.personalDetails?.name || user.name,
-              email: data.personalDetails?.email || user.email,
-              mobile: data.personalDetails?.mobile || user.phone || '',
-              institution: data.personalDetails?.institution || '',
-              department: data.personalDetails?.department || '',
-              designation: data.personalDetails?.designation || '',
-              areaOfSpecialization: data.personalDetails?.areaOfSpecialization || '',
-              yearOfStudy: data.personalDetails?.yearOfStudy || '',
-              category: data.personalDetails?.category || 'External Student',
-              teamMembers: data.teamMembers || [],
-              paperTitle: data.paperDetails?.title || '',
-              abstract: data.paperDetails?.abstract || '',
-              keywords: data.paperDetails?.keywords?.join(', ') || '',
-              track: data.paperDetails?.track || 'CIDT'
+              name: latest.personalDetails?.name || user.name,
+              email: latest.personalDetails?.email || user.email,
+              mobile: latest.personalDetails?.mobile || user.phone || '',
+              institution: latest.personalDetails?.institution || '',
+              department: latest.personalDetails?.department || '',
+              designation: latest.personalDetails?.designation || '',
+              areaOfSpecialization: latest.personalDetails?.areaOfSpecialization || '',
+              yearOfStudy: latest.personalDetails?.yearOfStudy || '',
+              category: latest.personalDetails?.category || 'External Student',
+              teamMembers: latest.teamMembers || [],
+              paperTitle: latest.paperDetails?.title || '',
+              abstract: latest.paperDetails?.abstract || '',
+              keywords: latest.paperDetails?.keywords?.join(', ') || '',
+              track: latest.paperDetails?.track || 'CIDT'
             }));
 
             // If starting from step 1 but user logged in and has draft/data
@@ -222,7 +225,8 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
     const validTeamMembers = formData.teamMembers.filter(m => m.name && m.name.trim() !== '');
 
     try {
-      await axios.post('/api/registrations/draft', {
+      const { data } = await axios.post('/api/registrations/draft', {
+        id: registrationId,
         personalDetails: {
           name: formData.name,
           email: formData.email,
@@ -244,8 +248,14 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
       }, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
+
+      if (data?._id) {
+        setRegistrationId(data._id);
+      }
+      return data;
     } catch (error) {
       console.error("Draft save failed", error);
+      return null;
     }
   };
 
@@ -352,9 +362,16 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
 
     setLoading(true);
     try {
-      await handleSaveDraft();
+      const savedReg = await handleSaveDraft();
+      const finalId = savedReg?._id || registrationId;
 
-      await axios.post('/api/registrations/submit', {}, {
+      if (!finalId) {
+        throw new Error("Registration record could not be established.");
+      }
+
+      await axios.post('/api/registrations/submit', {
+        id: finalId
+      }, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 

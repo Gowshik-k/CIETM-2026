@@ -120,6 +120,7 @@ const AdminDashboard = () => {
   const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
   const [scannedResult, setScannedResult] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState(true);
   const [manualPaymentAmount, setManualPaymentAmount] = useState('');
@@ -192,6 +193,7 @@ const AdminDashboard = () => {
       setScannedResult(data);
       toast.success("Identity Verified & Attendance Logged", { id: loadingToast });
       fetchAllData();
+      setIsScannerModalOpen(false);
     } catch (error) {
       const message = error.response?.data?.message || "Invalid QR Code";
       toast.error(message, { id: loadingToast });
@@ -611,7 +613,20 @@ const AdminDashboard = () => {
             </button>
             <button
               title="Download All Manuscripts (ZIP)"
-              onClick={() => window.open(`/api/registrations/download-all?token=${user.token}`, '_blank')}
+              onClick={() => {
+                const toastId = toast.loading("Connecting to server for bulk archive...");
+                const downloadUrl = `/api/registrations/download-all?token=${user.token}`;
+                
+                // Using a temporary anchor is often more robust for triggering downloads with headers
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.setAttribute('download', '');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                setTimeout(() => toast.dismiss(toastId), 4000);
+              }}
               className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2"
             >
               <div className="relative">
@@ -1189,194 +1204,173 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </motion.div>
-            )}
-
-            {activeTab === 'verifier' && (
+            )}            {activeTab === 'verifier' && (
               <motion.div
-                key="verifier"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="max-w-4xl mx-auto"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                  <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-slate-200 p-6 md:p-10 shadow-sm flex flex-col items-center">
-                    <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
-                      <ScanLine size={32} />
-                    </div>
-                    <h3 className="text-xl font-black text-slate-800 mb-2">On-site Verifier</h3>
-                    <p className="text-sm font-bold text-slate-400 text-center mb-8">Scan the QR code on the participant's virtual ID card to verify their identity and payment status.</p>
+                 key="verifier"
+                 initial={{ opacity: 0, y: -20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -20 }}
+                 className="max-w-4xl mx-auto"
+               >
+                 {/* Simplified Launch Control */}
+                 <div className="flex justify-center mb-8">
+                   <button
+                     onClick={() => setIsScannerModalOpen(true)}
+                     className="group px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-3"
+                   >
+                     <ScanLine size={16} />
+                     Launch Scanner
+                   </button>
+                 </div>
 
-                    <QRScanner onScan={handleVerifyQR} />
-
-                    <div className="mt-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                      Scanner Active
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-slate-200 p-6 md:p-10 shadow-sm flex flex-col min-h-[400px] md:min-h-[500px]">
-                    {!scannedResult ? (
-                      <div className="flex-1 flex flex-col items-center justify-center text-center opacity-40">
-                        <QrCode size={64} className="mb-4 text-slate-300" />
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Waiting for Scan...</p>
-                      </div>
-                    ) : (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="h-full flex flex-col"
-                      >
-                        <div className="flex items-center gap-4 mb-10 pb-6 border-b border-slate-100">
-                          <div className="w-16 h-16 rounded-3xl bg-indigo-600 text-white flex items-center justify-center text-2xl font-black shadow-xl shadow-indigo-100 uppercase">
-                            {scannedResult.personalDetails?.name?.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Participant Identity</p>
-                            <h4 className="text-2xl font-black text-slate-800 leading-none">{scannedResult.personalDetails?.name}</h4>
-                          </div>
+                 {/* Manifest Container */}
+                 <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden h-fit relative">
+                   {!scannedResult ? (
+                     <div className="p-16 text-center flex flex-col items-center justify-center min-h-[400px]">
+                        <div className="w-24 h-24 border-2 border-dashed border-slate-100 rounded-[2.5rem] flex items-center justify-center mb-6 opacity-40">
+                           <Users size={32} className="text-slate-200" />
+                        </div>
+                        <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Scanner Offline</h4>
+                     </div>
+                   ) : (
+                     <div className="animate-fade-in flex flex-col md:flex-row">
+                        {/* Summary Sidebar */}
+                        <div className="md:w-[240px] p-8 bg-slate-50/50 border-r border-slate-100 flex flex-col items-center justify-center text-center">
+                           <div className={`w-20 h-20 rounded-3xl flex items-center justify-center text-3xl font-black shadow-xl uppercase border-4 border-white mb-4 animate-scale-in ${scannedResult.paymentStatus === 'Completed' ? 'bg-indigo-600 text-white' : 'bg-red-600 text-white'}`}>
+                              {scannedResult.personalDetails?.name?.charAt(0)}
+                           </div>
+                           <h4 className="text-lg font-black text-slate-800 leading-tight mb-1">{scannedResult.personalDetails?.name}</h4>
+                           <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest">{scannedResult.personalDetails?.category}</p>
+                           <div className="mt-6 pt-6 border-t border-slate-100 w-full">
+                              <span className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest border ${scannedResult.paymentStatus === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
+                                 {scannedResult.paymentStatus === 'Completed' ? 'Cleared' : 'Pending'}
+                              </span>
+                           </div>
                         </div>
 
-                        <div className="space-y-6 flex-1">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                              <p className="text-[8px] font-black text-slate-400 uppercase mb-1">ID Status</p>
-                              <p className="text-xs font-bold text-blue-600 flex items-center gap-1.5"><ShieldCheck size={14} /> ACTIVE</p>
-                            </div>
-                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                              <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Registration</p>
-                              <p className="text-xs font-bold text-indigo-600 uppercase tracking-tighter truncate">{scannedResult.status}</p>
-                            </div>
-                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 col-span-2">
-                              <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Attendance Record</p>
-                              <p className="text-xs font-bold text-blue-600 flex items-center gap-1.5 uppercase tracking-tighter">
-                                <Clock size={14} /> Logged at {new Date(scannedResult.attendedAt).toLocaleTimeString()}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                            <p className="text-[8px] font-black text-slate-400 uppercase mb-2">Category</p>
-                            <p className="text-sm font-black text-slate-800">{scannedResult.personalDetails?.category}</p>
-                            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{scannedResult.personalDetails?.institution}</p>
-                          </div>
-
-                          <div className={`p-5 rounded-2xl border ${scannedResult.paymentStatus === 'Completed' ? 'bg-blue-50 border-blue-100' : 'bg-red-50 border-red-100'}`}>
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <p className={`text-[8px] font-black uppercase mb-1 ${scannedResult.paymentStatus === 'Completed' ? 'text-blue-600' : 'text-red-600'}`}>Payment Status</p>
-                                <p className={`text-lg font-black ${scannedResult.paymentStatus === 'Completed' ? 'text-blue-800' : 'text-red-800'}`}>{scannedResult.paymentStatus}</p>
-                              </div>
-                              <div className={`p-2 rounded-xl ${scannedResult.paymentStatus === 'Completed' ? 'bg-blue-500 text-white shadow-lg shadow-blue-200' : 'bg-red-500 text-white shadow-lg shadow-red-200'}`}>
-                                <CreditCard size={24} />
-                              </div>
-                            </div>
-
-                            {scannedResult.paymentStatus !== 'Completed' && (
-                              <div className="mt-4 flex flex-col gap-3 pt-4 border-t border-red-200/50">
-                                {scannedResult.status !== 'Accepted' ? (
-                                  <div className={`p-4 rounded-xl border flex items-center gap-3 ${scannedResult.status === 'Draft' ? 'bg-amber-50 border-amber-100' : 'bg-blue-50 border-blue-100'}`}>
-                                    <AlertCircle className={scannedResult.status === 'Draft' ? "text-amber-600" : "text-blue-600"} size={18} />
-                                    <p className={`text-[10px] font-bold uppercase tracking-tight ${scannedResult.status === 'Draft' ? "text-amber-700" : "text-blue-700"}`}>
-                                      {scannedResult.status === 'Draft'
-                                        ? "Submission Incomplete: Author must submit paper details."
-                                        : `Verification Restricted: Manuscript status is "${scannedResult.status}". Accept it first in the submissions tab.`}
-                                    </p>
-                                  </div>
-                                ) : (
-                                  <>
-                                    <div className="flex justify-between items-center px-1">
-                                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Fee Required</p>
-                                      <p className="text-sm font-black text-red-600">₹{calculateRequiredFee(scannedResult)}</p>
-                                    </div>
-                                    <div className="relative">
-                                      <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                                      <input
-                                        type="number"
-                                        placeholder="Enter Amount Collected"
-                                        value={manualPaymentAmount || calculateRequiredFee(scannedResult)}
-                                        onChange={(e) => setManualPaymentAmount(e.target.value)}
-                                        className="w-full pl-9 pr-4 py-3 bg-white border-2 border-red-100 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:border-red-400 transition-all shadow-sm"
-                                      />
-                                    </div>
-                                    <button
-                                      onClick={() => handleManualPaymentConfirm(scannedResult)}
-                                      className="w-full py-3 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-200 hover:-translate-y-0.5 transition-all"
-                                    >
-                                      Collect & Verify Entry
+                        {/* Details Focus Area */}
+                        <div className="flex-1 flex flex-col bg-white">
+                           <div className="p-6 space-y-5">
+                              {/* Paper Switcher */}
+                              {(scannedResult.otherPapers?.length > 0 || scannedResult.paperId) && (
+                                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                                    <button className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-indigo-600 text-white shadow-sm whitespace-nowrap">
+                                       {scannedResult.paperId || 'SELECTED'}
                                     </button>
-                                  </>
-                                )}
+                                    {scannedResult.otherPapers?.map((paper, idx) => (
+                                      <button key={idx} onClick={() => handleVerifyQR(paper.paperId || paper._id)} className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 border border-transparent hover:border-slate-200 transition-all whitespace-nowrap">
+                                        {paper.paperId || `PAPER ${idx + 2}`}
+                                      </button>
+                                    ))}
+                                 </div>
+                              )}
+
+                              <div className="grid grid-cols-2 gap-3">
+                                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                                    <p className="text-[10px] font-black text-slate-700 uppercase">{scannedResult.status}</p>
+                                 </div>
+                                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Affiliation</p>
+                                    <p className="text-[10px] font-black text-slate-700 uppercase truncate">{scannedResult.personalDetails?.institution || 'Academic Delegate'}</p>
+                                 </div>
                               </div>
-                            )}
 
-                            {scannedResult.paymentStatus === 'Completed' && (
-                              <p className="text-[10px] font-bold text-blue-700 mt-3 border-t border-blue-200/50 pt-3">
-                                Transaction: {scannedResult.transactionId}
-                              </p>
-                            )}
-                          </div>
-                        </div>
+                              <div className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm relative overflow-hidden flex items-center justify-between">
+                                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${scannedResult.paymentStatus === 'Completed' ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                                 <div className="min-w-0 flex-1 ml-2">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Finance</p>
+                                    <p className={`text-base font-black ${scannedResult.paymentStatus === 'Completed' ? 'text-emerald-700' : 'text-red-700'}`}>{scannedResult.paymentStatus}</p>
+                                    {scannedResult.paperDetails?.title && (
+                                      <p className="text-[9px] font-bold text-slate-500 truncate italic mt-1 leading-none opacity-60">"{scannedResult.paperDetails.title}"</p>
+                                    )}
+                                 </div>
+                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ml-4 ${scannedResult.paymentStatus === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                                    <CreditCard size={20} />
+                                 </div>
+                              </div>
 
-                        {scannedResult.otherPapers && scannedResult.otherPapers.length > 0 && (
-                          <div className="mt-8 space-y-4">
-                            <div className="flex items-center gap-3 px-1">
-                              <h5 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em]">Other Manuscripts ({scannedResult.otherPapers.length})</h5>
-                              <div className="h-px bg-slate-100 flex-1"></div>
-                            </div>
-                            <div className="grid grid-cols-1 gap-3">
-                              {scannedResult.otherPapers.map((paper, idx) => (
-                                <div key={idx} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between group hover:border-indigo-200 transition-all">
-                                  <div className="min-w-0 pr-4">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{paper.paperId || 'N/A'}</p>
-                                    <p className="text-xs font-bold text-slate-700 truncate" title={paper.paperDetails?.title}>{paper.paperDetails?.title || 'No Title'}</p>
-                                  </div>
-                                  <div className="shrink-0 flex flex-col items-end gap-1.5">
-                                    <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter ${
-                                      paper.status === 'Accepted' ? 'bg-emerald-100 text-emerald-700' : 
-                                      paper.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                                    }`}>
-                                      {paper.status}
-                                    </span>
-                                    <span className={`text-[8px] font-bold uppercase tracking-tight ${paper.paymentStatus === 'Completed' ? 'text-blue-600' : 'text-slate-400'}`}>
-                                      {paper.paymentStatus === 'Completed' ? 'Paid' : 'Unpaid'}
-                                    </span>
-                                  </div>
+                              {/* Action Manifest */}
+                              {scannedResult.paymentStatus !== 'Completed' ? (
+                                <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-xl">
+                                   <div className="flex justify-between items-center mb-3">
+                                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Amount Due</p>
+                                      <h5 className="text-xl font-black font-mono">₹{calculateRequiredFee(scannedResult)}</h5>
+                                   </div>
+                                   <div className="flex gap-2">
+                                      <input
+                                         type="number"
+                                         placeholder="Amount"
+                                         value={manualPaymentAmount || calculateRequiredFee(scannedResult)}
+                                         onChange={(e) => setManualPaymentAmount(e.target.value)}
+                                         className="flex-1 px-4 py-2 bg-white/10 border border-white/10 rounded-xl font-black text-white focus:outline-none focus:border-indigo-500 text-sm"
+                                      />
+                                      <button
+                                         onClick={() => handleManualPaymentConfirm(scannedResult)}
+                                         className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-indigo-500 transition-all font-outline"
+                                      >
+                                         Authorize
+                                      </button>
+                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                              ) : (
+                                <div className="bg-emerald-600 rounded-2xl p-4 text-white flex items-center gap-4 text-center justify-center shadow-lg shadow-emerald-50">
+                                   <CheckCircle size={20} />
+                                   <span className="text-xs font-black uppercase tracking-widest">Entry Authorized</span>
+                                </div>
+                              )}
 
-                        {scannedResult.paymentStatus !== 'Completed' ? (
-                          <div className="mt-8 p-4 bg-red-50 rounded-2xl border border-red-100 flex items-center gap-3">
-                            <AlertCircle className="text-red-600" size={20} />
-                            <p className="text-xs font-bold text-red-600">Entry Restricted: Payment is {(scannedResult.paymentStatus || 'Pending').toLowerCase()}.</p>
-                          </div>
-                        ) : (
-                          <div className="mt-8 p-6 bg-blue-600 rounded-3xl text-white shadow-xl shadow-blue-100 flex flex-col items-center justify-center gap-2">
-                            <div className="flex items-center gap-3">
-                              <CheckCircle size={24} />
-                              <span className="font-black uppercase tracking-widest text-sm">Clear For Entry</span>
-                            </div>
-                            <p className="text-[10px] font-bold text-blue-100 opacity-80 uppercase tracking-widest">Attendance Recorded Automatically</p>
-                          </div>
-                        )}
+                              <button
+                                onClick={() => setScannedResult(null)}
+                                className="w-full py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition-all border-t border-slate-50 mt-2"
+                              >
+                                Reset Session
+                              </button>
+                           </div>
+                        </div>
+                     </div>
+                   )}
+                 </div>
 
-                        <button
-                          onClick={() => setScannedResult(null)}
-                          className="mt-4 w-full py-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-indigo-600 transition-colors"
+                 {/* Simplified Digital Scanner Popup */}
+                 <AnimatePresence>
+                   {isScannerModalOpen && (
+                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                        <motion.div 
+                          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                          className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+                          onClick={() => setIsScannerModalOpen(false)}
+                        />
+                        <motion.div
+                          initial={{ scale: 0.95, opacity: 0, y: 10 }} 
+                          animate={{ scale: 1, opacity: 1, y: 0 }} 
+                          exit={{ scale: 0.95, opacity: 0, y: 10 }}
+                          className="relative bg-white w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl border border-slate-200"
                         >
-                          Reset Scanner
-                        </button>
-                      </motion.div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
+                           <div className="p-5 border-b border-slate-50 flex justify-between items-center bg-white">
+                              <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">QR Verification</h3>
+                              <button 
+                                onClick={() => setIsScannerModalOpen(false)} 
+                                className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors"
+                              >
+                                <X size={18} />
+                              </button>
+                           </div>
+                           
+                           <div className="p-6">
+                              <div className="qr-scanner-modal-wrapper overflow-hidden rounded-2xl border-2 border-slate-100 bg-black min-h-[240px]">
+                                 <QRScanner onScan={handleVerifyQR} />
+                              </div>
+                              <p className="mt-4 text-[9px] font-bold text-slate-400 uppercase text-center tracking-widest">
+                                 Position QR code within frame
+                              </p>
+                           </div>
+                        </motion.div>
+                     </div>
+                   )}
+                 </AnimatePresence>
+               </motion.div>
             )}
-
-
 
             {activeTab === 'analytics' && analytics && (
               <motion.div

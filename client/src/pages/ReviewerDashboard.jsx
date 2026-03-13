@@ -264,9 +264,25 @@ const ReviewerDashboard = () => {
         </div>
 
         <div className="mt-auto p-6 border-t border-slate-100">
-          <Link to="/" className="flex items-center justify-center gap-2 w-full py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-            <Home size={12} /> Exit to Site
-          </Link>
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg overflow-hidden shadow-inner border border-white">
+                {(() => {
+                  const myReg = registrations.find(r => (r.userId?._id || r.userId) === user?._id);
+                  return myReg?.personalDetails?.profilePicture ? (
+                    <img src={myReg.personalDetails.profilePicture} alt="" className="w-full h-full object-cover" />
+                  ) : user?.name?.charAt(0);
+                })()}
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-xs font-black text-slate-800 truncate">{user?.name}</p>
+                <p className="text-[9px] font-bold text-slate-400 truncate uppercase tracking-tighter">{user?.role} portal</p>
+              </div>
+            </div>
+            <Link to="/" className="flex items-center justify-center gap-2 w-full py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+              <Home size={12} /> Exit to Site
+            </Link>
+          </div>
           <button
             onClick={logout}
             className="flex items-center justify-center gap-2 w-full py-2 bg-red-50 text-red-600 border border-red-100 rounded-lg text-[10px] font-bold mt-2 hover:bg-red-100 transition-all uppercase tracking-widest"
@@ -405,6 +421,7 @@ const ReviewerDashboard = () => {
                   <thead className="bg-slate-50 border-b border-slate-100">
                     <tr>
                       <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Paper ID</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Author</th>
                       <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Title</th>
                       <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                       <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
@@ -418,6 +435,16 @@ const ReviewerDashboard = () => {
                              <div className="flex flex-col gap-0.5 font-mono">
                                <p className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter">DEG: {reg.userId?.delegateId || 'N/A'}</p>
                                <p className="text-[10px] font-bold text-slate-800 tracking-tighter">PAP: {reg.paperId || 'N/A'}</p>
+                             </div>
+                           </td>
+                           <td className="px-6 py-4">
+                             <div className="flex items-center gap-3">
+                               <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-[10px] uppercase overflow-hidden border border-slate-100 shadow-sm">
+                                 {reg.personalDetails?.profilePicture ? (
+                                   <img src={reg.personalDetails.profilePicture} alt="" className="w-full h-full object-cover" />
+                                 ) : (reg.personalDetails?.name || reg.userId?.name)?.charAt(0)}
+                               </div>
+                               <p className="text-xs font-black text-slate-700 truncate max-w-[120px]">{reg.personalDetails?.name || reg.userId?.name}</p>
                              </div>
                            </td>
                            <td className="px-6 py-4">
@@ -444,7 +471,8 @@ const ReviewerDashboard = () => {
                                     href={`/api/registrations/download/${reg._id}?token=${user.token}`} 
                                     className="p-2 bg-white text-slate-400 hover:text-indigo-600 rounded-lg transition-all shadow-sm border border-slate-100"
                                     title="Download Manuscript"
-                                    download={reg.paperId || (reg.personalDetails?.authorId || `PAPER-${reg._id.slice(-6).toUpperCase()}`)}
+                                    target="_blank"
+                                    rel="noreferrer"
                                     onClick={() => {
                                       if (reg.status === 'Submitted') {
                                         setTimeout(fetchData, 2000);

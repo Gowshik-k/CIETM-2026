@@ -6,7 +6,8 @@ import {
   FileText, CheckCircle, Clock, AlertCircle,
   Settings, Bell, Download, Menu, X, Search, ChevronRight, LogOut, Lock,
   LayoutDashboard, Calendar, MapPin, ShieldCheck, Award, Layers,
-  Upload, Home, Edit2, Camera, User, CreditCard, TrendingUp, MessageSquare
+  Upload, Home, Edit2, Camera, User, CreditCard, TrendingUp, MessageSquare, Trash2, PlusCircle, FileUp,
+  Sparkles, GraduationCap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SubmissionFormSingle from '../components/SubmissionFormSingle';
@@ -223,6 +224,26 @@ const Dashboard = () => {
       console.error("Upload error", error);
     } finally {
       setUploading(false);
+    }
+  };
+  
+  const handleDeleteRegistration = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this submission? This action cannot be undone.")) return;
+
+    try {
+      await axios.delete(`/api/registrations/${id}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      toast.success("Submission deleted successfully");
+      
+      // If we deleted the active registration, clear it
+      if (activeRegistrationId === id) {
+        setActiveRegistrationId(null);
+      }
+      
+      fetchRegistration();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete submission");
     }
   };
 
@@ -502,23 +523,24 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Deadlines List */}
-          <motion.div variants={overviewItemVariants} className="bg-white rounded-[2rem] border border-slate-100 p-6 md:p-8 shadow-sm relative overflow-hidden group/timeline transition-all duration-500">
-            <h3 className="text-sm font-extrabold text-slate-800 mb-8 flex items-center gap-3">
-              <div className="w-10 h-10 bg-indigo-50/80 text-indigo-600 rounded-2xl flex items-center justify-center shadow-sm border border-indigo-100/50">
-                <Clock size={18} strokeWidth={2.5} />
+          {/* Deadlines List */}
+          <motion.div variants={overviewItemVariants} className="bg-white rounded-[2rem] border border-slate-100 p-6 md:p-8 shadow-sm relative overflow-hidden group/timeline">
+            <h3 className="text-sm font-black text-slate-800 mb-8 flex items-center gap-3">
+              <div className="w-10 h-10 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center border border-slate-100">
+                <Clock size={18} />
               </div>
-              Conference Timeline
+              <span className="uppercase tracking-widest text-xs">Conference Timeline</span>
             </h3>
 
-            <div className="relative space-y-0 mt-2">
+            <div className="relative space-y-0">
               {/* Vertical Connector Line */}
-              <div className="absolute left-[20px] top-6 bottom-6 w-[2px] bg-slate-100"></div>
+              <div className="absolute left-[19px] top-6 bottom-6 w-[2px] bg-slate-50"></div>
 
               {[
-                { label: 'Abstract Submission', date: '2026-03-08' },
                 { label: 'Full Paper Submission', date: '2026-03-16' },
                 { label: 'Acceptance Notification', date: '2026-03-24' },
-                { label: 'Registration Deadline', date: '2026-04-10' },
+                { label: 'Camera Ready Paper', date: '2026-04-02' },
+                { label: 'Payment Deadline', date: '2026-04-12' },
                 { label: 'Conference Date', date: '2026-04-29' }
               ].map((item, i, arr) => {
                 const now = new Date();
@@ -528,55 +550,47 @@ const Dashboard = () => {
                   return now > d;
                 };
 
-                let currentActiveIndex = 0;
-                if (isPast('2026-03-08')) currentActiveIndex = 1;
-                if (isPast('2026-03-16')) currentActiveIndex = 2;
-                if (isPast('2026-03-24')) currentActiveIndex = 3;
-                if (isPast('2026-04-10')) currentActiveIndex = 4;
-                if (isPast('2026-04-29')) currentActiveIndex = 5;
-
-                const done = i < currentActiveIndex;
-                const active = i === currentActiveIndex;
+                const done = isPast(item.date);
+                const active = !done && (i === 0 || isPast(arr[i-1].date));
 
                 return (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, x: -10 }}
+                    initial={{ opacity: 0, x: -5 }}
                     whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 + 0.3 }}
-                    viewport={{ once: true }}
-                    className="relative flex items-center justify-between py-5 group/item cursor-default bg-white z-10"
+                    transition={{ delay: i * 0.1 }}
+                    className="relative flex items-center justify-between py-4 group/item cursor-default z-10"
                   >
-                    <div className="flex items-center gap-5 bg-white pr-4">
-                      {/* Status Icon Column */}
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center relative z-20 shrink-0 ${done ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20 ring-4 ring-white' :
-                        active ? 'bg-white border-2 border-indigo-500 text-indigo-600 shadow-sm ring-4 ring-white' :
-                          'bg-white border-2 border-slate-100 text-slate-300 ring-4 ring-white'
-                        }`}>
-                        {done ? <CheckCircle size={18} strokeWidth={2.5} /> :
-                          active ? <Clock size={16} strokeWidth={2.5} /> :
-                            <div className="w-2 h-2 bg-slate-300 rounded-full"></div>}
+                    <div className="flex items-center gap-5 relative">
+                      {/* Status Node */}
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center relative z-20 shrink-0 border-2 transition-all ${
+                        done ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-100' :
+                        active ? 'bg-white border-indigo-600 text-indigo-600 shadow-sm' :
+                        'bg-white border-slate-100 text-slate-300'
+                      }`}>
+                        {done ? <CheckCircle size={16} strokeWidth={3} /> : 
+                         active ? <Clock size={16} strokeWidth={2.5} /> : 
+                         <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>}
                       </div>
 
                       <div className="flex flex-col">
-                        <span className={`text-sm tracking-tight transition-colors ${active ? 'text-indigo-600 font-bold' :
-                          done ? 'text-slate-400 font-semibold line-through decoration-slate-300' : 'text-slate-600 font-semibold'
-                          }`}>
+                        <span className={`text-sm font-bold tracking-tight ${
+                          active ? 'text-indigo-600' : done ? 'text-slate-400 line-through decoration-slate-300' : 'text-slate-600'
+                        }`}>
                           {item.label}
                         </span>
-                        <span className="text-[10px] font-bold text-slate-400 md:hidden uppercase tracking-widest mt-0.5">
+                        <span className={`text-[10px] font-bold uppercase tracking-widest ${
+                          active ? 'text-indigo-400' : 'text-slate-400'
+                        }`}>
                           {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
                         </span>
                       </div>
                     </div>
-                    <div className="bg-white pl-4 relative z-10">
-                      <span className={`hidden md:flex items-center justify-center px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-300 ${active ? 'bg-indigo-50 border border-indigo-200/50 text-indigo-600' :
-                        done ? 'bg-slate-50 text-slate-400 border border-slate-100/50' :
-                          'bg-white border border-slate-100 text-slate-400'
-                        }`}>
-                        {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
-                      </span>
-                    </div>
+                    {active && (
+                      <div className="hidden sm:block px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-full">
+                        <span className="text-[8px] font-black text-indigo-600 uppercase tracking-widest">Active Phase</span>
+                      </div>
+                    )}
                   </motion.div>
                 )
               })}
@@ -598,7 +612,7 @@ const Dashboard = () => {
                 {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={32} /> :
                   registration?.status === 'Accepted' ? <CreditCard size={32} /> :
                   registration?.paperDetails?.fileUrl ? <Clock size={32} /> :
-                  <Upload size={32} />}
+                  <FileUp size={32} />}
               </div>
 
               <div>
@@ -626,21 +640,17 @@ const Dashboard = () => {
                   className="w-full py-3.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
                 >
                   {registration?.status === 'Accepted' ? 'Proceed to Payment' :
-                    registration?.paperDetails?.fileUrl ? 'Open Submission' : 'Start Upload'}
+                    registration?.paperDetails?.fileUrl ? 'Open Submission' : 'Upload Manuscript'}
                 </button>
               )}
             </div>
           </motion.div>
 
           {/* ID Card / Verification */}
-          <motion.div variants={overviewItemVariants} className={`rounded-[2rem] p-8 border transition-all duration-300 ${
-            registration?.paymentStatus === 'Completed' 
-            ? 'bg-slate-900 text-white border-slate-800 shadow-xl' 
-            : 'bg-white border-slate-100 text-slate-400 opacity-60'
-          } group`}>
+          <motion.div variants={overviewItemVariants} className="rounded-[2rem] p-8 border transition-all duration-300 bg-slate-900 text-white border-slate-800 shadow-xl group">
             <div className="flex items-center justify-between mb-8">
               <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Digital Identity</span>
-              <ShieldCheck size={20} className={registration?.paymentStatus === 'Completed' ? 'text-indigo-400' : 'text-slate-300'} />
+              <ShieldCheck size={20} className="text-indigo-400" />
             </div>
             <div className="mb-10">
               <p className="text-3xl font-black tracking-tight mb-2">DELEGATE PASS</p>
@@ -648,11 +658,7 @@ const Dashboard = () => {
             </div>
             <button
               onClick={() => registration && setShowIDCard(true)}
-              className={`w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
-                registration?.paymentStatus === 'Completed'
-                ? 'bg-white text-slate-900 hover:bg-slate-100 shadow-lg'
-                : 'bg-slate-50 text-slate-400 cursor-not-allowed border border-slate-100'
-              }`}
+              className="w-full py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
             >
               Access ID Card
             </button>
@@ -749,14 +755,26 @@ const Dashboard = () => {
             >
               <div className={`w-2 h-2 rounded-full ${activeRegistrationId === reg._id ? 'bg-white' : (reg.status === 'Accepted' ? 'bg-emerald-400' : reg.status === 'Rejected' ? 'bg-red-400' : 'bg-amber-400')}`}></div>
               <span className="text-xs font-black uppercase tracking-widest">{reg.paperId || `#${reg._id.slice(-6).toUpperCase()}`}</span>
+              {!['Accepted', 'Rejected'].includes(reg.status) && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteRegistration(reg._id);
+                  }}
+                  className="p-1 hover:bg-white/20 rounded text-white/40 hover:text-white transition-colors"
+                  title="Delete Paper"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </button>
           ))}
           <button 
             onClick={() => setIsAddingNew(true)}
             className="px-5 py-3 rounded-2xl flex items-center gap-2 bg-slate-900 text-white transition-all shadow-lg shadow-slate-200 hover:bg-slate-800 ml-auto"
           >
-            <Upload size={14} />
-            <span className="text-[10px] font-black uppercase tracking-widest">Add Paper</span>
+            <PlusCircle size={14} />
+            <span className="text-[10px] font-black uppercase tracking-widest">Submit New Paper</span>
           </button>
         </motion.div>
 
@@ -823,12 +841,20 @@ const Dashboard = () => {
                   <Clock size={12} className="text-slate-400" /> Submitted: {registration?.createdAt ? new Date(registration.createdAt).toLocaleDateString() : 'N/A'}
                 </span>
                 {!['Accepted', 'Rejected'].includes(registration?.status) && (
-                  <button
-                    onClick={handleEditDetails}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors border border-indigo-100/50 hover:border-indigo-200"
-                  >
-                    <Edit2 size={12} /> Edit Details
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleEditDetails}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors border border-indigo-100/50 hover:border-indigo-200"
+                    >
+                      <Edit2 size={12} /> Edit Details
+                    </button>
+                    <button
+                      onClick={() => handleDeleteRegistration(registration._id)}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors border border-red-100/50 hover:border-red-200 font-mono"
+                    >
+                      <Trash2 size={12} /> Delete Submission
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -994,7 +1020,7 @@ const Dashboard = () => {
               {/* Combined Manuscript Actions */}
               <div className="pt-8 mt-8 border-t border-slate-100">
                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                  <Layers size={14} className="text-slate-400" /> Manuscript Actions
+                  <FileUp size={14} className="text-slate-400" /> Full Paper Management
                 </h3>
 
                 {registration?.status !== 'Accepted' && (
@@ -1018,8 +1044,8 @@ const Dashboard = () => {
                         <button className="w-full relative z-0 flex items-center justify-center gap-3 bg-indigo-600 text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 pointer-events-none">
                           {uploading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          ) : <Upload size={18} />}
-                          {uploading ? 'Uploading...' : 'Upload Manuscript (Word)'}
+                          ) : <FileUp size={18} />}
+                          {uploading ? 'Uploading...' : 'Upload Full Paper (.docx)'}
                         </button>
                       </div>
                     ) : (
@@ -1294,11 +1320,7 @@ const Dashboard = () => {
               key={item.id}
               onClick={() => {
                 if (item.id === 'idcard') {
-                  if (registration) {
-                    setShowIDCard(true);
-                  } else {
-                    toast.error("Please start your registration to access the ID Card");
-                  }
+                  setShowIDCard(true);
                 } else {
                   setActiveTab(item.id);
                 }
@@ -1521,17 +1543,12 @@ const Dashboard = () => {
                                     Authorization: `Bearer ${user?.token}`
                                   }
                                 });
-
-                                setRegistration(prev => ({
-                                  ...prev,
-                                  personalDetails: {
-                                    ...(prev?.personalDetails || {}),
-                                    profilePicture: data.url
-                                  }
-                                }));
+                                await fetchRegistration();
                                 toast.success("Avatar updated successfully!", { icon: '📸' });
                               } catch (error) {
-                                toast.error("Failed to upload image. Please try again.");
+                                 console.error("Avatar Upload Error:", error);
+                                 const message = error.response?.data?.message || "Failed to upload image. Please try again.";
+                                 toast.error(message);
                               } finally {
                                 setUploadingProfilePic(false);
                               }
@@ -1730,15 +1747,15 @@ const Dashboard = () => {
                       <div className="space-y-4">
                         <div className="flex flex-col">
                           <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">Department</span>
-                          <span className="text-xs font-bold leading-tight line-clamp-1">{registration.personalDetails.department || 'Academic'}</span>
+                          <span className="text-xs font-bold leading-tight line-clamp-1">{registration?.personalDetails?.department || 'Academic'}</span>
                         </div>
                         <div className="flex flex-col">
                           <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">Institution</span>
-                          <span className="text-[10px] font-bold line-clamp-2 leading-tight uppercase opacity-90">{registration.personalDetails.institution}</span>
+                          <span className="text-[10px] font-bold line-clamp-2 leading-tight uppercase opacity-90">{registration?.personalDetails?.institution || 'CIET INSTITUTION'}</span>
                         </div>
                         <div className="flex flex-col">
                           <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">Presentation Track</span>
-                          <span className="text-xs font-bold leading-tight text-amber-400">{registration.paperDetails.track}</span>
+                          <span className="text-xs font-bold leading-tight text-amber-400">{registration?.paperDetails?.track || 'CONFERENCE TRACK'}</span>
                         </div>
                       </div>
 
@@ -1851,11 +1868,11 @@ const Dashboard = () => {
                   <div className="space-y-[3mm]">
                     <div className="flex flex-col text-[2.5mm]">
                       <span className="font-black text-indigo-300 uppercase tracking-widest mb-[0.5mm]">Institution Name</span>
-                      <span className="font-bold uppercase line-clamp-2 leading-tight">{registration.personalDetails.institution}</span>
+                      <span className="font-bold uppercase line-clamp-2 leading-tight">{registration?.personalDetails?.institution || 'CIET INSTITUTION'}</span>
                     </div>
                     <div className="flex flex-col text-[2.5mm]">
                       <span className="font-black text-indigo-300 uppercase tracking-widest mb-[0.5mm]">Department & Track</span>
-                      <span className="font-bold line-clamp-1 leading-tight">{registration.personalDetails.department} - {registration.paperDetails.track}</span>
+                      <span className="font-bold line-clamp-1 leading-tight">{registration?.personalDetails?.department || 'Academic'} - {registration?.paperDetails?.track || 'Track'}</span>
                     </div>
                   </div>
                   <div className="pt-[4mm] mt-auto flex justify-between items-end border-t border-white/10">
