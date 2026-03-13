@@ -738,51 +738,76 @@ const HomePage = () => {
       </section>
 
       {/* Organizing Team Section */}
-      <section id='organizing-team' className='py-12 md:py-20 bg-white'>
-        <div className='w-full max-w-7xl mx-auto px-6'>
-          <div className='mt-0'>
-            <h3 className="text-xl font-bold text-slate-400 uppercase tracking-[0.2em] text-center mb-12 mt-24 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[40px] before:bg-slate-200 after:content-[''] after:h-px after:w-[40px] after:bg-slate-200">Organizing Team</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto px-4">
-              {[
-                { name: "Mr. G. R. Seenivasan", role: "Assistant Professor", dept: "Civil Engineering", img: "/organizing team/G R Seenivasan.jpeg" },
-                { name: "Ms. N. Mithraa", role: "Assistant Professor", dept: "Information Technology", img: "/organizing team/Nmithra.jpeg" },
-                { name: "Ms. R. Yoga", role: "Assistant Professor", dept: "Computer Science & Engineering", img: "/organizing team/Yoga.png" },
-                { name: "Ms. M. Abirami", role: "Assistant Professor", dept: "Computer Science & Engineering", img: "/organizing team/Abirami.png" },
-                { name: "Ms. P. Chandralakshmi", role: "Assistant Professor", dept: "Electrical & Electronics Engineering", img: "/organizing team/Chandralakshmi.jpeg" },
-                { name: "Mr. S. Arunkumar ", role: "Assistant Professor", dept: "Electronics Engineering - VLSI", img: "/organizing team/Arunkumar .jpeg" },
-                { name: "Ms. R. R. Yuganandhine", role: "Assistant Professor", dept: "Electronics & Communication Engineering", img: "/organizing team/Yuganandhine.png" },
-                { name: "Dr. L. Venkatesh", role: "Associate Professor", dept: "Mechanical Engineering", img: "/organizing team/venkatesh.jpeg" },
-                { name: "Mr. K. Senthilkumar", role: "Assistant Professor", dept: "Mechatronics Engineering", img: "/organizing team/Senthilkumar K.jpg.jpeg" },
-                { name: "Ms. T. Malarvizhi", role: "Assistant Professor", dept: "Artificial Intelligence & Data Science", img: "/organizing team/Malarvizhi.png" },
-                { name: "Dr. M. Arunmozhi", role: "Associate Professor", dept: "Master of Business Administration", img: "/organizing team/Arunmozhi.jpeg" },
-                { name: "Ms. S. R. Sarvada", role: "Assistant Professor", dept: "Science & Humanities - English", img: "/organizing team/S.R.Sarvada.jpeg" },
-                { name: "Ms. V. Mohana Priya", role: "Assistant Professor", dept: "Science & Humanities - Mathematics", img: "/organizing team/Mohana-Priya .jpeg" },
-                { name: "Ms. K. Sangavi", role: "Assistant Professor", dept: "Science & Humanities - Mathematics", img: "/organizing team/Sangavi.jpeg" },
-              ].map((m, idx, arr) => (
-                <motion.div
-                  key={idx}
-                  whileHover={{ y: -8 }}
-                  className={`bg-white p-6 rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-500 flex flex-col items-center text-center group h-full col-span-1 ${arr.length % 4 === 2 && idx === arr.length - 2 ? 'lg:col-start-2' : ''}`}
-                >
-                  <div className="w-36 h-44 md:w-40 md:h-52 mb-5 relative">
-                    {m.img ? (
-                      <img
-                        src={m.img}
-                        alt={m.name}
-                        className="w-full h-full rounded-[1.25rem] object-cover object-top border-4 border-slate-50 group-hover:border-indigo-100 shadow-md group-hover:shadow-xl transition-all duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-slate-50 text-slate-400 rounded-[1.25rem] flex items-center justify-center border-4 border-slate-50 group-hover:bg-indigo-50 group-hover:text-indigo-500 shadow-md group-hover:shadow-xl transition-all duration-500 group-hover:scale-105">
-                        <User size={48} />
-                      </div>
-                    )}
+      <section id='organizing-team' className='py-20 md:py-32 bg-slate-50 relative overflow-hidden'>
+        {/* Background Elements */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#4f46e5 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+        <div className="absolute top-1/4 -right-20 w-96 h-96 bg-indigo-200/20 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute bottom-1/4 -left-20 w-96 h-96 bg-purple-200/20 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div className='w-full max-w-7xl mx-auto px-6 relative z-10'>
+          <div className="max-w-3xl mx-auto text-center mb-16 md:mb-24">
+            <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-[10px] md:text-xs tracking-[0.2em] uppercase mb-5 border border-indigo-100/50">Core Contributors</span>
+            <h2 className="text-4xl md:text-6xl font-black mb-6 text-slate-900 tracking-tight uppercase">
+              Organizing <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Team</span>
+            </h2>
+            <p className="text-sm md:text-lg text-slate-500 font-bold max-w-2xl mx-auto leading-relaxed">
+              The dedicated experts working behind the scenes to make CIETM 2026 a landmark success.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-4 md:gap-8 max-w-7xl mx-auto">
+            {[
+              { name: "Mr. G. R. Seenivasan", role: "Assistant Professor", dept: "Civil Engineering", img: "/organizing team/G R Seenivasan.jpeg" },
+              { name: "Ms. N. Mithraa", role: "Assistant Professor", dept: "Information Technology", img: "/organizing team/Nmithra.jpeg" },
+              { name: "Ms. R. Yoga", role: "Assistant Professor", dept: "Computer Science & Engineering", img: "/organizing team/Yoga.png" },
+              { name: "Ms. M. Abirami", role: "Assistant Professor", dept: "Computer Science & Engineering", img: "/organizing team/Abirami.png" },
+              { name: "Ms. P. Chandralakshmi", role: "Assistant Professor", dept: "Electrical & Electronics Engineering", img: "/organizing team/Chandralakshmi.jpeg" },
+              { name: "Mr. S. Arunkumar ", role: "Assistant Professor", dept: "Electronics Engineering - VLSI", img: "/organizing team/Arunkumar .jpeg" },
+              { name: "Ms. R. R. Yuganandhine", role: "Assistant Professor", dept: "Electronics & Communication Engineering", img: "/organizing team/Yuganandhine.png" },
+              { name: "Dr. L. Venkatesh", role: "Associate Professor", dept: "Mechanical Engineering", img: "/organizing team/venkatesh.jpeg" },
+              { name: "Mr. K. Senthilkumar", role: "Assistant Professor", dept: "Mechatronics Engineering", img: "/organizing team/Senthilkumar K.jpg.jpeg" },
+              { name: "Ms. T. Malarvizhi", role: "Assistant Professor", dept: "Artificial Intelligence & Data Science", img: "/organizing team/Malarvizhi.png" },
+              { name: "Dr. M. Arunmozhi", role: "Associate Professor", dept: "Master of Business Administration", img: "/organizing team/Arunmozhi.jpeg" },
+              { name: "Ms. S. R. Sarvada", role: "Assistant Professor", dept: "Science & Humanities - English", img: "/organizing team/S.R.Sarvada.jpeg" },
+              { name: "Ms. V. Mohana Priya", role: "Assistant Professor", dept: "Science & Humanities - Mathematics", img: "/organizing team/Mohana-Priya .jpeg" },
+              { name: "Ms. K. Sangavi", role: "Assistant Professor", dept: "Science & Humanities - Mathematics", img: "/organizing team/Sangavi.jpeg" },
+            ].map((m, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: idx * 0.05 }}
+                whileHover={{ y: -10, scale: 1.02 }}
+                className="w-[165px] sm:w-[220px] md:w-[260px] bg-white rounded-[2rem] p-4 md:p-6 border border-slate-100 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_40px_60px_-20px_rgba(99,102,241,0.15)] transition-all duration-500 group relative overflow-hidden flex flex-col items-center text-center"
+              >
+                {/* Decorative blob on hover */}
+                <div className="absolute -top-10 -right-10 w-24 h-24 bg-indigo-50 rounded-full opacity-0 group-hover:opacity-100 group-hover:scale-[3] transition-all duration-700 -z-10"></div>
+                
+                <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 mb-5 relative group-hover:rotate-2 transition-transform duration-500">
+                  <div className="absolute inset-0 bg-indigo-600 rounded-[1.5rem] md:rounded-[2rem] rotate-6 opacity-0 group-hover:opacity-10 transition-all"></div>
+                  {m.img ? (
+                    <img
+                      src={m.img}
+                      alt={m.name}
+                      className="w-full h-full rounded-[1.5rem] md:rounded-[2rem] object-cover object-top border-4 border-slate-50 shadow-md group-hover:shadow-2xl transition-all duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-slate-100 text-slate-400 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center border-4 border-slate-50 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all">
+                      <User size={40} />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1 md:space-y-2">
+                  <h4 className="text-sm md:text-lg font-black text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors">{m.name}</h4>
+                  <div className="flex flex-col gap-1 items-center">
+                    <span className="text-[9px] md:text-[11px] font-black text-indigo-500 uppercase tracking-widest px-2.5 py-1 bg-indigo-50 rounded-full">{m.role}</span>
+                    <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] leading-relaxed max-w-[150px]">{m.dept}</p>
                   </div>
-                  <h4 className="text-lg font-bold text-slate-800 mb-2">{m.name}</h4>
-                  <span className="text-[0.75rem] font-bold text-indigo-600 uppercase tracking-wider mb-2">{m.role}</span>
-                  <span className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">{m.dept}</span>
-                </motion.div>
-              ))}
-            </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
