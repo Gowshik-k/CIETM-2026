@@ -755,7 +755,7 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4 md:gap-8 max-w-7xl mx-auto">
+          <div className="flex flex-nowrap overflow-x-auto md:flex-wrap md:justify-center gap-6 md:gap-8 pb-10 md:pb-0 px-4 md:px-0 hide-scrollbar">
             {[
               { name: "Mr. G. R. Seenivasan", role: "Assistant Professor", dept: "Civil Engineering", img: "/organizing team/G R Seenivasan.jpeg" },
               { name: "Ms. N. Mithraa", role: "Assistant Professor", dept: "Information Technology", img: "/organizing team/Nmithra.jpeg" },
@@ -772,41 +772,32 @@ const HomePage = () => {
               { name: "Ms. V. Mohana Priya", role: "Assistant Professor", dept: "Science & Humanities - Mathematics", img: "/organizing team/Mohana-Priya .jpeg" },
               { name: "Ms. K. Sangavi", role: "Assistant Professor", dept: "Science & Humanities - Mathematics", img: "/organizing team/Sangavi.jpeg" },
             ].map((m, idx) => (
-              <motion.div
+              <div
                 key={idx}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: idx * 0.05 }}
-                whileHover={{ y: -10, scale: 1.02 }}
-                className="w-[165px] sm:w-[220px] md:w-[260px] bg-white rounded-[2rem] p-4 md:p-6 border border-slate-100 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_40px_60px_-20px_rgba(99,102,241,0.15)] transition-all duration-500 group relative overflow-hidden flex flex-col items-center text-center"
+                className="w-[220px] md:w-[260px] shrink-0 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm transition-all duration-300 flex flex-col items-center text-center"
               >
-                {/* Decorative blob on hover */}
-                <div className="absolute -top-10 -right-10 w-24 h-24 bg-indigo-50 rounded-full opacity-0 group-hover:opacity-100 group-hover:scale-[3] transition-all duration-700 -z-10"></div>
-                
-                <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 mb-5 relative group-hover:rotate-2 transition-transform duration-500">
-                  <div className="absolute inset-0 bg-indigo-600 rounded-[1.5rem] md:rounded-[2rem] rotate-6 opacity-0 group-hover:opacity-10 transition-all"></div>
+                <div className="w-32 h-32 md:w-40 md:h-40 mb-5">
                   {m.img ? (
                     <img
                       src={m.img}
                       alt={m.name}
-                      className="w-full h-full rounded-[1.5rem] md:rounded-[2rem] object-cover object-top border-4 border-slate-50 shadow-md group-hover:shadow-2xl transition-all duration-500"
+                      className="w-full h-full rounded-2xl object-cover object-top border-4 border-slate-50 shadow-sm"
                     />
                   ) : (
-                    <div className="w-full h-full bg-slate-100 text-slate-400 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center border-4 border-slate-50 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all">
+                    <div className="w-full h-full bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center border-4 border-slate-50">
                       <User size={40} />
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-1 md:space-y-2">
-                  <h4 className="text-sm md:text-lg font-black text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors">{m.name}</h4>
-                  <div className="flex flex-col gap-1 items-center">
-                    <span className="text-[9px] md:text-[11px] font-black text-indigo-500 uppercase tracking-widest px-2.5 py-1 bg-indigo-50 rounded-full">{m.role}</span>
-                    <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] leading-relaxed max-w-[150px]">{m.dept}</p>
+                <div className="space-y-2">
+                  <h4 className="text-base md:text-lg font-bold text-slate-800 leading-tight">{m.name}</h4>
+                  <div className="flex flex-col gap-1.5 items-center">
+                    <span className="text-[10px] md:text-[11px] font-bold text-indigo-600 uppercase tracking-widest px-3 py-1 bg-indigo-50 rounded-full">{m.role}</span>
+                    <p className="text-[9px] md:text-[10px] font-semibold text-slate-400 uppercase tracking-[0.05em] leading-relaxed">{m.dept}</p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
