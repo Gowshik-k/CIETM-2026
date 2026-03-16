@@ -994,20 +994,26 @@ const AdminDashboard = () => {
                             <td className="px-4 py-6 text-right">
                                <div className="flex items-center justify-end gap-2">
                                   {reg.paperDetails?.fileUrl && (
-                                    <a 
-                                       href={`/api/registrations/download/${reg._id}?token=${user.token}`} 
-                                       className="p-2.5 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-xl transition-all"
-                                       title="Download Manuscript"
-                                        target="_blank"
-                                        rel="noreferrer"
-                                       onClick={() => {
-                                         if (reg.status === 'Submitted') {
-                                           setTimeout(fetchAllData, 2000);
+                                    <button 
+                                       onClick={async () => {
+                                         const paperId = reg.paperId || reg._id.slice(-6).toUpperCase();
+                                         const ext = reg.paperDetails?.originalName?.split('.').pop() || 'docx';
+                                         const loadingToast = toast.loading('Preparing download…');
+                                         try {
+                                           await downloadFile(`/api/registrations/download/${reg._id}`, `${paperId}.${ext}`, user.token);
+                                           toast.success('Download started!', { id: loadingToast });
+                                           if (reg.status === 'Submitted') {
+                                             setTimeout(fetchAllData, 2000);
+                                           }
+                                         } catch (err) {
+                                           toast.error(err.message || 'Download failed', { id: loadingToast });
                                          }
                                        }}
+                                       className="p-2.5 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-xl transition-all"
+                                       title="Download Manuscript"
                                     >
                                        <Download size={16} />
-                                    </a>
+                                    </button>
                                   )}
                                   <button onClick={() => setSelectedReg(reg)} className="p-2.5 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-xl font-black text-[10px] px-3 uppercase tracking-tighter transition-all">Inspect</button>
                                   <button

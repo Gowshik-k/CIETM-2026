@@ -111,10 +111,18 @@ if (fs.existsSync(clientDistPath)) {
 
 // SPA Fallback & 404 Handler
 app.use((req, res, next) => {
-    if (fs.existsSync(clientDistPath) && req.method === 'GET' && !req.path.startsWith('/api')) {
+    // SPA Fallback: Send index.html for GET requests that are NOT API calls and NOT download links
+    const isApiRequest = req.path.startsWith('/api') || req.path.includes('/download');
+    
+    if (fs.existsSync(clientDistPath) && req.method === 'GET' && !isApiRequest) {
         return res.sendFile(path.resolve(clientDistPath, 'index.html'));
     }
-    res.status(404).json({ message: 'Route not found' });
+    next();
+});
+
+// Explicit 404 handler for API/Download routes that fall through
+app.use((req, res) => {
+    res.status(404).json({ message: `Route ${req.method} ${req.path} not found on this server.` });
 });
 
 // Error Handling Middleware
