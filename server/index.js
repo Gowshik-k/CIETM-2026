@@ -86,6 +86,10 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 
+app.get('/api/debug/ping', (req, res) => {
+    res.json({ message: 'pong', version: '1.2.0-debug', timestamp: new Date() });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/payments', paymentRoutes);
