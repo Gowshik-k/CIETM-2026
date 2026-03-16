@@ -27,7 +27,18 @@ const app = express();
 app.use(helmet({
     contentSecurityPolicy: false,
 }));
-app.use(compression());
+app.use(compression({
+    // Skip compression for file download routes — piping binary streams through
+    // compression middleware corrupts the response on production Nginx setups
+    filter: (req, res) => {
+        if (
+            req.path.startsWith('/api/registrations/download')
+        ) {
+            return false; // Do not compress — let the binary data pass through raw
+        }
+        return compression.filter(req, res);
+    }
+}));
 
 // Request logging
 if (process.env.NODE_ENV === 'development') {

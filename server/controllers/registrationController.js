@@ -296,7 +296,6 @@ const downloadPaper = async (req, res) => {
         }
 
         // Auto-update status from Submitted to Under Review ONLY when downloaded by Reviewer/Admin/Chair
-        // Do not update status if the author themselves downloads it
         const isOwner = registration.userId.toString() === req.user._id.toString();
         if (registration.status === 'Submitted' && !isOwner) {
             registration.status = 'Under Review';
@@ -305,52 +304,57 @@ const downloadPaper = async (req, res) => {
         }
 
         const paperID = registration.paperId || `CIETM-${registration._id.toString().slice(-6).toUpperCase()}`;
-        const basename = paperID;
 
         // Get extension from originalName or default to docx
         const originalName = registration.paperDetails.originalName || '';
-        const extension = originalName.split('.').pop() || 'docx';
+        const extension = (originalName.split('.').pop() || 'docx').toLowerCase();
 
         // Generate the URL to fetch from Cloudinary
         const secureUrl = registration.paperDetails.fileUrl.replace('http://', 'https://');
+        console.log(`[Download] Fetching into buffer from: ${secureUrl}`);
 
-        // Fetch and stream to guarantee filename (browser redirects often lose filename context)
-        console.log(`[Download] Fetching from storage: ${secureUrl}`);
+        // Fetch the entire file into an in-memory BUFFER (not a stream).
+        // This approach is immune to Express compression/middleware wrapping and
+        // Nginx buffering issues that break pipe-based streaming in production.
         const response = await axios({
             method: 'get',
             url: secureUrl,
-            responseType: 'stream',
-            timeout: 30000 // Increased timeout for larger files
+            responseType: 'arraybuffer',
+            timeout: 30000
         });
 
         if (response.status !== 200) {
             console.error(`[Download] Storage server returned status ${response.status}`);
-            return res.status(404).send('Resource not available on storage server');
+            return res.status(502).json({ message: 'Could not retrieve file from storage' });
         }
 
-        // Set headers to force download and prevent buffering/caching
-        res.setHeader('Content-Type', response.headers['content-type'] || 'application/octet-stream');
-        res.setHeader('Content-Disposition', `attachment; filename="${basename}.${extension}"`);
-        res.setHeader('X-Accel-Buffering', 'no'); // Disable Nginx buffering
+        const fileBuffer = Buffer.from(response.data);
+
+        // Map extension to correct MIME type
+        const mimeTypes = {
+            docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            doc:  'application/msword',
+            pdf:  'application/pdf',
+        };
+        const contentType = mimeTypes[extension] || response.headers['content-type'] || 'application/octet-stream';
+
+        // Send complete buffer — Express will set Content-Length automatically, satisfying Nginx
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${paperID}.${extension}"`);
+        res.setHeader('Content-Length', fileBuffer.length);
+        res.setHeader('X-Accel-Buffering', 'no');
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
-        
-        response.data.pipe(res);
 
-        response.data.on('error', (err) => {
-            console.error('[Download] Stream error:', err);
-            if (!res.headersSent) {
-                res.status(500).json({ message: 'Error streaming file' });
-            }
-        });
+        console.log(`[Download] Sending buffer (${fileBuffer.length} bytes) for ${paperID}.${extension}`);
+        return res.send(fileBuffer);
 
     } catch (error) {
-        console.error('Download Error:', error.message);
+        console.error('[Download] Error:', error.message);
         if (error.response) {
-            console.error('Storage Server Error Response:', error.response.status, error.response.statusText);
+            console.error('[Download] Storage response:', error.response.status, error.response.statusText);
         }
-        
         if (!res.headersSent) {
             res.status(500).json({ message: 'Error processing download request' });
         }
