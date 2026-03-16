@@ -13,8 +13,10 @@
  */
 export const downloadFile = async (url, filename, token) => {
   // Prepend the base URL if it's set in VITE_API_URL (used for separate frontend/backend hosting)
-  const apiUrl = import.meta.env.VITE_API_URL || '';
-  const finalUrl = url.startsWith('http') ? url : `${apiUrl}${url}`;
+  // Ensure we don't end up with double slashes (e.g. https://api.com//api/...)
+  const apiUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+  const cleanPath = url.startsWith('/') ? url : `/${url}`;
+  const finalUrl = url.startsWith('http') ? url : `${apiUrl}${cleanPath}`;
 
   const response = await fetch(finalUrl, {
     method: 'GET',
