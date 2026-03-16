@@ -642,19 +642,27 @@ const AdminDashboard = () => {
             </button>
             <button
               title="Download All Manuscripts (ZIP)"
-              onClick={() => {
-                const toastId = toast.loading("Connecting to server for bulk archive...");
-                const downloadUrl = `/api/registrations/download-all?token=${user.token}`;
-                
-                // Using a temporary anchor is often more robust for triggering downloads with headers
-                const link = document.createElement('a');
-                link.href = downloadUrl;
-                link.setAttribute('download', '');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                setTimeout(() => toast.dismiss(toastId), 4000);
+              onClick={async () => {
+                const toastId = toast.loading("Preparing archive, please wait...");
+                try {
+                  const response = await fetch(`/api/registrations/download-all?token=${user.token}`);
+                  if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.message || `Server error: ${response.status}`);
+                  }
+                  const blob = await response.blob();
+                  const blobUrl = URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = blobUrl;
+                  link.download = `CIETM_Archive_${new Date().toISOString().split('T')[0]}.zip`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  URL.revokeObjectURL(blobUrl);
+                  toast.success("Archive downloaded successfully!", { id: toastId });
+                } catch (err) {
+                  toast.error(`Download failed: ${err.message}`, { id: toastId });
+                }
               }}
               className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2"
             >
