@@ -40,7 +40,7 @@ const Footer = () => {
             <Link to="/" className="text-3xl font-black text-slate-900 tracking-tighter mb-2 flex items-center gap-2 group" onClick={() => scrollToSection('#hero')}>
               CIETM <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 p-1">2026</span>
             </Link>
-            <p className="text-slate-500 leading-relaxed mb-10 text-base max-w-sm font-medium">
+            <p className="text-slate-500 leading-relaxed mb-10 text-base max-w-sm font-medium text-justify">
               Join the global dialogue at the prestigious National Conference on Contemporary Innovations in Engineering, Technology and Management. 
               Driving innovation through multidisciplinary excellence.
             </p>
@@ -70,7 +70,7 @@ const Footer = () => {
                 <li><Link to="/register" className={footerLinkClass}>Registration</Link></li>
                 <li><Link to="/terms" className={footerLinkClass}>Terms & Conditions</Link></li>
                 <li><a href="https://www.ieee.org/content/dam/ieee-org/ieee/web/org/conferences/Conference-template-A4.doc" target="_blank" rel="noopener noreferrer" className={footerLinkClass}>Paper Template</a></li>
-                <li><a href="mailto:info@cietcbe.edu.in" className={footerLinkClass}>Contact Support</a></li>
+                <li><a href="mailto:cietm@cietcbe.edu.in" className={footerLinkClass}>Contact Support</a></li>
               </ul>
             </div>
           </div>
@@ -95,13 +95,13 @@ const Footer = () => {
                 </li>
                 <li className="flex group/item">
                   <a 
-                    href="mailto:info@cietm2026.com"
+                    href="mailto:cietm@cietcbe.edu.in"
                     className="flex flex-col lg:flex-row items-center lg:items-start gap-4 lg:gap-5 w-full group/link"
                   >
                     <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center text-indigo-500 shrink-0 shadow-sm border border-slate-100 group-hover/item:bg-indigo-600 group-hover/item:text-white transition-all duration-300">
                       <Mail size={20} />
                     </div>
-                    <span className="lg:pt-2 hover:text-indigo-600 transition-colors text-center lg:text-left font-bold">info@cietcbe.edu.in</span>
+                    <span className="lg:pt-2 hover:text-indigo-600 transition-colors text-center lg:text-left font-bold">cietm@cietcbe.edu.in</span>
                   </a>
                 </li>
               </ul>

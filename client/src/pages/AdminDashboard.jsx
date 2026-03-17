@@ -7,7 +7,7 @@ import {
   XCircle, Search, Filter, ExternalLink, Home,
   LayoutDashboard, Download, PieChart, BarChart2,
   Settings, Bell, Mail, Shield, ChevronRight,
-  TrendingUp, IndianRupee, AlertCircle, CreditCard, Trash2, UserPlus, LogOut, RefreshCw, Zap, ChevronDown
+  TrendingUp, IndianRupee, AlertCircle, CreditCard, Trash2, UserPlus, LogOut, RefreshCw, Zap, ChevronDown, Files, User
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -141,6 +141,14 @@ const AdminDashboard = () => {
   const [updatingRole, setUpdatingRole] = useState(false);
   const mobileFilterRef = useRef(null);
   const verifyingRef = useRef(false);
+
+  // Inspector logic
+  const inspectorData = selectedReg || scannedResult;
+  const isFromScanner = !!scannedResult;
+  const closeInspector = () => {
+    setSelectedReg(null);
+    setScannedResult(null);
+  };
 
 
   const categoryAmounts = {
@@ -606,13 +614,20 @@ const AdminDashboard = () => {
               { id: 'overview', label: 'Monitor Board', icon: LayoutDashboard },
               { id: 'submissions', label: 'Paper Submissions', icon: FileCheck },
               { id: 'users', label: 'User Directory', icon: Users },
-              { id: 'verifier', label: 'On-site Entry', icon: ScanLine },
+              { id: 'verifier', label: 'On-site Entry', icon: ScanLine, action: () => setIsScannerModalOpen(true) },
               { id: 'analytics', label: 'Growth Insights', icon: TrendingUp },
               { id: 'settings', label: 'System Settings', icon: Settings },
             ].map(item => (
               <button
                 key={item.id}
-                onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
+                onClick={() => { 
+                  if (item.action) {
+                    item.action();
+                  } else {
+                    setActiveTab(item.id); 
+                  }
+                  setMobileMenuOpen(false); 
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all ${activeTab === item.id
                   ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
                   : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
@@ -973,7 +988,9 @@ const AdminDashboard = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {filteredData.map((reg, index) => (
+                        {filteredData.map((reg, index) => {
+                          const userAvatar = registrations.find(r => (r.userId?._id || r.userId) === (reg.userId?._id || reg.userId) && r.personalDetails?.profilePicture)?.personalDetails?.profilePicture;
+                          return (
                           <tr 
                             key={reg._id} 
                             onClick={() => {
@@ -984,8 +1001,8 @@ const AdminDashboard = () => {
                             <td className="px-4 py-4">
                               <div className="flex items-center gap-3">
                                 <div className="hidden sm:flex w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 items-center justify-center font-bold text-xs uppercase cursor-pointer overflow-hidden border border-slate-100 shadow-sm" onClick={(e) => { e.stopPropagation(); setSelectedReg(reg); }}>
-                                  {reg.personalDetails?.profilePicture ? (
-                                    <img src={reg.personalDetails.profilePicture} alt="" className="w-full h-full object-cover" />
+                                  {userAvatar ? (
+                                    <img src={userAvatar} alt="" className="w-full h-full object-cover" />
                                   ) : (reg.personalDetails?.name || reg.userId?.name)?.charAt(0)}
                                 </div>
                                 <div className="min-w-0">
@@ -1037,10 +1054,10 @@ const AdminDashboard = () => {
                                      <>
                                        <div className="fixed inset-0 z-[70]" onClick={() => setActiveReviewerMenu(null)} />
                                        <motion.div
-                                         initial={{ opacity: 0, y: (filteredData.length - index) <= 2 ? -10 : 10, scale: 0.95 }}
-                                         animate={{ opacity: 1, y: (filteredData.length - index) <= 2 ? -5 : 5, scale: 1 }}
-                                         exit={{ opacity: 0, y: (filteredData.length - index) <= 2 ? -10 : 10, scale: 0.95 }}
-                                         className={`absolute left-0 ${(filteredData.length - index) <= 2 ? 'bottom-full mb-2' : 'top-full mt-2'} z-[80] w-56 bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden p-1.5`}
+                                         initial={{ opacity: 0, x: -10, scale: 0.95 }}
+                                         animate={{ opacity: 1, x: 0, scale: 1 }}
+                                         exit={{ opacity: 0, x: -10, scale: 0.95 }}
+                                         className={`absolute lg:left-full lg:ml-4 lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto ${(filteredData.length - index) <= 2 ? "bottom-full mb-2" : "top-full mt-2"} left-0 z-[80] w-56 bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden p-1.5`}
                                        >
                                          <div className="flex flex-col gap-1 max-h-60 overflow-y-auto no-scrollbar">
                                            <button
@@ -1129,15 +1146,15 @@ const AdminDashboard = () => {
                                   <button onClick={(e) => { e.stopPropagation(); setSelectedReg(reg); }} className="p-2 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-lg font-black text-[9px] px-2.5 uppercase tracking-tighter transition-all">Inspect</button>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); handleDeleteSubmission(reg._id); }}
-                                    className="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all"
+                                    className="p-2 text-slate-300 hover:text-red-500 transition-colors group/delete"
                                     title="Delete Paper"
                                   >
-                                    <Trash2 size={14} />
+                                    <Trash2 size={16} className="group-hover/delete:scale-110 transition-transform" />
                                   </button>
                                </div>
                             </td>
                           </tr>
-                        ))}
+                        )})}
                       </tbody>
                     </table>
                     {filteredData.length === 0 && (
@@ -1283,18 +1300,21 @@ const AdminDashboard = () => {
                           .map((u, index, array) => (
                           <tr key={u._id} className="hover:bg-slate-50/50 transition-colors">
                             <td className="px-8 py-6">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs ${u.role === 'admin' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-500'}`}>
-                                  {u.name?.charAt(0)}
+                              <div className="flex items-center gap-4">
+                                <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-sm overflow-hidden border-2 border-slate-100 shadow-sm transition-all duration-300 hover:scale-110 hover:border-indigo-200 group/avatar ${u.role === 'admin' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600'}`}>
+                                  {registrations.find(r => (r.userId?._id || r.userId) === u._id)?.personalDetails?.profilePicture ? (
+                                    <img 
+                                      src={registrations.find(r => (r.userId?._id || r.userId) === u._id).personalDetails.profilePicture} 
+                                      alt="" 
+                                      className="w-full h-full object-cover group-hover/avatar:scale-110 transition-transform duration-500" 
+                                    />
+                                  ) : u.name?.charAt(0)}
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="text-sm font-black text-slate-800 leading-none mb-1">{u.name}</p>
-                                  <div className="flex items-center gap-2">
-                                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Delegate ID:</span>
-                                     <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-tighter font-mono leading-none">
-                                       {u.delegateId || `#USR-${u._id.slice(-6).toUpperCase()}`}
-                                     </p>
-                                  </div>
+                                  <p className="text-sm font-black text-slate-800 leading-none mb-1.5">{u.name}</p>
+                                  <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-tighter font-mono leading-none">
+                                    {u.delegateId || `#USR-${u._id.slice(-6).toUpperCase()}`}
+                                  </p>
                                 </div>
                               </div>
                             </td>
@@ -1325,10 +1345,10 @@ const AdminDashboard = () => {
                                      <>
                                        <div className="fixed inset-0 z-[70]" onClick={() => setActiveUserRoleMenu(null)} />
                                        <motion.div
-                                         initial={{ opacity: 0, y: (array.length - index) <= 2 ? -10 : 10, scale: 0.95 }}
-                                         animate={{ opacity: 1, y: (array.length - index) <= 2 ? -5 : 5, scale: 1 }}
-                                         exit={{ opacity: 0, y: (array.length - index) <= 2 ? -10 : 10, scale: 0.95 }}
-                                         className={`absolute left-0 ${(array.length - index) <= 2 ? 'bottom-full mb-2' : 'top-full mt-2'} z-[80] w-48 bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden p-1.5`}
+                                         initial={{ opacity: 0, x: -10, scale: 0.95 }}
+                                         animate={{ opacity: 1, x: 0, scale: 1 }}
+                                         exit={{ opacity: 0, x: -10, scale: 0.95 }}
+                                         className={`absolute lg:left-full lg:ml-4 lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto ${(array.length - index) <= 2 ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 z-[80] w-48 bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden p-1.5`}
                                        >
                                          <div className="flex flex-col gap-1">
                                            {[
@@ -1416,10 +1436,10 @@ const AdminDashboard = () => {
                                 {u._id !== user._id && (
                                   <button
                                     onClick={() => handleDeleteUser(u)}
-                                    className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                                    className="p-2 text-slate-300 hover:text-red-600 transition-colors group/delete"
                                     title="Remove User"
                                   >
-                                    <Trash2 size={14} />
+                                    <Trash2 size={16} className="group-hover/delete:scale-110 transition-transform" />
                                   </button>
                                 )}
                               </div>
@@ -1448,165 +1468,7 @@ const AdminDashboard = () => {
               </motion.div>
             )}
 
-            {activeTab === 'verifier' && (
-              <motion.div
-                 key="verifier"
-                 initial={{ opacity: 0, y: -20 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 exit={{ opacity: 0, y: -20 }}
-                 className="max-w-4xl mx-auto"
-               >
-                 {/* Header Title & Launch Control */}
-                  <div className="flex justify-between items-center mb-8 bg-white/50 backdrop-blur-sm p-6 rounded-3xl border border-slate-100 shadow-sm">
-                    <div>
-                      <h3 className="text-base font-black text-slate-800 tracking-tight">On-site Entry</h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Verification & Entry Management</p>
-                    </div>
-                    <button
-                      onClick={() => setIsScannerModalOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 hover:border-indigo-200 transition-all border border-indigo-100 shadow-sm shadow-indigo-100/20 active:scale-95"
-                    >
-                      <ScanLine size={14} />
-                      Launch Scanner
-                    </button>
-                  </div>
 
-                 {/* Manifest Container */}
-                 <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden h-fit relative">
-                   {!scannedResult ? (
-                     <div className="p-16 text-center flex flex-col items-center justify-center min-h-[400px]">
-                        <div className="w-24 h-24 border-2 border-dashed border-slate-100 rounded-[2.5rem] flex items-center justify-center mb-6 opacity-40">
-                           <Users size={32} className="text-slate-200" />
-                        </div>
-                        <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Scanner Offline</h4>
-                     </div>
-                    ) : (
-                      <div className="animate-fade-in p-8 md:p-12">
-                         <div className="max-w-xl mx-auto space-y-8">
-                            {/* Simple Profile Header */}
-                            <div className="flex items-center gap-6 pb-8 border-b border-slate-100">
-                               <div className="w-20 h-20 rounded-2xl bg-indigo-600 flex items-center justify-center text-3xl font-black text-white shadow-xl">
-                                  {scannedResult.personalDetails?.name?.charAt(0)}
-                               </div>
-                               <div>
-                                  <h4 className="text-2xl font-black text-slate-800 tracking-tight">{scannedResult.personalDetails?.name}</h4>
-                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">{scannedResult.userId?.delegateId || scannedResult.delegateId || 'N/A'}</p>
-                               </div>
-                            </div>
-
-                            {/* Essential Details */}
-                            <div className="grid grid-cols-1 gap-1">
-                               {[
-                                 { label: 'Institution', val: scannedResult.personalDetails?.institution || 'Academic Delegate' },
-                                 { label: 'Category', val: scannedResult.personalDetails?.category },
-                                 { label: 'Paper ID', val: scannedResult.paperId || (scannedResult._id ? scannedResult._id.toString().slice(-6).toUpperCase() : 'N/A') },
-                                 { label: 'Manuscript', val: scannedResult.status, color: scannedResult.status === 'Accepted' ? 'text-emerald-600' : 'text-amber-600' }
-                               ].map((item, idx) => (
-                                 <div key={idx} className="flex justify-between items-center py-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 px-4 rounded-xl transition-colors">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</span>
-                                    <span className={`text-[13px] font-bold ${item.color || 'text-slate-700'} tracking-tight`}>{item.val}</span>
-                                 </div>
-                               ))}
-                            </div>
-
-                            {/* High Performance Finance Card */}
-                            {scannedResult.paymentStatus !== 'Completed' ? (
-                              <div className="mt-6 p-8 bg-slate-50 rounded-[2.5rem] border border-slate-200 relative overflow-hidden">
-                                 <div className="relative z-10">
-                                    <div className="flex justify-between items-start mb-6">
-                                       <div>
-                                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Portfolio Balance</p>
-                                          <h5 className="text-4xl font-black text-slate-800 tracking-tighter">₹{calculatePortfolioBalance(scannedResult)}</h5>
-                                       </div>
-                                       <div className="w-12 h-12 bg-white rounded-2xl border border-slate-100 flex items-center justify-center text-indigo-600 shadow-sm">
-                                          <CreditCard size={24} />
-                                       </div>
-                                    </div>
-                                    <div className="space-y-4">
-                                       <div className="space-y-2">
-                                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Manual Authorized Entry</label>
-                                          <div className="flex gap-2">
-                                             <div className="relative flex-1 group">
-                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm group-focus-within:text-indigo-600 transition-colors">₹</div>
-                                                <input
-                                                   type="number"
-                                                   value={manualPaymentAmount || calculateRequiredFee(scannedResult)}
-                                                   onChange={(e) => setManualPaymentAmount(e.target.value)}
-                                                   className="w-full pl-8 pr-4 py-3.5 bg-white border border-slate-100 rounded-xl font-black text-slate-800 outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-500/5 transition-all text-sm"
-                                                />
-                                             </div>
-                                             <button
-                                                onClick={() => handleManualPaymentConfirm(scannedResult)}
-                                                className="px-8 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-xl"
-                                             >
-                                                Pay
-                                             </button>
-                                          </div>
-                                       </div>
-                                       <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center opacity-60">Required: ₹{calculateRequiredFee(scannedResult)}</p>
-                                    </div>
-                                 </div>
-                              </div>
-                            ) : (
-                               <div className="p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100 flex flex-col items-center gap-2 text-emerald-700">
-                                  <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-100 mb-2">
-                                     <CheckCircle size={24} />
-                                  </div>
-                                  <span className="text-[11px] font-black uppercase tracking-[0.2em]">Entry Authorized</span>
-                                  <p className="text-[10px] font-medium opacity-60">Finance & Identity Verified</p>
-                               </div>
-                            )}
-
-                            <button
-                              onClick={() => setScannedResult(null)}
-                              className="w-full py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition-all border-t border-slate-50 mt-4"
-                            >
-                               Reset Session
-                            </button>
-                         </div>
-                      </div>
-                   )}
-                </div>
-
-                 {/* Simplified Digital Scanner Popup */}
-                 <AnimatePresence>
-                   {isScannerModalOpen && (
-                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-                        <motion.div 
-                          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                          className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
-                          onClick={() => setIsScannerModalOpen(false)}
-                        />
-                        <motion.div
-                          initial={{ scale: 0.95, opacity: 0, y: 10 }} 
-                          animate={{ scale: 1, opacity: 1, y: 0 }} 
-                          exit={{ scale: 0.95, opacity: 0, y: 10 }}
-                          className="relative bg-white w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl border border-slate-200"
-                        >
-                           <div className="p-5 border-b border-slate-50 flex justify-between items-center bg-white">
-                              <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">QR Verification</h3>
-                              <button 
-                                onClick={() => setIsScannerModalOpen(false)} 
-                                className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors"
-                              >
-                                <X size={18} />
-                              </button>
-                           </div>
-                           
-                           <div className="p-6">
-                              <div className="qr-scanner-modal-wrapper overflow-hidden rounded-2xl border-2 border-slate-100 bg-black min-h-[240px]">
-                                 <QRScanner onScan={handleVerifyQR} />
-                              </div>
-                              <p className="mt-4 text-[9px] font-bold text-slate-400 uppercase text-center tracking-widest">
-                                 Position QR code within frame
-                              </p>
-                           </div>
-                        </motion.div>
-                     </div>
-                   )}
-                 </AnimatePresence>
-               </motion.div>
-            )}
 
             {activeTab === 'analytics' && analytics && (
               <motion.div
@@ -2037,15 +1899,15 @@ const AdminDashboard = () => {
         </div>
       </main>
 
-      {/* Advanced Registration Inspector Modal */}
+      {/* Unified Registration Inspector Modal */}
       <AnimatePresence>
-        {selectedReg && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12 overflow-hidden">
+        {inspectorData && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 md:p-12 overflow-hidden">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setSelectedReg(null)}
+              onClick={closeInspector}
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
             ></motion.div>
 
@@ -2053,79 +1915,96 @@ const AdminDashboard = () => {
               initial={{ scale: 0.9, opacity: 0, y: 50 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 50 }}
-              className="relative w-full md:w-[95vw] lg:w-full max-w-6xl bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row h-[95vh] md:h-[85vh] overflow-y-auto md:overflow-hidden"
+              className="relative w-full md:w-[95vw] lg:w-full max-w-6xl bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row h-[95vh] md:h-[80vh] overflow-y-auto md:overflow-hidden"
             >
               {/* Universal Close Button */}
               <button 
-                onClick={() => setSelectedReg(null)} 
+                onClick={closeInspector} 
                 className="absolute top-6 right-6 md:top-8 md:right-10 z-[60] p-3 bg-white/60 backdrop-blur-xl border border-slate-200 text-slate-400 rounded-2xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all active:scale-90 shadow-lg shadow-slate-200/50"
               >
                 <X size={24} strokeWidth={3} />
               </button>
+
               {/* Modal Sidebar - Profile & Top Stats */}
-              <div className="w-full md:w-80 bg-slate-50/50 border-r border-slate-100 p-8 md:p-10 flex flex-col shrink-0 md:overflow-y-auto custom-scrollbar">
-                <div className="flex flex-row md:flex-col items-center gap-6 md:gap-0 mb-8 md:mb-0">
-                  <div className="w-16 h-16 md:w-24 md:h-24 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center text-white text-2xl md:text-4xl font-black shadow-xl shadow-indigo-200 shrink-0">
-                    {(selectedReg.personalDetails?.name || selectedReg.userId?.name)?.charAt(0)}
+              <div className="w-full md:w-72 bg-white border-r border-slate-100 p-6 md:p-8 flex flex-col shrink-0 md:overflow-y-auto custom-scrollbar">
+                <div className="flex flex-row md:flex-col items-center gap-6 md:gap-0 mb-6 md:mb-0">
+                  <div className="w-14 h-14 md:w-20 md:h-20 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 text-xl md:text-3xl font-black border border-slate-100 shrink-0 overflow-hidden">
+                    {registrations.find(r => (r.userId?._id || r.userId) === (inspectorData.userId?._id || inspectorData.userId) && r.personalDetails?.profilePicture)?.personalDetails?.profilePicture ? (
+                      <img 
+                        src={registrations.find(r => (r.userId?._id || r.userId) === (inspectorData.userId?._id || inspectorData.userId) && r.personalDetails?.profilePicture).personalDetails.profilePicture} 
+                        alt="" 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (inspectorData.personalDetails?.name || inspectorData.userId?.name)?.charAt(0)}
                   </div>
-                  <div className="text-left md:text-center md:mb-8 md:mt-6 flex-1 min-w-0">
-                    <h2 className="text-lg md:text-2xl font-black text-slate-800 leading-tight truncate">{selectedReg.personalDetails?.name || selectedReg.userId?.name}</h2>
-                    <p className="text-[10px] md:text-[11px] font-black text-slate-400 mt-1 md:mt-2 uppercase tracking-widest truncate">{selectedReg.userId?.email}</p>
+                  <div className="text-left md:text-center md:mb-6 md:mt-4 flex-1 min-w-0">
+                    <h2 className="text-base md:text-xl font-black text-slate-800 leading-tight truncate">{inspectorData.personalDetails?.name || inspectorData.userId?.name}</h2>
+                    <p className="text-[9px] md:text-[10px] font-black text-slate-400 mt-1 uppercase tracking-widest truncate">{inspectorData.userId?.email || inspectorData.personalDetails?.email}</p>
                   </div>
                 </div>
 
-                <div className="space-y-4 mb-4 md:mb-10">
-                  <div className="flex flex-col gap-2 p-5 bg-white rounded-2xl border border-slate-200/60 shadow-sm transition-all hover:border-indigo-100">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Delegate ID</span>
-                      <span className="text-[10px] font-mono font-black text-indigo-600 group-hover:text-indigo-700">{selectedReg.userId?.delegateId || 'N/A'}</span>
+                <div className="space-y-3 mb-4 md:mb-8">
+                  <div className="flex flex-col gap-1.5 p-4 bg-white rounded-xl border border-slate-200/60 transition-all hover:border-slate-300">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="font-black text-slate-400 uppercase tracking-widest">Delegate</span>
+                      <span className="font-mono font-black text-slate-700">{inspectorData.userId?.delegateId || inspectorData.delegateId || 'N/A'}</span>
                     </div>
-                    <div className="h-[1px] bg-slate-100 w-full"></div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Paper ID</span>
-                      <span className="text-[10px] font-mono font-black text-slate-700">{selectedReg.paperId || 'N/A'}</span>
+                    <div className="h-[1px] bg-slate-50 w-full"></div>
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="font-black text-slate-400 uppercase tracking-widest">Paper</span>
+                      <span className="font-mono font-black text-slate-700">{inspectorData.paperId || 'N/A'}</span>
                     </div>
                   </div>
                   
-                  <div className={`flex justify-between items-center px-5 py-4 rounded-2xl border shadow-sm transition-all ${
-                    selectedReg.status === 'Accepted' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
-                    selectedReg.status === 'Rejected' ? 'bg-red-50 border-red-100 text-red-600' :
-                    'bg-amber-50 border-amber-100 text-amber-600'
-                  }`}>
-                    <span className="text-[10px] font-black uppercase tracking-widest">Manuscript</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest">
-                      {selectedReg.status}
+                  <div className="flex justify-between items-center px-4 py-3 rounded-xl border border-slate-100 bg-white shadow-sm">
+                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Manuscript</span>
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${
+                      inspectorData.status === 'Accepted' ? 'text-emerald-500' : 
+                      inspectorData.status === 'Rejected' ? 'text-red-500' : 'text-amber-500'
+                    }`}>
+                      {inspectorData.status}
                     </span>
                   </div>
 
-                  <div className={`flex justify-between items-center px-5 py-4 rounded-2xl border shadow-sm transition-all ${
-                    selectedReg.paymentStatus === 'Completed' ? 'bg-blue-50 border-blue-100 text-blue-600' : 
-                    'bg-amber-50/50 border-amber-100 text-amber-600'
-                  }`}>
-                    <span className="text-[10px] font-black uppercase tracking-widest">Finance</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest">{selectedReg.paymentStatus}</span>
+                  <div className="flex justify-between items-center px-4 py-3 rounded-xl border border-slate-100 bg-white shadow-sm">
+                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Finance</span>
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${
+                      inspectorData.paymentStatus === 'Completed' ? 'text-indigo-600' : 'text-amber-500'
+                    }`}>{inspectorData.paymentStatus}</span>
                   </div>
                 </div>
 
                 <div className="hidden md:flex flex-col gap-3 mt-auto">
-                  {selectedReg.status !== 'Accepted' && (
+                  {inspectorData.status !== 'Accepted' && (
                     <button
-                      onClick={() => handleReview(selectedReg._id, 'Accepted')}
-                      disabled={!selectedReg.paperDetails?.fileUrl}
-                      className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${!selectedReg.paperDetails?.fileUrl
+                      onClick={() => handleReview(inspectorData._id, 'Accepted')}
+                      disabled={!inspectorData.paperDetails?.fileUrl}
+                      className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${!inspectorData.paperDetails?.fileUrl
                         ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-100'
                         : 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
                         }`}
                     >
-                      {!selectedReg.paperDetails?.fileUrl ? 'Awaiting Upload' : 'Approve Decision'}
+                      {!inspectorData.paperDetails?.fileUrl ? 'Awaiting Upload' : 'Approve Decision'}
                     </button>
                   )}
-                  {selectedReg.status !== 'Rejected' && (
+                  {inspectorData.status !== 'Rejected' && (
                     <button
-                      onClick={() => handleReview(selectedReg._id, 'Rejected')}
+                      onClick={() => handleReview(inspectorData._id, 'Rejected')}
                       className="w-full py-4 bg-white border border-red-100 text-red-500 hover:bg-red-50 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
                     >
                       Reject Submission
+                    </button>
+                  )}
+                  
+                  {isFromScanner && (
+                    <button
+                      onClick={() => {
+                        closeInspector();
+                        setIsScannerModalOpen(true);
+                      }}
+                      className="w-full py-4 bg-white text-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2 border border-slate-200 mt-2"
+                    >
+                      <RefreshCw size={14} /> Scan Another
                     </button>
                   )}
                 </div>
@@ -2133,152 +2012,265 @@ const AdminDashboard = () => {
 
               {/* Modal Main Content Area */}
               <div className="flex-1 flex flex-col min-w-0 h-full bg-white">
-                <div className="flex-1 md:overflow-y-auto p-6 md:p-12 custom-scrollbar">
-                  <div className="flex justify-between items-start mb-8 md:mb-12 gap-6">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-widest rounded">Research Entry</span>
-                        <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{selectedReg.paperDetails?.track || 'General Domain'}</span>
+                <div className="flex-1 md:overflow-y-auto p-6 md:p-10 custom-scrollbar">
+                  {isFromScanner ? (
+                    /* Simplified Verification View for Scanner */
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="px-1.5 py-0.5 bg-slate-900 text-white text-[7px] font-black uppercase tracking-widest rounded">Verification</span>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Entry Check</span>
+                        </div>
+                        <h1 className="text-xl md:text-2xl font-black text-slate-800 leading-tight">
+                          {inspectorData.personalDetails?.name || inspectorData.userId?.name}
+                        </h1>
                       </div>
-                      <h1 className="text-xl md:text-3xl font-black text-slate-800 leading-[1.15] break-words pr-12 md:pr-0">
-                        {selectedReg.paperDetails?.title || 'No Title Provided'}
-                      </h1>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-4 bg-white rounded-2xl border border-slate-100 flex flex-col gap-1 shadow-sm">
+                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Submissions</p>
+                           <p className="text-xl font-black text-slate-800 flex items-center gap-2">
+                              <Files size={16} className="text-slate-400" />
+                              {1 + (inspectorData.otherPapers?.length || 0)} Units
+                           </p>
+                        </div>
+                        <div className="p-4 bg-white rounded-2xl border border-slate-100 flex flex-col gap-1 shadow-sm">
+                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Portfolio Due</p>
+                           <p className="text-xl font-black text-slate-800 flex items-center gap-2">
+                              <CreditCard size={16} className="text-slate-400" />
+                              ₹{calculatePortfolioBalance(inspectorData)}
+                           </p>
+                        </div>
+                        <div className="p-4 bg-white rounded-2xl border border-slate-100 flex flex-col gap-1 shadow-sm">
+                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Status</p>
+                           <p className="text-xl font-black text-emerald-500 flex items-center gap-2">
+                              <ShieldCheck size={16} />
+                              Verified
+                           </p>
+                        </div>
+                      </div>
+
+                      <section>
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                          <User size={14} /> Identity Breakdown
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div className="space-y-1">
+                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest pl-1">Primary Affiliation</p>
+                              <p className="text-xs font-bold text-slate-700 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">{inspectorData.personalDetails?.institution || 'N/A'}</p>
+                           </div>
+                           <div className="space-y-1">
+                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest pl-1">Delegate Category</p>
+                              <p className="text-xs font-bold text-slate-700 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">{inspectorData.personalDetails?.category || 'N/A'}</p>
+                           </div>
+                        </div>
+                      </section>
+
+                      <section>
+                         <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                              <Layers size={14} /> Submission Portfolio
+                            </h4>
+                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Live Status Check</span>
+                         </div>
+                         
+                         <div className="space-y-2">
+                            {/* Current Paper */}
+                            <div className="p-3.5 bg-white border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-x-4 gap-y-2.5 transition-all hover:bg-slate-50/50 group">
+                               <div className="flex-1 min-w-0">
+                                   <p className="text-xs font-black text-slate-800 truncate mb-1 sm:mb-0">{inspectorData.paperDetails?.title || 'Untitled Paper'}</p>
+                                   <div className="flex items-center gap-2">
+                                      <span className="px-1.5 py-0.5 bg-slate-50 text-slate-400 text-[7px] font-black uppercase tracking-widest rounded border border-slate-100">Scanning Source</span>
+                                      <span className="text-[8px] font-mono text-slate-500 font-black">#{inspectorData.paperId || 'N/A'}</span>
+                                   </div>
+                                </div>
+                               <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                                   <div className="flex items-center gap-2">
+                                      <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border border-slate-100 ${inspectorData.paymentStatus === 'Completed' ? 'bg-indigo-50 text-indigo-600 border-indigo-50' : 'bg-amber-50 text-amber-600 border-amber-50'}`}>
+                                         {inspectorData.paymentStatus === 'Completed' ? 'Paid' : 'Unpaid'}
+                                      </span>
+                                      <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border border-slate-100 ${inspectorData.status === 'Accepted' ? 'bg-emerald-50 text-emerald-600 border-emerald-50' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                                         {inspectorData.status}
+                                      </span>
+                                   </div>
+                                </div>
+                            </div>
+
+                            {/* Other Papers */}
+                            {inspectorData.otherPapers?.map((p, i) => (
+                                <div key={i} className="p-3.5 bg-white border border-slate-100 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-x-4 gap-y-2.5 transition-all opacity-80 hover:opacity-100 hover:bg-slate-50/50">
+                                   <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-bold text-slate-600 truncate mb-1 sm:mb-0">{p.status === 'Draft' ? 'Draft Application' : p.title || 'Associated Paper'}</p>
+                                      <div className="flex items-center gap-2">
+                                         <span className="px-1.5 py-0.5 bg-slate-50 text-slate-400 text-[7px] font-black uppercase tracking-widest rounded border border-slate-100">Multi-Submission</span>
+                                         <span className="text-[8px] font-mono text-slate-500 font-black">#{p.paperId || 'N/A'}</span>
+                                      </div>
+                                   </div>
+                                  <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                                      <div className="flex items-center gap-2">
+                                         <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border border-slate-100 ${p.paymentStatus === 'Completed' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                                            {p.paymentStatus === 'Completed' ? 'Paid' : 'Unpaid'}
+                                         </span>
+                                     <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border border-slate-100 ${p.status === 'Accepted' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                                            {p.status}
+                                         </span>
+                                      </div>
+                                  </div>
+                               </div>
+                            ))}
+                         </div>
+                      </section>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-                    <section>
-                      <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                        <Users size={16} /> Personal Info
-                      </h4>
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Principal Name</p>
-                            <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{selectedReg.personalDetails?.name || selectedReg.userId?.name || 'N/A'}</p>
+                  ) : (
+                    /* Full Inspection View for Directory */
+                    <>
+                      <div className="flex justify-between items-start mb-8 md:mb-12 gap-6">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-widest rounded">Research Entry</span>
+                            <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{inspectorData.paperDetails?.track || 'General Domain'}</span>
                           </div>
-                          <div>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Principal Email</p>
-                            <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 truncate" title={selectedReg.personalDetails?.email || selectedReg.userId?.email}>{selectedReg.personalDetails?.email || selectedReg.userId?.email || 'N/A'}</p>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Institution</p>
-                          <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{selectedReg.personalDetails?.institution || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Category / Participant Type</p>
-                          <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{selectedReg.personalDetails?.category || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Mobile Contact</p>
-                          <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{selectedReg.personalDetails?.mobile || 'N/A'}</p>
+                          <h1 className="text-xl md:text-3xl font-black text-slate-800 leading-[1.15] break-words pr-12 md:pr-0">
+                            {inspectorData.paperDetails?.title || 'No Title Provided'}
+                          </h1>
                         </div>
                       </div>
-                    </section>
 
-                    <section>
-                      <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                        <FileCheck size={16} /> Submission Metadata
-                      </h4>
-                      <div className="space-y-6">
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Conference Track</p>
-                          <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{selectedReg.paperDetails?.track || 'N/A'}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                        <section>
+                          <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <Users size={16} /> Personal Info
+                          </h4>
+                          <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Principal Name</p>
+                                <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{inspectorData.personalDetails?.name || inspectorData.userId?.name || 'N/A'}</p>
+                              </div>
+                              <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Principal Email</p>
+                                <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 truncate" title={inspectorData.personalDetails?.email || inspectorData.userId?.email}>{inspectorData.personalDetails?.email || inspectorData.userId?.email || 'N/A'}</p>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Institution</p>
+                              <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{inspectorData.personalDetails?.institution || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Category / Participant Type</p>
+                              <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{inspectorData.personalDetails?.category || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Mobile Contact</p>
+                              <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{inspectorData.personalDetails?.mobile || 'N/A'}</p>
+                            </div>
+                          </div>
+                        </section>
+
+                        <section>
+                          <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <FileCheck size={16} /> Submission Metadata
+                          </h4>
+                          <div className="space-y-6">
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Conference Track</p>
+                              <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{inspectorData.paperDetails?.track || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Manuscript File</p>
+                              {inspectorData.paperDetails?.fileUrl ? (
+                                <button
+                                  onClick={async () => {
+                                    const paperId = inspectorData.paperId || inspectorData._id.slice(-6).toUpperCase();
+                                    const ext = inspectorData.paperDetails?.originalName?.split('.').pop() || 'docx';
+                                    const loadingToast = toast.loading('Preparing download…');
+                                    try {
+                                      await downloadFile(`/api/registrations/download/${inspectorData._id}`, `${paperId}.${ext}`, user.token);
+                                      toast.success('Download started!', { id: loadingToast });
+                                    } catch (err) {
+                                      toast.error(err.message || 'Download failed', { id: loadingToast });
+                                    }
+                                  }}
+                                  className="flex items-center justify-between gap-3 bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 transition-all group w-full"
+                                >
+                                  <span className="text-xs font-black uppercase flex items-center gap-2 tracking-widest"><Download size={14} /> Download Word Doc</span>
+                                </button>
+                              ) : (
+                                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-400 uppercase text-center tracking-widest italic">No File Uploaded Yet</div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Keywords</p>
+                              <div className="flex flex-wrap gap-2">
+                                {inspectorData.paperDetails?.keywords?.map((k, i) => (
+                                  <span key={i} className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-500">{k}</span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </section>
+                      </div>
+
+                      <div className="mt-12">
+                        <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 border-b border-slate-100 pb-3">Abstract Overview</h4>
+                        <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+                          <p className="text-slate-600 text-base leading-relaxed font-serif italic text-justify whitespace-pre-line">
+                            {inspectorData.paperDetails?.abstract || 'No abstract content available.'}
+                          </p>
                         </div>
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Manuscript File</p>
-                          {selectedReg.paperDetails?.fileUrl ? (
-                            <button
-                              onClick={async () => {
-                                const paperId = selectedReg.paperId || selectedReg._id.slice(-6).toUpperCase();
-                                const ext = selectedReg.paperDetails?.originalName?.split('.').pop() || 'docx';
-                                const loadingToast = toast.loading('Preparing download…');
-                                try {
-                                  await downloadFile(`/api/registrations/download/${selectedReg._id}`, `${paperId}.${ext}`, user.token);
-                                  toast.success('Download started!', { id: loadingToast });
-                                } catch (err) {
-                                  toast.error(err.message || 'Download failed', { id: loadingToast });
-                                }
-                              }}
-                              className="flex items-center justify-between gap-3 bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 transition-all group w-full"
-                            >
-                              <span className="text-xs font-black uppercase flex items-center gap-2 tracking-widest"><Download size={14} /> Download Word Doc</span>
-                            </button>
-                          ) : (
-                            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-400 uppercase text-center tracking-widest italic">No File Uploaded Yet</div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Keywords</p>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedReg.paperDetails?.keywords?.map((k, i) => (
-                              <span key={i} className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-500">{k}</span>
+                      </div>
+
+                      {inspectorData.teamMembers && inspectorData.teamMembers.length > 0 && (
+                        <div className="mt-12 md:mt-20">
+                          <div className="flex items-center gap-4 mb-8">
+                            <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] whitespace-nowrap">Collaborating Authors</h4>
+                            <div className="h-px bg-slate-100 flex-1"></div>
+                            <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-lg">{inspectorData.teamMembers.length} Person(s)</span>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+                            {inspectorData.teamMembers.map((member, i) => (
+                              <div key={i} className="p-6 border border-slate-100 rounded-[2rem] bg-white shadow-sm hover:shadow-xl hover:shadow-indigo-50/50 hover:border-indigo-100 transition-all group">
+                                <div className="flex items-center gap-4 mb-5">
+                                  <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center font-black text-sm transition-all shadow-inner">
+                                    {member.name?.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{member.name}</p>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{member.category}</p>
+                                  </div>
+                                </div>
+                                <div className="space-y-3">
+                                  <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100/50">
+                                    <Mail size={14} className="text-slate-400" />
+                                    <p className="text-[11px] font-bold text-slate-600 truncate">{member.email}</p>
+                                  </div>
+                                  <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100/50">
+                                    <Shield size={14} className="text-slate-400" />
+                                    <p className="text-[11px] font-bold text-slate-600 truncate" title={member.affiliation}>{member.affiliation}</p>
+                                  </div>
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </div>
-                      </div>
-                    </section>
-                  </div>
+                      )}
 
-                  <div className="mt-12">
-                    <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 border-b border-slate-100 pb-3">Abstract Overview</h4>
-                    <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
-                      <p className="text-slate-600 text-base leading-relaxed font-serif italic text-justify whitespace-pre-line">
-                        {selectedReg.paperDetails?.abstract || 'No abstract content available.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {selectedReg.teamMembers && selectedReg.teamMembers.length > 0 && (
-                    <div className="mt-12 md:mt-20">
-                      <div className="flex items-center gap-4 mb-8">
-                        <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] whitespace-nowrap">Collaborating Authors</h4>
-                        <div className="h-px bg-slate-100 flex-1"></div>
-                        <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-lg">{selectedReg.teamMembers.length} Person(s)</span>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-                        {selectedReg.teamMembers.map((member, i) => (
-                          <div key={i} className="p-6 border border-slate-100 rounded-[2rem] bg-white shadow-sm hover:shadow-xl hover:shadow-indigo-50/50 hover:border-indigo-100 transition-all group">
-                            <div className="flex items-center gap-4 mb-5">
-                              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center font-black text-sm transition-all shadow-inner">
-                                {member.name?.charAt(0)}
-                              </div>
-                              <div>
-                                <p className="text-sm font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{member.name}</p>
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{member.category}</p>
-                              </div>
-                            </div>
-                            <div className="space-y-3">
-                              <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100/50">
-                                <Mail size={14} className="text-slate-400" />
-                                <p className="text-[11px] font-bold text-slate-600 truncate">{member.email}</p>
-                              </div>
-                              <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100/50">
-                                <Shield size={14} className="text-slate-400" />
-                                <p className="text-[11px] font-bold text-slate-600 truncate" title={member.affiliation}>{member.affiliation}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Manual Review Information */}
-                  {selectedReg.paperDetails?.reviewerComments && (
-                    <div className="mt-12 p-8 bg-amber-50 rounded-[2rem] border border-amber-100 mb-10">
-                      <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><Bell size={14} /> Reviewer Assessment</h4>
-                      <p className="text-sm font-bold text-amber-800 leading-relaxed italic">"{selectedReg.paperDetails.reviewerComments}"</p>
-                    </div>
+                      {/* Manual Review Information */}
+                      {inspectorData.paperDetails?.reviewerComments && (
+                        <div className="mt-12 p-8 bg-amber-50 rounded-[2rem] border border-amber-100 mb-10">
+                          <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><Bell size={14} /> Reviewer Assessment</h4>
+                          <p className="text-sm font-bold text-amber-800 leading-relaxed italic">"{inspectorData.paperDetails.reviewerComments}"</p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
                 {/* Modal Actions Footer */}
                 <div className="bg-white/80 backdrop-blur-2xl border-t border-slate-100 p-6 md:p-8 flex flex-col lg:flex-row items-center justify-between gap-6 z-20 shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
-                    {selectedReg.paymentStatus === 'Completed' ? (
+                    {inspectorData.paymentStatus === 'Completed' ? (
                       <div className="px-5 py-3 rounded-2xl transition-all flex-1 sm:flex-none bg-blue-50 border border-blue-100 flex flex-col">
                         <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1">Payment Verified</p>
                         <p className="text-sm font-black flex items-center gap-2 text-blue-700">
@@ -2289,10 +2281,10 @@ const AdminDashboard = () => {
                       <div className="px-5 py-3 rounded-2xl border-2 border-amber-100 transition-all flex-1 sm:flex-none bg-amber-50/30 flex flex-col gap-2 relative group hover:border-amber-400">
                         <div className="flex justify-between items-center gap-4">
                           <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Manual Collection</p>
-                          <span className="text-[11px] font-black text-amber-700">₹{calculateRequiredFee(selectedReg)}</span>
+                          <span className="text-[11px] font-black text-amber-700">₹{calculateRequiredFee(inspectorData)}</span>
                         </div>
 
-                        {selectedReg.status !== 'Accepted' ? (
+                        {inspectorData.status !== 'Accepted' ? (
                           <div className="flex items-center gap-2 text-amber-600/60 pb-1">
                             <AlertCircle size={12} />
                             <span className="text-[9px] font-bold uppercase tracking-tight">
@@ -2304,12 +2296,12 @@ const AdminDashboard = () => {
                             <input
                               type="number"
                               placeholder="Amount"
-                              value={manualPaymentAmount || calculateRequiredFee(selectedReg)}
+                              value={manualPaymentAmount || calculateRequiredFee(inspectorData)}
                               onChange={(e) => setManualPaymentAmount(e.target.value)}
                               className="w-24 bg-white border border-amber-200 rounded-lg p-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-amber-500/10"
                             />
                             <button
-                              onClick={() => handleManualPaymentConfirm(selectedReg)}
+                              onClick={() => handleManualPaymentConfirm(inspectorData)}
                               className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest shadow-lg shadow-amber-200 transition-all active:scale-95"
                             >
                               Verify
@@ -2319,22 +2311,22 @@ const AdminDashboard = () => {
                       </div>
                     )}
 
-                    {selectedReg.paymentStatus === 'Completed' && (
+                    {inspectorData.paymentStatus === 'Completed' && (
                       <button
-                        onClick={() => handleToggleAttendance(selectedReg)}
-                        className={`px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none flex flex-col justify-center text-left ${selectedReg.attended ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-indigo-400 hover:text-indigo-600'}`}
+                        onClick={() => handleToggleAttendance(inspectorData)}
+                        className={`px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none flex flex-col justify-center text-left ${inspectorData.attended ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-indigo-400 hover:text-indigo-600'}`}
                       >
-                        <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${selectedReg.attended ? 'text-indigo-200' : 'text-slate-400'}`}>On-site Attendance</p>
+                        <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${inspectorData.attended ? 'text-indigo-200' : 'text-slate-400'}`}>On-site Attendance</p>
                         <span className="text-sm font-black flex items-center gap-2">
-                          {selectedReg.attended ? <Users size={16} /> : <ScanLine size={16} />}
-                          {selectedReg.attended ? 'Marked Present' : 'Mark Absent'}
+                          {inspectorData.attended ? <Users size={16} /> : <ScanLine size={16} />}
+                          {inspectorData.attended ? 'Marked Present' : 'Mark Absent'}
                         </span>
                       </button>
                     )}
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-                    {!selectedReg.paperDetails?.fileUrl ? (
+                    {!inspectorData.paperDetails?.fileUrl ? (
                       <div className="flex items-center justify-center p-4 bg-slate-50 border border-slate-200 rounded-2xl w-full">
                         <p className="text-xs font-bold text-slate-400 text-center uppercase tracking-widest italic">
                           Awaiting Manuscript Upload...
@@ -2342,17 +2334,17 @@ const AdminDashboard = () => {
                       </div>
                     ) : (
                       <>
-                        {selectedReg.status !== 'Accepted' && (
+                        {inspectorData.status !== 'Accepted' && (
                           <button
-                            onClick={() => handleReview(selectedReg._id, 'Accepted')}
+                            onClick={() => handleReview(inspectorData._id, 'Accepted')}
                             className="flex-1 w-full sm:w-auto px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-indigo-700 hover:scale-105 transition-all shadow-xl shadow-indigo-200 active:scale-95"
                           >
                             Accept Paper
                           </button>
                         )}
-                        {selectedReg.status !== 'Rejected' && (
+                        {inspectorData.status !== 'Rejected' && (
                           <button
-                            onClick={() => handleReview(selectedReg._id, 'Rejected')}
+                            onClick={() => handleReview(inspectorData._id, 'Rejected')}
                             className="flex-1 w-full sm:w-auto px-8 py-4 bg-white text-red-500 border border-red-100 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-red-50 transition-all active:scale-95"
                           >
                             Reject
@@ -2361,6 +2353,47 @@ const AdminDashboard = () => {
                       </>
                     )}
                   </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* QR Scanner Modal */}
+      <AnimatePresence>
+        {isScannerModalOpen && (
+          <div className="fixed inset-0 z-[105] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="relative bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl border border-slate-200"
+            >
+              <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-white">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <ScanLine size={16} />
+                  </div>
+                  <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">Live Entry Scanner</h3>
+                </div>
+                <button
+                  onClick={() => setIsScannerModalOpen(false)}
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="p-8">
+                <div className="qr-scanner-modal-wrapper overflow-hidden rounded-[2rem] border-2 border-slate-100 bg-black min-h-[260px] shadow-inner">
+                  <QRScanner onScan={handleVerifyQR} />
+                </div>
+                <div className="mt-6 flex flex-col items-center gap-2">
+                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] animate-pulse">Scanning...</p>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase text-center tracking-widest max-w-[200px]">
+                    Align the delegate's QR code within the frame to verify entry
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -2475,8 +2508,10 @@ const AdminDashboard = () => {
             </motion.div>
           </div>
         )}
+      </AnimatePresence>
 
-        {/* Track Selection Modal */}
+      {/* Track Selection Modal */}
+      <AnimatePresence>
         {isTrackModalOpen && trackTargetUser && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 overflow-hidden">
             <motion.div

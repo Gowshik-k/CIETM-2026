@@ -264,8 +264,8 @@ const HomePage = () => {
           <div className="max-w-4xl mx-auto text-center mb-20">
             {/* Centered Text Content */}
             <span className="inline-block px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5 border border-indigo-100">Introduction</span>
-            <h2 className="text-4xl md:text-5xl font-bold mb-8 text-slate-900 tracking-tight leading-tight uppercase">
-              About the <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Conference</span>
+            <h2 className="text-4xl md:text-6xl font-black mb-8 text-slate-900 tracking-tighter leading-tight uppercase">
+              About the <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 animate-gradient-x">Conference</span>
             </h2>
             <p className="text-lg md:text-2xl text-slate-600 leading-relaxed font-semibold mb-8 px-2 max-w-4xl mx-auto">
               CIETM-2026 stands at the intersection of innovation and excellence, providing a premier platform to showcase the latest breakthroughs in Science, Engineering, Technology, and Management.
@@ -360,20 +360,22 @@ const HomePage = () => {
       </section>
 
       {/* Conference Guidelines Section */}
-      <section id="conference" className="py-16 md:py-24 bg-slate-50">
-        <div className="w-full max-w-7xl mx-auto px-6">
-          <div className="max-w-3xl mx-auto text-center mb-16">
-            <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5">Submission Guide</span>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 tracking-tight">Conference <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Guidelines</span></h2>
-            <p className="text-lg text-slate-500 font-medium">Everything you need to know about participating in CIETM 2026.</p>
+      <section id="conference" className="py-20 md:py-32 bg-[#020b1c] text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_60%)] pointer-events-none"></div>
+        <div className="w-full max-w-7xl mx-auto px-6 relative z-10">
+          <div className="max-w-3xl mx-auto text-center mb-20 md:mb-24">
+            <span className="inline-block px-5 py-2 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-extrabold text-[10px] md:text-xs tracking-[0.2em] uppercase mb-6">Submission Guide</span>
+            <h2 className="text-4xl md:text-7xl font-black mb-6 text-white tracking-tighter uppercase leading-[1.1]">
+              Conference <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Guidelines</span>
+            </h2>
+            <p className="text-base md:text-lg text-slate-400 font-bold max-w-2xl mx-auto leading-relaxed">Everything you need to know about participating in CIETM 2026.</p>
           </div>
 
-          <div className="bg-[#020b1c] rounded-[30px] md:rounded-[40px] p-6 sm:p-10 md:p-12 text-white relative overflow-hidden shadow-2xl border border-white/5 max-w-6xl mx-auto">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_60%)] pointer-events-none"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-start relative z-10">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-12 lg:gap-20 items-start relative z-10">
               {/* Guidelines Pane */}
               <div>
-                <h3 className="text-2xl md:text-4xl font-extrabold mb-8 text-white text-center md:text-left">Author Guidelines</h3>
+                <h3 className="text-3xl md:text-5xl font-black mb-8 text-white text-center md:text-left tracking-tighter uppercase font-display">Author Guidelines</h3>
                 <ul className="flex flex-col gap-8 md:gap-10">
                   <li className="flex gap-6 text-lg text-slate-400 leading-relaxed font-medium">
                     <CheckCircle className="text-sky-400 mt-1 shrink-0" size={26} />
@@ -443,7 +445,7 @@ const HomePage = () => {
 
               {/* Vertical Timeline Pane */}
               <div className="relative">
-                <h3 className="text-2xl md:text-4xl font-extrabold mb-10 text-white text-center md:text-left">Conference Timeline</h3>
+                <h3 className="text-3xl md:text-5xl font-black mb-10 text-white text-center md:text-left tracking-tighter uppercase font-display">Conference Timeline</h3>
                 <div className="flex flex-col gap-0">
                   {[
                     { icon: <FileText size={22} />, title: 'Full paper submission', date: 'March 16, 2026' },
@@ -482,7 +484,7 @@ const HomePage = () => {
         <div className="w-full max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5">Academic Tracks</span>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 tracking-tight">Research Focus Areas</h2>
+            <h2 className="text-4xl md:text-6xl font-black mb-6 text-slate-900 tracking-tighter uppercase">Research <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Focus Areas</span></h2>
             <p className="text-lg text-slate-500 font-medium">We invite high-quality original research papers in the following tracks</p>
           </div>
 
@@ -527,7 +529,7 @@ const HomePage = () => {
         <div className="w-full max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5">Experts</span>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 tracking-tight">Keynote <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Speakers</span></h2>
+            <h2 className="text-4xl md:text-6xl font-black mb-6 text-slate-900 tracking-tighter uppercase">Keynote <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Speakers</span></h2>
             <p className="text-lg text-slate-500 font-medium max-w-2xl mx-auto">Meet the visionary leaders sharing their insights at CIETM 2026.</p>
           </div>
 
@@ -591,12 +593,12 @@ const HomePage = () => {
         <div className="w-full max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5">Leadership</span>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 tracking-tight">Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Patrons</span></h2>
+            <h2 className="text-4xl md:text-6xl font-black mb-6 text-slate-900 tracking-tighter uppercase">Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Patrons</span></h2>
             <p className="text-lg text-slate-500 font-medium">Visionary leadership guiding CIETM 2026 towards excellence.</p>
           </div>
 
           <div className="mt-16">
-            <h3 className="text-2xl font-bold text-slate-500 uppercase tracking-[0.2em] text-center mb-12 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[0px] before:bg-slate-300 after:content-[''] after:h-px after:w-[60px] after:bg-slate-300">Chief Patron</h3>
+            <h3 className="text-xl md:text-2xl font-black text-slate-400 uppercase tracking-[0.25em] text-center mb-12 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[0px] before:bg-slate-300 after:content-[''] after:h-px after:w-[60px] after:bg-slate-300">Chief Patron</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto justify-center">
               {[
                 { name: "Dr. P. Natarajan", role: "Academic Director", img: "/assets/Natarajan.jpeg" },
@@ -608,7 +610,7 @@ const HomePage = () => {
                   whileHover={{ y: -8 }}
                   className="bg-white p-12 md:p-8 rounded-2xl text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-200 hover:border-indigo-500 transition-all duration-300 relative overflow-hidden group h-full"
                 >
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="mb-7 inline-block relative w-full overflow-hidden rounded-[20px]">
                     {p.img ? (
                       <img 
@@ -628,7 +630,7 @@ const HomePage = () => {
               ))}
             </div>
 
-            <h3 className="text-2xl font-bold text-slate-500 uppercase tracking-[0.2em] text-center mb-12 mt-20 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[60px] before:bg-slate-300 after:content-[''] after:h-px after:w-[60px] after:bg-slate-300">Patron</h3>
+            <h3 className="text-xl md:text-2xl font-black text-slate-400 uppercase tracking-[0.25em] text-center mb-12 mt-20 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[60px] before:bg-slate-300 after:content-[''] after:h-px after:w-[60px] after:bg-slate-300">Patron</h3>
             <div className="max-w-sm mx-auto">
               {[
                 { name: "Dr. K. Manikanda Subramanian", role: "Principal", img: "assets/Principal1.jpeg" }
@@ -638,7 +640,7 @@ const HomePage = () => {
                   whileHover={{ y: -8 }}
                   className="bg-white p-12 md:p-8 rounded-2xl text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-200 hover:border-indigo-500 transition-all duration-300 relative overflow-hidden group h-full"
                 >
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="mb-7 inline-block relative w-full overflow-hidden rounded-[20px]">
                     {p.img ? (
                       <img 
@@ -658,7 +660,7 @@ const HomePage = () => {
               ))}
             </div>
 
-            <h3 className="text-2xl font-bold text-slate-500 uppercase tracking-[0.2em] text-center mb-12 mt-20 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[60px] before:bg-slate-300 after:content-[''] after:h-px after:w-[60px] after:bg-slate-300">Convenor</h3>
+            <h3 className="text-xl md:text-2xl font-black text-slate-400 uppercase tracking-[0.25em] text-center mb-12 mt-20 flex items-center justify-center gap-6 before:content-[''] before:h-px before:w-[60px] before:bg-slate-300 after:content-[''] after:h-px after:w-[60px] after:bg-slate-300">Convenor</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-3xl mx-auto justify-center">
               {[
                 { name: "Dr. P. Magudeaswaran", role: "Head Of the Department - Civil Engineering", img: "/convenor/magudeaswaran.jpg" },
@@ -669,7 +671,7 @@ const HomePage = () => {
                   whileHover={{ y: -8 }}
                   className="bg-white p-12 md:p-8 rounded-2xl text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1)] border border-slate-200 hover:border-indigo-500 transition-all duration-300 relative overflow-hidden group h-full"
                 >
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="mb-7 inline-block relative w-full overflow-hidden rounded-[20px]">
                     {p.img ? (
                       <img 
@@ -700,7 +702,7 @@ const HomePage = () => {
         <div className="w-full max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5">Guidance</span>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 tracking-tight">Advisory <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Board</span></h2>
+            <h2 className="text-4xl md:text-6xl font-black mb-6 text-slate-900 tracking-tighter uppercase">Advisory <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Board</span></h2>
             <p className="text-lg text-slate-500 font-medium max-w-2xl mx-auto">Distinguished global leaders providing expert guidance for the conference.</p>
           </div>
 
@@ -762,7 +764,7 @@ const HomePage = () => {
           <div className="max-w-3xl mx-auto text-center mb-16 md:mb-24">
             <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-[10px] md:text-xs tracking-[0.2em] uppercase mb-5 border border-indigo-100/50">Core Contributors</span>
             <h2 className="text-4xl md:text-6xl font-black mb-6 text-slate-900 tracking-tight uppercase">
-              Organizing <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Team</span>
+              Organizing <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Team</span>
             </h2>
             <p className="text-sm md:text-lg text-slate-500 font-bold max-w-2xl mx-auto leading-relaxed">
               The dedicated experts working behind the scenes to make CIETM 2026 a landmark success.
@@ -848,7 +850,7 @@ const HomePage = () => {
                   className="mb-6 md:mb-8"
                 >
                   <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-4 md:mb-6 leading-[1.2] tracking-tighter text-white drop-shadow-2xl">
-                    Coimbatore Institute of <br className="hidden sm:block" /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400 sm:whitespace-nowrap">Engineering and Technology</span>
+                    Coimbatore Institute of <br className="hidden sm:block" /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 sm:whitespace-nowrap">Engineering and Technology</span>
                   </h2>
                 </motion.div>
                 <motion.p
@@ -856,7 +858,7 @@ const HomePage = () => {
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.3 }}
-                  className="text-base sm:text-lg md:text-2xl font-medium leading-relaxed opacity-90 mb-0 text-slate-200"
+                  className="text-base sm:text-lg md:text-2xl font-medium leading-relaxed opacity-90 mb-0 text-slate-200 text-justify"
                 >
                   The Coimbatore Institute of Engineering and Technology (CIET), Coimbatore, Tamil Nadu, is an autonomous institution established in 2001 by the Kovai Kalaimagal Educational Trust (KKET). The institute is dedicated to providing high-quality education in the fields of Engineering, Technology, and Management, fostering academic excellence and professional development. CIET is affiliated with Anna University, approved by AICTE, and accredited with an ‘A’ Grade by NAAC.
                 </motion.p>
@@ -919,7 +921,7 @@ const HomePage = () => {
           {/* Section Header */}
           <div className="max-w-3xl mx-auto text-center mb-16">
             <span className="inline-block px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-extrabold text-xs tracking-widest uppercase mb-5">Innovation Hub</span>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-900 tracking-tight">Meet the <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">Developers</span></h2>
+            <h2 className="text-4xl md:text-6xl font-black mb-6 text-slate-900 tracking-tighter uppercase">Meet the <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Developers</span></h2>
             <p className="text-lg text-slate-500 font-medium">The visionary student team behind the digital architecture of CIETM 2026.</p>
           </div>
 
@@ -1043,14 +1045,14 @@ const HomePage = () => {
                 <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-50/80 backdrop-blur-sm border border-indigo-100 mb-6 shadow-sm overflow-hidden relative group">
                   <span className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                   <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></div>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 font-extrabold text-xs tracking-[0.2em] uppercase">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 font-extrabold text-xs tracking-[0.2em] uppercase">
                     Who We Are
                   </span>
                 </span>
                 <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-tight mb-6 relative">
                   Engineered by <br className="hidden lg:block"/>
                   <span className="relative inline-block">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 animate-gradient-x">IT Students</span>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 animate-gradient-x">IT Students</span>
                     <svg className="absolute w-full h-3 -bottom-1 left-0 text-indigo-500/40" viewBox="0 0 100 10" preserveAspectRatio="none">
                       <motion.path 
                         initial={{ pathLength: 0, opacity: 0 }}
@@ -1069,10 +1071,10 @@ const HomePage = () => {
               </div>
 
               <div className="space-y-6 text-base md:text-lg text-slate-600 font-medium leading-relaxed mb-8">
-                <p className="border-l-4 border-indigo-500 pl-4 py-1 italic text-slate-700 bg-gradient-to-r from-indigo-50/50 to-transparent pr-4">
+                <p className="border-l-4 border-indigo-500 pl-4 py-1 italic text-slate-700 bg-gradient-to-r from-indigo-50/50 to-transparent pr-4 text-justify">
                   We are a passionate team of student developers from the <strong className="text-indigo-700 font-extrabold tracking-wide">Department of Information Technology</strong> at the Coimbatore Institute of Engineering and Technology.
                 </p>
-                <p className="px-4 border-l-4 border-transparent">
+                <p className="px-4 border-l-4 border-transparent text-justify">
                   Driven by innovation and a shared enthusiasm for building modern digital experiences, this entire platform was architected, designed, and deployed from the ground up by our department's students to comprehensively support CIETM-2026.
                 </p>
               </div>
@@ -1087,7 +1089,7 @@ const HomePage = () => {
                     </div>
                     <div className="text-center sm:text-left">
                       <h4 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">Built with Purpose</h4>
-                      <p className="text-sm md:text-base text-slate-500 leading-relaxed">From intuitive UI/UX design to robust backend architecture, this platform stands as a testament to the practical skills and technological excellence cultured within the IT department.</p>
+                      <p className="text-sm md:text-base text-slate-500 leading-relaxed text-justify">From intuitive UI/UX design to robust backend architecture, this platform stands as a testament to the practical skills and technological excellence cultured within the IT department.</p>
                     </div>
                   </div>
                 </div>
