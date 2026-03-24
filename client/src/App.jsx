@@ -17,6 +17,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const ChairDashboard = lazy(() => import('./pages/ChairDashboard'));
 const ReviewerDashboard = lazy(() => import('./pages/ReviewerDashboard'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions'));
+const UserGuide = lazy(() => import('./pages/UserGuide'));
 
 const MobileWarning = () => {
   const [show, setShow] = useState(false);
@@ -58,6 +59,16 @@ const MobileWarning = () => {
   );
 };
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
+
 const AppContent = () => {
   const location = useLocation();
   const hideNavbar = location.pathname.startsWith('/dashboard') || 
@@ -68,6 +79,7 @@ const AppContent = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <ScrollToTop />
       <MobileWarning />
       {!hideNavbar && <Navbar />}
       <main className="flex-1 relative">
@@ -76,6 +88,7 @@ const AppContent = () => {
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/terms" element={<TermsConditions />} />
+            <Route path="/guide" element={<UserGuide />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />

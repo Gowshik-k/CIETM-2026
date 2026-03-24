@@ -68,6 +68,7 @@ const Footer = () => {
               <ul className="space-y-4">
                 <li><Link to="/login" className={footerLinkClass}>Author Login</Link></li>
                 <li><Link to="/register" className={footerLinkClass}>Registration</Link></li>
+                <li><Link to="/guide" className={footerLinkClass}>User Guide</Link></li>
                 <li><Link to="/terms" className={footerLinkClass}>Terms & Conditions</Link></li>
                 <li><a href="https://www.ieee.org/content/dam/ieee-org/ieee/web/org/conferences/Conference-template-A4.doc" target="_blank" rel="noopener noreferrer" className={footerLinkClass}>Paper Template</a></li>
                 <li><a href="mailto:cietm@cietcbe.edu.in" className={footerLinkClass}>Contact Support</a></li>

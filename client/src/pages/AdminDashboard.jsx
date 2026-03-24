@@ -562,6 +562,30 @@ const AdminDashboard = () => {
     }).filter(reg => reg.status !== 'Draft');
   }, [registrations, filter, search]);
 
+  const tracksChartData = useMemo(() => {
+    // Calculate actual paper count based on unique titles to avoid counting co-authors twice
+    const uniquePapersPerTrack = {};
+    const titlesSeen = new Set();
+    
+    registrations
+    .filter(reg => reg.status !== 'Draft' && reg.paperDetails?.title)
+    .forEach(reg => {
+      const title = reg.paperDetails.title.toLowerCase().trim();
+      if (!titlesSeen.has(title)) {
+        titlesSeen.add(title);
+        const track = reg.paperDetails.track || 'General';
+        uniquePapersPerTrack[track] = (uniquePapersPerTrack[track] || 0) + 1;
+      }
+    });
+
+    return CONFERENCE_TRACKS.map(track => ({
+      _id: track.id,
+      name: track.id,
+      count: uniquePapersPerTrack[track.id] || 0,
+      Submissions: uniquePapersPerTrack[track.id] || 0
+    }));
+  }, [registrations]);
+
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
   const overviewVariants = {
@@ -823,7 +847,7 @@ const AdminDashboard = () => {
 
                     <div className="h-[320px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={analytics?.tracks || []}>
+                        <BarChart data={tracksChartData}>
                           <defs>
                              <linearGradient id="colorTrackBar" x1="0" y1="0" x2="0" y2="1">
                                <stop offset="5%" stopColor="#6366f1" stopOpacity={1} />
@@ -1044,7 +1068,7 @@ const AdminDashboard = () => {
                                    } hover:border-indigo-300 active:scale-95 disabled:opacity-50`}
                                  >
                                    <span className="truncate">
-                                     {reg.paperDetails?.assignedReviewer?.name || 'Reviewer'}
+                                     {reg.paperDetails?.assignedReviewer?.name || 'Unassigned'}
                                    </span>
                                    <ChevronDown size={14} className={`shrink-0 transition-transform duration-300 ${activeReviewerMenu === reg._id ? 'rotate-180' : ''}`} />
                                  </button>
@@ -1268,7 +1292,7 @@ const AdminDashboard = () => {
                         className="p-2.5 sm:px-4 sm:py-2.5 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-200 transition-all flex items-center gap-2 whitespace-nowrap shrink-0"
                       >
                         <UserPlus size={18} />
-                        <span className="hidden sm:inline">Create</span>
+                        <span className="hidden sm:inline">Add User</span>
                       </button>
                     </div>
                   </div>
@@ -1539,58 +1563,58 @@ const AdminDashboard = () => {
                   <div className="bg-white rounded-[2.5rem] border border-slate-200 p-6 md:p-8 shadow-sm lg:col-span-2 flex flex-col">
                     <h3 className="text-lg font-black text-slate-800 mb-6 border-b border-slate-100 pb-4">Manuscripts per Track</h3>
                     <div className="flex-1 w-full min-h-[400px]">
-                      {analytics.tracks && analytics.tracks.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={analytics.tracks.map(t => ({ name: t._id, Submissions: t.count }))}
-                            margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
-                          >
-                            <defs>
-                              <linearGradient id="colorTrackCount" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={1} />
-                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0.8} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis
-                              dataKey="name"
-                              axisLine={false}
-                              tickLine={false}
-                              tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
-                              dy={15}
-                              angle={-45}
-                              textAnchor="end"
-                            />
-                            <YAxis
-                              axisLine={false}
-                              tickLine={false}
-                              tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }}
-                              dx={-10}
-                            />
-                            <Tooltip
-                              cursor={{ fill: '#f8fafc' }}
-                              contentStyle={{
-                                borderRadius: '16px',
-                                border: 'none',
-                                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-                                fontWeight: 700,
-                                fontSize: '12px'
-                              }}
-                            />
-                            <Bar
-                              dataKey="Submissions"
-                              fill="url(#colorTrackCount)"
-                              radius={[8, 8, 8, 8]}
-                              barSize={40}
-                              animationDuration={1500}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
-                          <TrendingUp size={48} className="opacity-20 mb-4" />
-                          <p className="font-bold text-sm tracking-wide">No track data available yet.</p>
-                        </div>
+                      {tracksChartData.some(d => d.Submissions > 0) ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={tracksChartData}
+                              margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
+                            >
+                              <defs>
+                                <linearGradient id="colorTrackCount" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={1} />
+                                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0.8} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                              <XAxis
+                                dataKey="name"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
+                                dy={15}
+                                angle={-45}
+                                textAnchor="end"
+                              />
+                              <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }}
+                                dx={-10}
+                              />
+                              <Tooltip
+                                cursor={{ fill: '#f8fafc' }}
+                                contentStyle={{
+                                  borderRadius: '16px',
+                                  border: 'none',
+                                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                                  fontWeight: 700,
+                                  fontSize: '12px'
+                                }}
+                              />
+                              <Bar
+                                dataKey="Submissions"
+                                fill="url(#colorTrackCount)"
+                                radius={[8, 8, 8, 8]}
+                                barSize={40}
+                                animationDuration={1500}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                            <TrendingUp size={48} className="opacity-20 mb-4" />
+                            <p className="font-bold text-sm tracking-wide">No track data available yet.</p>
+                          </div>
                       )}
                     </div>
                   </div>
@@ -2155,7 +2179,11 @@ const AdminDashboard = () => {
                             </div>
                             <div>
                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Institution</p>
-                              <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{inspectorData.personalDetails?.institution || 'N/A'}</p>
+                              <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 uppercase">{inspectorData.personalDetails?.institution || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Department</p>
+                              <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 uppercase">{inspectorData.personalDetails?.department || 'N/A'}</p>
                             </div>
                             <div>
                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Category / Participant Type</p>

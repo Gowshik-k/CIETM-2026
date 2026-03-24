@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import {
   Calendar, MapPin, FileText, ArrowRight,
   Globe, Users, Award, Sparkles,
-  GraduationCap, BookOpen, CheckCircle, Download, FileCheck, Layers,
+  GraduationCap, BookOpen, CheckCircle, Download, FileCheck, Layers, FileUp,
   Linkedin, Twitter, ChevronLeft, ChevronRight, ChevronUp, User, Github
 } from 'lucide-react';
 
@@ -237,7 +237,7 @@ const HomePage = () => {
             </div>
 
             <div className="mt-0">
-              <CountdownTimer targetDate="2026-04-29T00:00:00" />
+              <CountdownTimer targetDate="2026-05-05T00:00:00" />
             </div>
           </motion.div>
         </div>
@@ -448,11 +448,11 @@ const HomePage = () => {
                 <h3 className="text-3xl md:text-5xl font-black mb-10 text-white text-center md:text-left tracking-tighter uppercase font-display">Conference Timeline</h3>
                 <div className="flex flex-col gap-0">
                   {[
-                    { icon: <FileText size={22} />, title: 'Full paper submission', date: 'March 16, 2026' },
-                    { icon: <Award size={22} />, title: 'Acceptance notification', date: 'March 24, 2026' },
-                    { icon: <CheckCircle size={22} />, title: 'Camera ready', date: 'April 2, 2026' },
-                    { icon: <Sparkles size={22} />, title: 'Payment confirmation deadline', date: 'April 12, 2026' },
-                    { icon: <GraduationCap size={22} />, title: 'Conference date', date: 'April 29, 2026', active: true }
+                    { icon: <FileText size={22} />, title: 'Abstract Submission', date: 'March 30, 2026' },
+                    { icon: <FileUp size={22} />, title: 'Full Paper Submission', date: 'April 06, 2026' },
+                    { icon: <Award size={22} />, title: 'Acceptance Notification', date: 'April 13, 2026' },
+                    { icon: <Sparkles size={22} />, title: 'Payment Confirmation', date: 'April 24, 2026' },
+                    { icon: <GraduationCap size={22} />, title: 'Conference Date', date: 'May 05, 2026', active: true }
                   ].map((item, index, arr) => (
                     <div key={index} className={`relative pl-16 pb-10 ${index === arr.length - 1 ? 'pb-0' : ''}`}>
                       {index !== arr.length - 1 && (

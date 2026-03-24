@@ -529,7 +529,7 @@ const Dashboard = () => {
                 </div>
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Event Date</span>
               </div>
-              <p className="text-sm font-bold text-slate-800">29th April 2026</p>
+              <p className="text-sm font-bold text-slate-800">5th May 2026</p>
             </div>
           </motion.div>
 
@@ -548,11 +548,11 @@ const Dashboard = () => {
               <div className="absolute left-[19px] top-6 bottom-6 w-[2px] bg-slate-50"></div>
 
               {[
-                { label: 'Full Paper Submission', date: '2026-03-16' },
-                { label: 'Acceptance Notification', date: '2026-03-24' },
-                { label: 'Camera Ready Paper', date: '2026-04-02' },
-                { label: 'Payment Deadline', date: '2026-04-12' },
-                { label: 'Conference Date', date: '2026-04-29' }
+                { label: 'Abstract Submission', date: '2026-03-30' },
+                { label: 'Full Paper Submission', date: '2026-04-06' },
+                { label: 'Acceptance Notification', date: '2026-04-13' },
+                { label: 'Payment Confirmation', date: '2026-04-24' },
+                { label: 'Conference Date', date: '2026-05-05' }
               ].map((item, i, arr) => {
                 const now = new Date();
                 const isPast = (dateStr) => {

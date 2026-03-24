@@ -8,9 +8,10 @@ import {
   Settings, Bell, Shield, ChevronRight, Lock,
   TrendingUp, Download, Menu, X, Users, Layers,
   QrCode, ScanLine, ShieldCheck, CreditCard, AlertCircle, IndianRupee,
-  ExternalLink, Mail, LogOut, CheckSquare, Square, Trash2, RefreshCw
+  ExternalLink, Mail, LogOut, CheckSquare, Square, Trash2, RefreshCw, Files, User, Zap
 } from 'lucide-react';
-import { CONFERENCE_TRACKS } from '../constants/conferenceData';
+import { CONFERENCE_TRACKS, CATEGORY_AMOUNTS } from '../constants/conferenceData';
+import { downloadFile } from '../utils/downloadHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import DashboardSkeleton from '../components/DashboardSkeleton';
@@ -96,8 +97,17 @@ const ChairDashboard = () => {
   const [reviewers, setReviewers] = useState([]);
   const [assigningReviewer, setAssigningReviewer] = useState(false);
   const [autoAssigning, setAutoAssigning] = useState(false);
+  const [activeReviewerMenu, setActiveReviewerMenu] = useState(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const mobileFilterRef = useRef(null);
+
+  // Unified Inspector States
+  const inspectorData = selectedReg || scannedResult;
+  const isFromScanner = !!scannedResult;
+  const closeInspector = () => {
+    setSelectedReg(null);
+    setScannedResult(null);
+  };
   const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
   const [trackTargetUser, setTrackTargetUser] = useState(null);
   const [selectedTracks, setSelectedTracks] = useState([]);
@@ -126,22 +136,38 @@ const ChairDashboard = () => {
     }
   }, [user]);
 
-  const categoryAmounts = {
-    'UG/PG STUDENTS': 500,
-    'FACULTY/RESEARCH SCHOLARS': 750,
-    'EXTERNAL / ONLINE PRESENTATION': 300,
-    'INDUSTRY PERSONNEL': 900
-  };
 
   const calculateRequiredFee = (reg) => {
     if (!reg) return 0;
-    let total = categoryAmounts[reg.personalDetails?.category] || 1000;
+    const category = reg.personalDetails?.category || reg.userId?.category;
+    let total = CONFERENCE_TRACKS.find(t => t.id === reg.paperDetails?.track) ? (CATEGORY_AMOUNTS[category] || 1000) : 0;
+    
+    // In this system, one registration = one person/paper. 
+    // If there are team members, we assume they are listed in teamMembers
     if (reg.teamMembers && reg.teamMembers.length > 0) {
       reg.teamMembers.forEach(member => {
-        total += categoryAmounts[member.category] || 1000;
+        total += CATEGORY_AMOUNTS[member.category] || 1000;
       });
     }
     return total;
+  };
+
+  const calculatePortfolioBalance = (reg) => {
+    if (!reg) return 0;
+    let balance = 0;
+    // Current paper
+    if (reg.status === 'Accepted' && reg.paymentStatus !== 'Completed') {
+      balance += calculateRequiredFee(reg);
+    }
+    // Associated papers (if any are returned in verification)
+    if (reg.otherPapers) {
+      reg.otherPapers.forEach(p => {
+        if (p.status === 'Accepted' && p.paymentStatus !== 'Completed') {
+          balance += calculateRequiredFee(p);
+        }
+      });
+    }
+    return balance;
   };
 
   useEffect(() => {
@@ -445,6 +471,11 @@ const ChairDashboard = () => {
     }).filter(reg => reg.status !== 'Draft');
   }, [registrations, filter, search]);
 
+  const uniquePapersCount = useMemo(() => {
+    return new Set(filteredData.map(r => r.paperDetails?.title?.toLowerCase()?.trim()).filter(Boolean)).size;
+  }, [filteredData]);
+
+
   if (loading) return <DashboardSkeleton />;
 
   return (
@@ -578,7 +609,7 @@ const ChairDashboard = () => {
                        <Layers size={12} className="text-indigo-600" /> <span className="truncate">Intake Velocity</span>
                     </p>
                     <div className="flex items-baseline gap-1 md:gap-2">
-                      <p className="text-xl md:text-3xl font-black text-slate-800 tracking-tight">{filteredData.length}</p>
+                      <p className="text-xl md:text-3xl font-black text-slate-800 tracking-tight">{uniquePapersCount}</p>
                       <span className="text-[8px] md:text-[10px] font-bold text-emerald-500 bg-emerald-50 px-1.5 md:px-2 py-0.5 rounded-full">+12%</span>
                     </div>
                     <p className="text-[8px] md:text-[10px] font-bold text-slate-400 mt-1 md:mt-2 uppercase tracking-wide truncate">Total Active Manuscripts</p>
@@ -650,9 +681,10 @@ const ChairDashboard = () => {
                     </div>
 
                     <div className="space-y-5">
-                       {CONFERENCE_TRACKS.map((track, idx) => {
-                          const count = registrations.filter(r => r.paperDetails?.track === track.id).length;
-                          const percentage = Math.round((count / (registrations.length || 1)) * 100);
+                        {CONFERENCE_TRACKS.map((track, idx) => {
+                          const trackPapers = filteredData.filter(r => r.paperDetails?.track === track.id);
+                          const count = new Set(trackPapers.map(r => r.paperDetails?.title?.toLowerCase()?.trim()).filter(Boolean)).size;
+                          const percentage = Math.round((count / (uniquePapersCount || 1)) * 100);
                           return (
                              <div key={track.id} className="group cursor-default">
                                 <div className="flex justify-between items-end mb-2">
@@ -697,7 +729,7 @@ const ChairDashboard = () => {
                              <CheckCircle size={10} className="text-emerald-500" /> Evaluations Logged
                           </p>
                           <p className="text-2xl font-black text-slate-800 tracking-tight">
-                             {registrations.filter(r => r.paperDetails?.reviewerComments).length}
+                             {filteredData.filter(r => r.paperDetails?.reviewerComments).length}
                           </p>
                        </div>
 
@@ -735,217 +767,288 @@ const ChairDashboard = () => {
 
           {activeTab === 'submissions' && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-              <div className="flex flex-col gap-4 w-full">
-                <div className="flex flex-row gap-2 w-full">
-                  <div className="relative flex-1 group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={16} />
-                    <input
-                      type="text"
-                      placeholder="Search papers, authors..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-white rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 font-bold text-xs text-slate-700 transition-all shadow-sm"
-                    />
-                  </div>
-                  
-                  {/* Mobile View: Custom Stylish Dropdown (Beside Search) */}
-                  <div className="sm:hidden relative w-12 shrink-0" ref={mobileFilterRef}>
-                     <button
-                        onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-                        className={`w-full h-full flex items-center justify-center bg-white border border-slate-200 rounded-xl shadow-sm transition-all active:scale-95 ${filter !== 'All' ? 'border-indigo-500 bg-indigo-50/30' : ''}`}
-                     >
-                        <Filter size={16} className={filter !== 'All' ? 'text-indigo-600' : 'text-slate-400'} />
-                     </button>
-
-                     <AnimatePresence>
-                        {isMobileFilterOpen && (
-                           <motion.div
-                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                              animate={{ opacity: 1, y: 5, scale: 1 }}
-                              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                              className="absolute top-full right-0 z-[60] mt-2 w-48 bg-white/80 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl shadow-indigo-200/40 overflow-hidden"
-                           >
-                              <div className="p-1.5 flex flex-col gap-1">
-                                 {[
-                                    { id: 'All', icon: <Layers size={14} /> },
-                                    { id: 'Submitted', icon: <Clock size={14}/> },
-                                    { id: 'Under Review', icon: <Shield size={14} /> },
-                                    { id: 'Accepted', icon: <CheckCircle size={14} /> },
-                                    { id: 'Rejected', icon: <XCircle size={14} /> }
-                                 ].map((item) => (
-                                    <button
-                                       key={item.id}
-                                       onClick={() => {
-                                          setFilter(item.id);
-                                          setIsMobileFilterOpen(false);
-                                       }}
-                                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                          filter === item.id 
-                                          ? 'bg-indigo-600 text-white' 
-                                          : 'text-slate-500 hover:bg-slate-50'
-                                       }`}
-                                    >
-                                       <span className={filter === item.id ? 'text-white' : 'text-slate-400'}>{item.icon}</span>
-                                       {item.id}
-                                    </button>
-                                 ))}
-                              </div>
-                           </motion.div>
-                        )}
-                     </AnimatePresence>
-                  </div>
+              <div className="flex flex-row items-center gap-2 w-full">
+                {/* Search Section */}
+                <div className="relative flex-1 group min-w-0">
+                  <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={14} />
+                  <input
+                    type="text"
+                    placeholder="Search submissions..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full pl-9 md:pl-10 pr-4 py-2.5 bg-white rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 font-bold text-xs text-slate-700 transition-all shadow-sm"
+                  />
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
-                  {/* Desktop View: Full Filter Buttons */}
-                  <div className="hidden sm:flex gap-1.5 overflow-x-auto pb-1 sm:pb-0 px-1 custom-scrollbar scroll-smooth">
-                    {['All', 'Submitted', 'Under Review', 'Accepted', 'Rejected'].map(t => (
+                {/* Filters Section */}
+                <div className="relative shrink-0" ref={mobileFilterRef}>
+                  {/* Mobile Filter Toggle */}
+                  <button 
+                    onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+                    className={`sm:hidden p-2.5 rounded-xl border transition-all ${filter !== 'All' ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-200 text-slate-400'}`}
+                  >
+                    <Filter size={18} />
+                  </button>
+
+                  {/* Desktop Horizontal Filters */}
+                  <div className="hidden sm:flex gap-1 p-1 bg-slate-100/50 rounded-xl border border-slate-200">
+                    {[
+                      { id: 'All', icon: Layers },
+                      { id: 'Submitted', icon: Clock },
+                      { id: 'Under Review', icon: Shield },
+                      { id: 'Accepted', icon: CheckCircle },
+                      { id: 'Rejected', icon: XCircle }
+                    ].map((item) => (
                       <button
-                        key={t}
-                        onClick={() => setFilter(t)}
-                        className={`px-3.5 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border ${filter === t
-                          ? 'bg-slate-900 border-slate-900 text-white z-10'
-                          : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+                        key={item.id}
+                        onClick={() => setFilter(item.id)}
+                        title={item.id}
+                        className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 ${filter === item.id
+                          ? 'bg-white text-indigo-600 shadow-sm border border-slate-200'
+                          : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
                           }`}
                       >
-                        {t}
+                        <item.icon size={13} />
+                        <span className="hidden xl:inline text-[9px] font-black uppercase tracking-widest whitespace-nowrap">{item.id}</span>
                       </button>
                     ))}
                   </div>
-                  
-                  <button
-                    onClick={handleAutoAssign}
-                    disabled={autoAssigning}
-                    className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border shrink-0 ${autoAssigning
-                        ? 'bg-slate-100 text-slate-400 border-slate-100'
-                        : 'bg-indigo-600 border-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-100'
-                      }`}
-                  >
-                    <ShieldCheck size={18} className={autoAssigning ? 'animate-pulse' : ''} />
-                    {autoAssigning ? 'Syncing...' : 'Sync Unassigned Papers'}
-                  </button>
+
+                  {/* Mobile Dropdown Menu */}
+                  <AnimatePresence>
+                    {isMobileFilterOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 5, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute top-full right-0 z-[60] mt-2 w-48 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden"
+                      >
+                        <div className="p-1.5 flex flex-col gap-1">
+                          {[
+                            { id: 'All', icon: Layers },
+                            { id: 'Submitted', icon: Clock },
+                            { id: 'Under Review', icon: Shield },
+                            { id: 'Accepted', icon: CheckCircle },
+                            { id: 'Rejected', icon: XCircle }
+                          ].map((item) => (
+                            <button
+                              key={item.id}
+                              onClick={() => { setFilter(item.id); setIsMobileFilterOpen(false); }}
+                              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === item.id ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                            >
+                              <item.icon size={14} />
+                              {item.id}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
+
+                {/* Sync Action */}
+                <button
+                  onClick={handleAutoAssign}
+                  disabled={autoAssigning}
+                  title="Sync Unassigned Papers"
+                  className={`flex items-center justify-center gap-2 p-2.5 sm:px-4 sm:py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border shrink-0 ${autoAssigning
+                      ? 'bg-slate-100 text-slate-400 border-slate-100'
+                      : 'bg-indigo-600 border-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100'
+                    }`}
+                >
+                  <Zap size={18} className={autoAssigning ? 'animate-pulse' : ''} />
+                  <span className="hidden md:inline">{autoAssigning ? 'Syncing...' : 'Sync Unassigned'}</span>
+                </button>
               </div>
 
               <div className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto custom-scrollbar">
                   <table className="w-full text-left border-collapse table-fixed">
                     <thead>
-                      <tr className="bg-slate-50/50 border-b border-slate-100 uppercase tracking-[0.1em] text-[10px] font-black text-slate-400">
-                        <th className="px-4 py-5 w-[20%]">Primary Author</th>
-                        <th className="px-4 py-5 w-[25%]">Research Title</th>
-                        <th className="px-4 py-5 w-[8%]">Track</th>
-                        <th className="px-4 py-5 w-[12%]">Reviewer</th>
-                        <th className="px-4 py-5 w-[10%]">Attendance</th>
-                        <th className="px-4 py-5 w-[10%]">Status</th>
-                        <th className="px-4 py-5 w-[15%] text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {filteredData.map(reg => (
-                        <tr key={reg._id} className="hover:bg-slate-50/50 transition-colors group">
-                          <td className="px-4 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase cursor-pointer overflow-hidden border border-slate-100 shadow-sm" onClick={() => setSelectedReg(reg)}>
-                                {reg.personalDetails?.profilePicture ? (
-                                  <img src={reg.personalDetails.profilePicture} alt="" className="w-full h-full object-cover" />
-                                ) : (reg.personalDetails?.name || reg.userId?.name)?.charAt(0)}
-                              </div>
-                              <div>
-                                <p className="text-sm font-black text-slate-800 leading-none">{reg.personalDetails?.name || reg.userId?.name}</p>
-                                <p className="text-[10px] font-semibold text-slate-400 mt-1">{reg.userId?.email}</p>
-                                <div className="flex flex-col gap-1 font-mono">
-                                   <span className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter bg-indigo-50/50 px-1.5 py-0.5 rounded border border-indigo-100/50 w-max">
-                                      {reg.userId?.delegateId || 'NO_USER_ID'}
-                                   </span>
-                                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 w-max">
-                                      {reg.paperId || (reg.authorId || `#PAPER-${reg._id.slice(-6).toUpperCase()}`)}
-                                   </span>
+                        <tr className="bg-slate-50/50 border-b border-slate-100 uppercase tracking-[0.1em] text-[10px] font-black text-slate-400">
+                          <th className="px-4 py-5 w-[60%] md:w-[20%] text-center">Primary Author</th>
+                          <th className="hidden md:table-cell px-4 py-5 w-[22%] text-center">Research Title</th>
+                          <th className="hidden md:table-cell px-4 py-5 w-[10%] text-center">Track</th>
+                          <th className="hidden lg:table-cell px-4 py-5 w-[15%] text-center">Reviewer</th>
+                          <th className="hidden xl:table-cell px-4 py-5 w-[10%] text-center">Attendance</th>
+                          <th className="px-4 py-5 w-[40%] md:w-[12%] text-center">Status</th>
+                          <th className="hidden md:table-cell px-4 py-5 w-[15%] text-center">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredData.map((reg, index) => {
+                          const userAvatar = registrations.find(r => (r.userId?._id || r.userId) === (reg.userId?._id || reg.userId) && r.personalDetails?.profilePicture)?.personalDetails?.profilePicture;
+                          return (
+                          <tr 
+                            key={reg._id} 
+                            onClick={() => {
+                              if (window.innerWidth < 768) setSelectedReg(reg);
+                            }}
+                            className="hover:bg-slate-50/50 transition-colors group cursor-pointer md:cursor-default"
+                          >
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="hidden sm:flex w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 items-center justify-center font-bold text-xs uppercase cursor-pointer overflow-hidden border border-slate-100 shadow-sm" onClick={(e) => { e.stopPropagation(); setSelectedReg(reg); }}>
+                                  {userAvatar ? (
+                                    <img src={userAvatar} alt="" className="w-full h-full object-cover" />
+                                  ) : (reg.personalDetails?.name || reg.userId?.name)?.charAt(0)}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-black text-slate-800 leading-none truncate">{reg.personalDetails?.name || reg.userId?.name}</p>
+                                  <p className="text-[10px] font-semibold text-slate-400 mt-1 truncate">{reg.userId?.email}</p>
+                                  <div className="flex flex-wrap gap-1 mt-1 font-mono">
+                                     <span className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter bg-indigo-50/50 px-1.5 py-0.5 rounded border border-indigo-100/50 w-max">
+                                        {reg.userId?.delegateId || 'NO_USER_ID'}
+                                     </span>
+                                     <span className="hidden md:inline-block text-[9px] font-black text-slate-500 uppercase tracking-tighter bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 w-max">
+                                        {reg.paperId || (reg.authorId || `#PAPER-${reg._id.slice(-6).toUpperCase()}`)}
+                                     </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <p className="text-sm font-bold text-slate-700 max-w-xs truncate group-hover:text-indigo-600 transition-colors cursor-pointer" onClick={() => setSelectedReg(reg)}>
-                               {reg.paperDetails?.title || 'Untitled Submission'}
-                            </p>
-                          </td>
-                          <td className="px-4 py-4">
-                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded border border-slate-100 italic">
-                                {reg.paperDetails?.track || 'Not Specified'}
-                             </span>
-                          </td>
-                          <td className="px-4 py-4">
-                               <select 
-                                 className="w-full max-w-[150px] bg-slate-50 border-none rounded-lg py-1 px-2 text-[10px] font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none disabled:opacity-50"
-                                 value={reg.paperDetails?.assignedReviewer?._id || ''}
-                                 onChange={(e) => handleAssignReviewer(reg._id, e.target.value)}
-                                 disabled={assigningReviewer}
-                               >
-                                 <option value="">{reg.paperDetails?.assignedReviewer ? 'Unassign Reviewer' : 'Assign Reviewer...'}</option>
-                                 {reviewers.map(rev => (
-                                   <option key={rev._id} value={rev._id}>
-                                     {rev.name}
-                                   </option>
-                                 ))}
-                               </select>
-                          </td>
-                          <td className="px-4 py-4">
-                            <div className="flex items-center gap-2">
-                               {reg.attended ? (
-                                 <span className="flex items-center gap-1.5 text-[9px] font-black text-blue-600 uppercase tracking-tighter"><CheckCircle size={14} /> Present</span>
-                               ) : (
-                                 <span className="flex items-center gap-1.5 text-[9px] font-black text-slate-300 uppercase tracking-tighter"><X size={14} /> Absent</span>
-                               )}
-                            </div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <span className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest inline-block shadow-sm ${
-                               reg.status === 'Accepted' ? 'bg-blue-100 text-blue-700' :
-                               reg.status === 'Rejected' ? 'bg-red-100 text-red-700' : 
-                               reg.status === 'Under Review' ? 'bg-amber-100 text-amber-700' :
-                               (reg.status === 'Submitted' && !reg.paperDetails?.fileUrl) ? 'bg-slate-100 text-slate-600' :
-                               'bg-indigo-50 text-indigo-600'
-                             }`}>
-                               {reg.status === 'Submitted' && !reg.paperDetails?.fileUrl ? 'Pending Upload' : reg.status}
-                             </span>
-                          </td>
-                          <td className="px-4 py-6 text-right">
-                             <div className="flex items-center justify-end gap-2">
-                                {reg.paperDetails?.fileUrl && (
-                                  <a 
-                                     href={`/api/registrations/download/${reg._id}?token=${user.token}`} 
-                                     className="p-2.5 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-xl transition-all"
-                                     title="Download Manuscript"
-                                      target="_blank"
-                                      rel="noreferrer"
-                                     onClick={() => {
-                                       if (reg.status === 'Submitted') {
-                                         setTimeout(fetchData, 2000);
-                                       }
-                                     }}
+                            </td>
+                            <td className="hidden md:table-cell px-4 py-4">
+                              <p className="text-sm font-bold text-slate-700 max-w-xs truncate group-hover:text-indigo-600 transition-colors cursor-pointer" onClick={() => setSelectedReg(reg)}>
+                                 {reg.paperDetails?.title || 'Untitled Submission'}
+                              </p>
+                            </td>
+                            <td className="hidden md:table-cell px-4 py-4 text-center">
+                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded border border-slate-100 italic">
+                                  {reg.paperDetails?.track || 'Not Specified'}
+                               </span>
+                            </td>
+                            <td className="hidden lg:table-cell px-4 py-4 overflow-visible">
+                               <div className="relative flex justify-center">
+                                 <button 
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     setActiveReviewerMenu(activeReviewerMenu === reg._id ? null : reg._id);
+                                   }}
+                                   disabled={assigningReviewer}
+                                   className={`w-full max-w-[140px] flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                                     reg.paperDetails?.assignedReviewer 
+                                       ? 'bg-indigo-50 border-indigo-100 text-indigo-700' 
+                                       : 'bg-slate-50 border-slate-100 text-slate-500'
+                                   } hover:border-indigo-300 active:scale-95 disabled:opacity-50`}
+                                 >
+                                   <span className="truncate">
+                                     {reg.paperDetails?.assignedReviewer?.name || 'Unassigned'}
+                                   </span>
+                                   <ChevronDown size={14} className={`shrink-0 transition-transform duration-300 ${activeReviewerMenu === reg._id ? 'rotate-180' : ''}`} />
+                                 </button>
+
+                                 <AnimatePresence>
+                                   {activeReviewerMenu === reg._id && (
+                                     <>
+                                       <div className="fixed inset-0 z-[70]" onClick={() => setActiveReviewerMenu(null)} />
+                                       <motion.div
+                                         initial={{ opacity: 0, x: -10, scale: 0.95 }}
+                                         animate={{ opacity: 1, x: 0, scale: 1 }}
+                                         exit={{ opacity: 0, x: -10, scale: 0.95 }}
+                                         className={`absolute lg:left-full lg:ml-4 lg:top-1/2 lg:-translate-y-1/2 lg:bottom-auto ${(filteredData.length - index) <= 2 ? "bottom-full mb-2" : "top-full mt-2"} left-0 z-[80] w-56 bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden p-1.5`}
+                                       >
+                                         <div className="flex flex-col gap-1 max-h-60 overflow-y-auto no-scrollbar">
+                                           <button
+                                              onClick={() => {
+                                                handleAssignReviewer(reg._id, "");
+                                                setActiveReviewerMenu(null);
+                                              }}
+                                              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-red-500 hover:bg-red-50 transition-all"
+                                           >
+                                              <Trash2 size={14} />
+                                              Unassign
+                                           </button>
+                                           
+                                           {reviewers.map(rev => {
+                                             const isActive = reg.paperDetails?.assignedReviewer?._id === rev._id;
+                                             return (
+                                               <button
+                                                 key={rev._id}
+                                                 onClick={() => {
+                                                   handleAssignReviewer(reg._id, rev._id);
+                                                   setActiveReviewerMenu(null);
+                                                 }}
+                                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
+                                                   isActive
+                                                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+                                                     : 'text-slate-500 hover:bg-slate-50'
+                                                 }`}
+                                               >
+                                                 <Users size={14} className={isActive ? 'text-white' : 'text-slate-400'} />
+                                                 {rev.name}
+                                               </button>
+                                             );
+                                           })}
+                                         </div>
+                                       </motion.div>
+                                     </>
+                                   )}
+                                 </AnimatePresence>
+                               </div>
+                            </td>
+                            <td className="hidden xl:table-cell px-4 py-4">
+                              <div className="flex items-center justify-center gap-3">
+                                 {reg.attended ? (
+                                   <span className="flex items-center gap-1.5 text-[9px] font-black text-blue-600 uppercase tracking-tighter"><CheckCircle size={14} /> Present</span>
+                                 ) : (
+                                   <span className="flex items-center gap-1.5 text-[9px] font-black text-slate-300 uppercase tracking-tighter"><X size={14} /> Absent</span>
+                                 )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <span className={`px-2 md:px-3 py-1.5 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest inline-block shadow-sm ${
+                                 reg.status === 'Accepted' ? 'bg-blue-100 text-blue-700' :
+                                 reg.status === 'Rejected' ? 'bg-red-100 text-red-700' : 
+                                 reg.status === 'Under Review' ? 'bg-amber-100 text-amber-700' :
+                                 (reg.status === 'Submitted' && !reg.paperDetails?.fileUrl) ? 'bg-slate-100 text-slate-600' :
+                                 'bg-indigo-50 text-indigo-600'
+                               }`}>
+                                 {reg.status === 'Submitted' && !reg.paperDetails?.fileUrl ? 'Pending' : reg.status}
+                               </span>
+                            </td>
+                            <td className="hidden md:table-cell px-4 py-6 text-right">
+                               <div className="flex items-center justify-end gap-2">
+                                  {reg.paperDetails?.fileUrl && (
+                                    <button 
+                                       onClick={async (e) => {
+                                         e.stopPropagation();
+                                         const paperId = reg.paperId || reg._id.slice(-6).toUpperCase();
+                                         const ext = reg.paperDetails?.originalName?.split('.').pop() || 'docx';
+                                         const loadingToast = toast.loading('Preparing download…');
+                                         try {
+                                           await downloadFile(`/api/registrations/download/${reg._id}`, `${paperId}.${ext}`, user.token);
+                                           toast.success('Download started!', { id: loadingToast });
+                                           if (reg.status === 'Submitted') {
+                                             setTimeout(fetchData, 2000);
+                                           }
+                                         } catch (err) {
+                                           toast.error(err.message || 'Download failed', { id: loadingToast });
+                                         }
+                                       }}
+                                       className="p-2 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-all"
+                                       title="Download Manuscript"
+                                    >
+                                       <Download size={14} />
+                                    </button>
+                                  )}
+                                  <button onClick={(e) => { e.stopPropagation(); setSelectedReg(reg); }} className="p-2 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-lg font-black text-[9px] px-2.5 uppercase tracking-tighter transition-all">Inspect</button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteSubmission(reg._id); }}
+                                    className="p-2 text-slate-300 hover:text-red-500 transition-colors group/delete"
+                                    title="Delete Paper"
                                   >
-                                     <Download size={16} />
-                                  </a>
-                                )}
-                                <button onClick={() => setSelectedReg(reg)} className="p-2.5 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-xl font-black text-[10px] px-3 uppercase tracking-tighter transition-all">Inspect</button>
-                                <button
-                                  onClick={() => handleDeleteSubmission(reg._id)}
-                                  className="p-2.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl transition-all"
-                                  title="Delete Paper"
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
+                                    <Trash2 size={16} className="group-hover/delete:scale-110 transition-transform" />
+                                  </button>
+                               </div>
+                            </td>
+                          </tr>
+                        )})}
+                      </tbody>
                   </table>
                   {filteredData.length === 0 && (
-                    <div className="py-24 text-center opacity-30">
-                       <AlertCircle size={48} className="mx-auto mb-4 text-slate-300" />
-                       <p className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">No submissions found</p>
+                    <div className="py-24 text-center">
+                       <AlertCircle size={48} className="mx-auto mb-4 text-slate-200" />
+                       <p className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">No submissions found</p>
                     </div>
                   )}
                 </div>
@@ -1555,15 +1658,15 @@ const ChairDashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* Registration Inspector Modal */}
+      {/* Unified Registration Inspector Modal */}
       <AnimatePresence>
-        {selectedReg && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12 overflow-hidden">
+        {inspectorData && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-12 overflow-hidden">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setSelectedReg(null)}
+              onClick={closeInspector}
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
             ></motion.div>
 
@@ -1571,297 +1674,435 @@ const ChairDashboard = () => {
               initial={{ scale: 0.9, opacity: 0, y: 50 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 50 }}
-              className="relative w-full md:w-[95vw] lg:w-full max-w-6xl bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row h-[90vh] md:h-[85vh] overflow-hidden overflow-y-auto md:overflow-y-hidden"
+              className="relative w-full md:w-[95vw] lg:w-full max-w-6xl bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row h-[95vh] md:h-[80vh] overflow-y-auto md:overflow-hidden"
             >
-              {/* Modal Sidebar - Summary */}
-              <div className="w-full md:w-80 bg-slate-50 border-r border-slate-100 p-6 md:p-10 flex flex-col shrink-0">
-                <div className="flex md:flex-col items-center gap-4 md:gap-0">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-indigo-600 rounded-2xl md:rounded-3xl flex items-center justify-center text-white text-2xl md:text-3xl font-black shadow-xl shadow-indigo-200 shrink-0">
-                    {(selectedReg.personalDetails?.name || selectedReg.userId?.name)?.charAt(0)}
+              {/* Universal Close Button */}
+              <button 
+                onClick={closeInspector} 
+                className="absolute top-6 right-6 md:top-8 md:right-10 z-[60] p-3 bg-white/60 backdrop-blur-xl border border-slate-200 text-slate-400 rounded-2xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all active:scale-90 shadow-lg shadow-slate-200/50"
+              >
+                <X size={24} strokeWidth={3} />
+              </button>
+
+              {/* Modal Sidebar - Profile & Top Stats */}
+              <div className="w-full md:w-72 bg-white border-r border-slate-100 p-6 md:p-8 flex flex-col shrink-0 md:overflow-y-auto custom-scrollbar">
+                <div className="flex flex-row md:flex-col items-center gap-6 md:gap-0 mb-6 md:mb-0">
+                  <div className="w-14 h-14 md:w-20 md:h-20 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 text-xl md:text-3xl font-black border border-slate-100 shrink-0 overflow-hidden">
+                    {registrations.find(r => (r.userId?._id || r.userId) === (inspectorData.userId?._id || inspectorData.userId) && r.personalDetails?.profilePicture)?.personalDetails?.profilePicture ? (
+                      <img 
+                        src={registrations.find(r => (r.userId?._id || r.userId) === (inspectorData.userId?._id || inspectorData.userId) && r.personalDetails?.profilePicture).personalDetails.profilePicture} 
+                        alt="" 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (inspectorData.personalDetails?.name || inspectorData.userId?.name)?.charAt(0)}
                   </div>
-                  <div className="text-left md:text-left md:mb-8 md:mt-6 overflow-hidden max-w-full">
-                    <h2 className="text-lg md:text-xl font-black text-slate-800 leading-tight truncate">{selectedReg.personalDetails?.name || selectedReg.userId?.name}</h2>
-                    <p className="text-xs font-bold text-slate-400 mt-1 md:mt-2 uppercase tracking-widest truncate">{selectedReg.userId?.email}</p>
+                  <div className="text-left md:text-center md:mb-6 md:mt-4 flex-1 min-w-0">
+                    <h2 className="text-base md:text-xl font-black text-slate-800 leading-tight truncate">{inspectorData.personalDetails?.name || inspectorData.userId?.name}</h2>
+                    <p className="text-[9px] md:text-[10px] font-black text-slate-400 mt-1 uppercase tracking-widest truncate">{inspectorData.userId?.email || inspectorData.personalDetails?.email}</p>
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6 md:mb-10 mt-6 md:mt-0">
-                  <div className="flex justify-between items-center px-4 py-3 bg-white rounded-2xl border border-slate-200">
-                    <span className="text-[9px] font-black text-slate-400 uppercase group-hover:block tracking-widest">ID</span>
-                    <span className="text-[10px] font-mono font-bold text-slate-800">
-                      {selectedReg.authorId || `...${selectedReg._id.slice(-6)}`}
+                <div className="space-y-3 mb-4 md:mb-8">
+                  <div className="flex flex-col gap-1.5 p-4 bg-white rounded-xl border border-slate-200/60 transition-all hover:border-slate-300">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="font-black text-slate-400 uppercase tracking-widest">Delegate</span>
+                      <span className="font-mono font-black text-slate-700">{inspectorData.userId?.delegateId || inspectorData.delegateId || 'N/A'}</span>
+                    </div>
+                    <div className="h-[1px] bg-slate-50 w-full"></div>
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="font-black text-slate-400 uppercase tracking-widest">Paper</span>
+                      <span className="font-mono font-black text-slate-700">{inspectorData.paperId || 'N/A'}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center px-4 py-3 rounded-xl border border-slate-100 bg-white shadow-sm">
+                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Manuscript</span>
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${
+                      inspectorData.status === 'Accepted' ? 'text-emerald-500' : 
+                      inspectorData.status === 'Rejected' ? 'text-red-500' : 'text-amber-500'
+                    }`}>
+                      {inspectorData.status}
                     </span>
                   </div>
-                  <div className={`flex justify-between items-center px-4 py-3 rounded-2xl border ${selectedReg.status === 'Accepted' ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-amber-50 border-amber-100 text-amber-600'
-                    }`}>
-                    <span className="text-[9px] font-black uppercase tracking-widest">Status</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest">
-                      {selectedReg.status === 'Submitted' && !selectedReg.paperDetails?.fileUrl ? 'Pending Upload' : selectedReg.status}
-                    </span>
-                  </div>
-                  <div className={`flex justify-between items-center px-4 py-3 rounded-2xl border ${selectedReg.paymentStatus === 'Completed' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-slate-100 border-slate-200 text-slate-400'
-                    }`}>
-                    <span className="text-[9px] font-black uppercase tracking-widest">Payment</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest">{selectedReg.paymentStatus}</span>
+
+                  <div className="flex justify-between items-center px-4 py-3 rounded-xl border border-slate-100 bg-white shadow-sm">
+                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Finance</span>
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${
+                      inspectorData.paymentStatus === 'Completed' ? 'text-indigo-600' : 'text-amber-500'
+                    }`}>{inspectorData.paymentStatus}</span>
                   </div>
                 </div>
 
-                <div className="mt-auto space-y-3">
-                  {selectedReg.status !== 'Accepted' && (
+                <div className="hidden md:flex flex-col gap-3 mt-auto">
+                  {inspectorData.status !== 'Accepted' && (
                     <button
-                      onClick={() => handleReview(selectedReg._id, 'Accepted')}
-                      disabled={!selectedReg.paperDetails?.fileUrl}
-                      className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:-translate-y-1 ${!selectedReg.paperDetails?.fileUrl
-                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200'
+                      onClick={() => handleReview(inspectorData._id, 'Accepted')}
+                      disabled={!inspectorData.paperDetails?.fileUrl}
+                      className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${!inspectorData.paperDetails?.fileUrl
+                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-100'
+                        : 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
                         }`}
                     >
-                      {!selectedReg.paperDetails?.fileUrl ? 'No Manuscript' : 'Approve Submission'}
+                      {!inspectorData.paperDetails?.fileUrl ? 'Awaiting Upload' : 'Approve Decision'}
                     </button>
                   )}
-                  {selectedReg.status !== 'Rejected' && (
+                  {inspectorData.status !== 'Rejected' && (
                     <button
-                      onClick={() => handleReview(selectedReg._id, 'Rejected')}
-                      className="w-full py-4 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all"
+                      onClick={() => handleReview(inspectorData._id, 'Rejected')}
+                      className="w-full py-4 bg-white border border-red-100 text-red-500 hover:bg-red-50 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
                     >
-                      Decline Submission
+                      Reject Submission
+                    </button>
+                  )}
+                  
+                  {isFromScanner && (
+                    <button
+                      onClick={() => {
+                        closeInspector();
+                        setIsScannerModalOpen(true);
+                      }}
+                      className="w-full py-4 bg-white text-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2 border border-slate-200 mt-2"
+                    >
+                      <RefreshCw size={14} /> Scan Another
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Modal Main Content Area */}
-              <div className="flex-1 flex flex-col min-w-0 h-full">
-                <div className="flex-1 overflow-y-auto p-6 md:p-12 custom-scrollbar">
-                  <div className="flex justify-between items-start mb-10 gap-4">
-                    <div className="flex-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Research Title</p>
-                      <h1 className="text-xl md:text-2xl font-black text-slate-800 leading-tight block">{selectedReg.paperDetails?.title || 'No Title Provided'}</h1>
-                    </div>
-                    <button onClick={() => setSelectedReg(null)} className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all shrink-0">
-                      <XCircle size={24} />
-                    </button>
-                  </div>
+              <div className="flex-1 flex flex-col min-w-0 h-full bg-white">
+                <div className="flex-1 md:overflow-y-auto p-6 md:p-10 custom-scrollbar">
+                  {isFromScanner ? (
+                    /* Simplified Verification View for Scanner */
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="px-1.5 py-0.5 bg-slate-900 text-white text-[7px] font-black uppercase tracking-widest rounded">Verification</span>
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Entry Check</span>
+                        </div>
+                        <h1 className="text-xl md:text-2xl font-black text-slate-800 leading-tight">
+                          {inspectorData.personalDetails?.name || inspectorData.userId?.name}
+                        </h1>
+                      </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-                    <section>
-                      <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                        <Users size={16} /> Personal Info
-                      </h4>
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Principal Name</p>
-                            <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{selectedReg.personalDetails?.name || selectedReg.userId?.name || 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Principal Email</p>
-                            <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 truncate" title={selectedReg.personalDetails?.email || selectedReg.userId?.email}>{selectedReg.personalDetails?.email || selectedReg.userId?.email || 'N/A'}</p>
-                          </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-4 bg-white rounded-2xl border border-slate-100 flex flex-col gap-1 shadow-sm">
+                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Submissions</p>
+                           <p className="text-xl font-black text-slate-800 flex items-center gap-2">
+                              <Files size={16} className="text-slate-400" />
+                              {1 + (inspectorData.otherPapers?.length || 0)} Units
+                           </p>
                         </div>
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Institution</p>
-                          <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{selectedReg.personalDetails?.institution || 'N/A'}</p>
+                        <div className="p-4 bg-white rounded-2xl border border-slate-100 flex flex-col gap-1 shadow-sm">
+                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Portfolio Due</p>
+                           <p className="text-xl font-black text-slate-800 flex items-center gap-2">
+                              <CreditCard size={16} className="text-slate-400" />
+                              ₹{calculatePortfolioBalance(inspectorData)}
+                           </p>
                         </div>
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Category / Participant Type</p>
-                          <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{selectedReg.personalDetails?.category || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Mobile Contact</p>
-                          <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{selectedReg.personalDetails?.mobile || 'N/A'}</p>
+                        <div className="p-4 bg-white rounded-2xl border border-slate-100 flex flex-col gap-1 shadow-sm">
+                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Status</p>
+                           <p className="text-xl font-black text-emerald-500 flex items-center gap-2">
+                              <ShieldCheck size={16} />
+                              Verified
+                           </p>
                         </div>
                       </div>
-                    </section>
 
-                    <section>
-                      <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                        <FileCheck size={16} /> Submission Metadata
-                      </h4>
-                      <div className="space-y-6">
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Conference Track</p>
-                          <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{selectedReg.paperDetails?.track || 'N/A'}</p>
+                      <section>
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                          <User size={14} /> Identity Breakdown
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div className="space-y-1">
+                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest pl-1">Primary Affiliation</p>
+                              <p className="text-xs font-bold text-slate-700 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">{inspectorData.personalDetails?.institution || 'N/A'}</p>
+                           </div>
+                           <div className="space-y-1">
+                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest pl-1">Delegate Category</p>
+                              <p className="text-xs font-bold text-slate-700 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">{inspectorData.personalDetails?.category || 'N/A'}</p>
+                           </div>
                         </div>
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Manuscript File</p>
-                          {selectedReg.paperDetails?.fileUrl ? (
-                            <a
-                              href={`/api/registrations/download/${selectedReg._id}?token=${user.token}`}
-                              target="_blank" rel="noreferrer"
-                              className="flex items-center justify-between gap-3 bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 transition-all group"
-                              onClick={() => {
-                                if (selectedReg.status === 'Submitted') {
-                                  setTimeout(fetchData, 2000);
-                                }
-                              }}
-                            >
-                              <span className="text-xs font-black uppercase flex items-center gap-2 tracking-widest"><Download size={14} /> Download Word Doc</span>
-                              <ExternalLink size={14} className="opacity-60 group-hover:opacity-100" />
-                            </a>
-                          ) : (
-                            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-400 uppercase text-center tracking-widest italic">No File Uploaded Yet</div>
-                          )}
+                      </section>
+
+                      <section>
+                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                            <Clock size={14} /> Submission Records
+                         </h4>
+                         <div className="space-y-2.5">
+                            {/* Selected Primary Record */}
+                            <div className="p-4 bg-slate-50 border-2 border-indigo-100 rounded-3xl group">
+                                <div className="flex items-center justify-between mb-3">
+                                   <p className="text-xs font-black text-slate-800 truncate pr-4">{inspectorData.paperDetails?.title || 'Selected Paper'}</p>
+                                   <div className="flex items-center gap-2 shrink-0">
+                                      <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border border-slate-200 ${inspectorData.paymentStatus === 'Completed' ? 'bg-indigo-600 text-white' : 'bg-white text-amber-500'}`}>
+                                         {inspectorData.paymentStatus === 'Completed' ? 'Paid' : 'Unpaid'}
+                                      </span>
+                                      <span className="px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest bg-emerald-500 text-white border border-emerald-500">
+                                         {inspectorData.status}
+                                      </span>
+                                   </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                   <span className="px-1.5 py-0.5 bg-slate-100 text-slate-400 text-[7px] font-black uppercase tracking-widest rounded border border-slate-200">Scanning Source</span>
+                                   <span className="text-[8px] font-mono text-slate-500 font-black">#{inspectorData.paperId || 'N/A'}</span>
+                                </div>
+                            </div>
+
+                            {/* Other Papers */}
+                            {inspectorData.otherPapers?.map((p, i) => (
+                                <div key={i} className="p-4 bg-white border border-slate-100 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-x-4 gap-y-2.5 transition-all opacity-80 hover:opacity-100 hover:bg-slate-50/50">
+                                   <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-bold text-slate-600 truncate mb-1 sm:mb-0">{p.status === 'Draft' ? 'Draft Application' : p.title || 'Associated Paper'}</p>
+                                      <div className="flex items-center gap-2">
+                                         <span className="px-1.5 py-0.5 bg-slate-50 text-slate-400 text-[7px] font-black uppercase tracking-widest rounded border border-slate-100">Multi-Submission</span>
+                                         <span className="text-[8px] font-mono text-slate-500 font-black">#{p.paperId || 'N/A'}</span>
+                                      </div>
+                                   </div>
+                                  <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                                      <div className="flex items-center gap-2">
+                                         <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border border-slate-100 ${p.paymentStatus === 'Completed' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                                            {p.paymentStatus === 'Completed' ? 'Paid' : 'Unpaid'}
+                                         </span>
+                                     <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border border-slate-100 ${p.status === 'Accepted' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                                            {p.status}
+                                         </span>
+                                      </div>
+                                  </div>
+                               </div>
+                            ))}
+                         </div>
+                      </section>
+                    </div>
+                  ) : (
+                    /* Full Inspection View for Directory */
+                    <>
+                      <div className="flex justify-between items-start mb-8 md:mb-12 gap-6">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black uppercase tracking-widest rounded">Research Entry</span>
+                            <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{inspectorData.paperDetails?.track || 'General Domain'}</span>
+                          </div>
+                          <h1 className="text-xl md:text-3xl font-black text-slate-800 leading-[1.15] break-words pr-12 md:pr-0">
+                            {inspectorData.paperDetails?.title || 'No Title Provided'}
+                          </h1>
                         </div>
-                        <div>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Keywords</p>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedReg.paperDetails?.keywords?.map((k, i) => (
-                              <span key={i} className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-500">{k}</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                        <section>
+                          <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <Users size={16} /> Personal Info
+                          </h4>
+                          <div className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Principal Name</p>
+                                <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{inspectorData.personalDetails?.name || inspectorData.userId?.name || 'N/A'}</p>
+                              </div>
+                              <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Principal Email</p>
+                                <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 truncate" title={inspectorData.personalDetails?.email || inspectorData.userId?.email}>{inspectorData.personalDetails?.email || inspectorData.userId?.email || 'N/A'}</p>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Institution</p>
+                              <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 uppercase">{inspectorData.personalDetails?.institution || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Department</p>
+                              <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 uppercase">{inspectorData.personalDetails?.department || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Category / Participant Type</p>
+                              <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{inspectorData.personalDetails?.category || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Mobile Contact</p>
+                              <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{inspectorData.personalDetails?.mobile || 'N/A'}</p>
+                            </div>
+                          </div>
+                        </section>
+
+                        <section>
+                          <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            <FileCheck size={16} /> Submission Metadata
+                          </h4>
+                          <div className="space-y-6">
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Conference Track</p>
+                              <p className="text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">{inspectorData.paperDetails?.track || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Manuscript File</p>
+                              {inspectorData.paperDetails?.fileUrl ? (
+                                <button
+                                  onClick={async () => {
+                                    const paperId = inspectorData.paperId || inspectorData._id.slice(-6).toUpperCase();
+                                    const ext = inspectorData.paperDetails?.originalName?.split('.').pop() || 'docx';
+                                    const loadingToast = toast.loading('Preparing download…');
+                                    try {
+                                      await downloadFile(`/api/registrations/download/${inspectorData._id}`, `${paperId}.${ext}`, user.token);
+                                      toast.success('Download started!', { id: loadingToast });
+                                    } catch (err) {
+                                      toast.error(err.message || 'Download failed', { id: loadingToast });
+                                    }
+                                  }}
+                                  className="flex items-center justify-between gap-3 bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 transition-all group w-full"
+                                >
+                                  <span className="text-xs font-black uppercase flex items-center gap-2 tracking-widest"><Download size={14} /> Download Word Doc</span>
+                                </button>
+                              ) : (
+                                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-400 uppercase text-center tracking-widest italic">No File Uploaded Yet</div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Keywords</p>
+                              <div className="flex flex-wrap gap-2">
+                                {inspectorData.paperDetails?.keywords?.map((k, i) => (
+                                  <span key={i} className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-500">{k}</span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </section>
+                      </div>
+
+                      <div className="mt-12">
+                        <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 border-b border-slate-100 pb-3">Abstract Overview</h4>
+                        <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+                          <p className="text-slate-600 text-base leading-relaxed font-serif italic text-justify whitespace-pre-line">
+                            {inspectorData.paperDetails?.abstract || 'No abstract content available.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {inspectorData.teamMembers && inspectorData.teamMembers.length > 0 && (
+                        <div className="mt-12 md:mt-20">
+                          <div className="flex items-center gap-4 mb-8">
+                            <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] whitespace-nowrap">Collaborating Authors</h4>
+                            <div className="h-px bg-slate-100 flex-1"></div>
+                            <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-lg">{inspectorData.teamMembers.length} Person(s)</span>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+                            {inspectorData.teamMembers.map((member, i) => (
+                              <div key={i} className="p-6 border border-slate-100 rounded-[2rem] bg-white shadow-sm hover:shadow-xl hover:shadow-indigo-50/50 hover:border-indigo-100 transition-all group">
+                                <div className="flex items-center gap-4 mb-5">
+                                  <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center font-black text-sm transition-all shadow-inner">
+                                    {member.name?.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-black text-slate-800 group-hover:text-indigo-600 transition-colors">{member.name}</p>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{member.category}</p>
+                                  </div>
+                                </div>
+                                <div className="space-y-3">
+                                  <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100/50">
+                                    <Mail size={14} className="text-slate-400" />
+                                    <p className="text-[11px] font-bold text-slate-600 truncate">{member.email}</p>
+                                  </div>
+                                  <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100/50">
+                                    <Shield size={14} className="text-slate-400" />
+                                    <p className="text-[11px] font-bold text-slate-600 truncate" title={member.affiliation}>{member.affiliation}</p>
+                                  </div>
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </div>
-                      </div>
-                    </section>
-                  </div>
+                      )}
 
-                  <div className="mt-12">
-                    <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 border-b border-slate-100 pb-3">Abstract Overview</h4>
-                    <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
-                      <p className="text-slate-600 text-base leading-relaxed font-serif italic text-justify whitespace-pre-line">
-                        {selectedReg.paperDetails?.abstract || 'No abstract content available.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {selectedReg.teamMembers && selectedReg.teamMembers.length > 0 && (
-                    <div className="mt-12">
-                      <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 border-b border-slate-100 pb-3">Co-Authors ({selectedReg.teamMembers.length})</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {selectedReg.teamMembers.map((member, i) => (
-                          <div key={i} className="p-5 border border-slate-200 rounded-3xl bg-white shadow-sm hover:border-indigo-200 transition-all group">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 flex items-center justify-center font-bold text-xs transition-colors">
-                                {member.name?.charAt(0)}
-                              </div>
-                              <div>
-                                <p className="text-xs font-black text-slate-800">{member.name}</p>
-                                <p className="text-[10px] font-bold text-slate-400 group-hover:text-indigo-600 uppercase tracking-tighter transition-colors">{member.category}</p>
-                              </div>
-                            </div>
-                            <div className="space-y-2 text-[10px] font-bold text-slate-500">
-                              <p className="flex items-center gap-2"><Mail size={12} className="opacity-50" /> {member.email}</p>
-                              <p className="flex items-center gap-2 truncate" title={member.affiliation}><Shield size={12} className="opacity-50" /> {member.affiliation}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 mt-12 pt-12 border-t border-slate-100">
-                    <section>
-                      <h4 className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                        <Users size={16} /> Academic Governance
-                      </h4>
-                      <div className="space-y-4">
-                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Assigned Reviewer</p>
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-xs">R</div>
-                            <p className="text-sm font-bold text-slate-700">{selectedReg.paperDetails?.assignedReviewer?.name || 'Waiting for Assignment'}</p>
-                          </div>
+                      {/* Manual Review Information */}
+                      {inspectorData.paperDetails?.reviewerComments && (
+                        <div className="mt-12 p-8 bg-amber-50 rounded-[2rem] border border-amber-100 mb-10">
+                          <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><Bell size={14} /> Reviewer Assessment</h4>
+                          <p className="text-sm font-bold text-amber-800 leading-relaxed italic">"{inspectorData.paperDetails.reviewerComments}"</p>
                         </div>
-                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 pl-1">Track Chair</p>
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center font-black text-xs">C</div>
-                            <p className="text-sm font-bold text-slate-700">{selectedReg.paperDetails?.assignedChair?.name || 'General Management'}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-
-                  {/* Manual Review Information */}
-                  {selectedReg.paperDetails?.reviewerComments && (
-                    <div className="mt-12 p-8 bg-amber-50 rounded-[2rem] border border-amber-100 mb-10">
-                      <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><Bell size={14} /> Reviewer Assessment</h4>
-                      <p className="text-sm font-bold text-amber-800 leading-relaxed italic">"{selectedReg.paperDetails.reviewerComments}"</p>
-                    </div>
+                      )}
+                    </>
                   )}
                 </div>
 
                 {/* Modal Actions Footer */}
-                <div className="bg-white/90 backdrop-blur-xl border-t border-slate-100 p-6 md:p-8 flex flex-col lg:flex-row items-center justify-between gap-4 md:gap-6 z-20 shrink-0">
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 md:gap-6 w-full lg:w-auto">
-                    {selectedReg.paymentStatus === 'Completed' ? (
-                      <div className="px-4 md:px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none bg-blue-50 border-blue-100">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Payment Verification</p>
+                <div className="bg-white/80 backdrop-blur-2xl border-t border-slate-100 p-6 md:p-8 flex flex-col lg:flex-row items-center justify-between gap-6 z-20 shrink-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
+                    {inspectorData.paymentStatus === 'Completed' ? (
+                      <div className="px-5 py-3 rounded-2xl transition-all flex-1 sm:flex-none bg-blue-50 border border-blue-100 flex flex-col">
+                        <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1">Payment Verified</p>
                         <p className="text-sm font-black flex items-center gap-2 text-blue-700">
                           <CheckCircle size={16} /> Completed
                         </p>
                       </div>
                     ) : (
-                      <div className="px-4 md:px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none bg-amber-50 border-amber-200 shadow-inner flex flex-col gap-2 relative">
-                        <div className="flex justify-between items-center mr-1">
-                          <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Manual Payment Collection</p>
-                          <span className="text-[10px] font-black text-amber-700">₹{calculateRequiredFee(selectedReg)} Required</span>
+                      <div className="px-5 py-3 rounded-2xl border-2 border-amber-100 transition-all flex-1 sm:flex-none bg-amber-50/30 flex flex-col gap-2 relative group hover:border-amber-400">
+                        <div className="flex justify-between items-center gap-4">
+                          <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Manual Collection</p>
+                          <span className="text-[11px] font-black text-amber-700">₹{calculateRequiredFee(inspectorData)}</span>
                         </div>
 
-                        {selectedReg.status !== 'Accepted' ? (
-                          <div className="flex items-center gap-2 text-amber-600">
-                            <AlertCircle size={14} />
+                        {inspectorData.status !== 'Accepted' ? (
+                          <div className="flex items-center gap-2 text-amber-600/60 pb-1">
+                            <AlertCircle size={12} />
                             <span className="text-[9px] font-bold uppercase tracking-tight">
-                              {selectedReg.status === 'Draft' ? "Submission Incomplete" : "Manuscript Not Accepted"}
+                              Needs Acceptance First
                             </span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
                             <input
                               type="number"
-                              placeholder="₹ Amount"
-                              min="1"
-                              value={manualPaymentAmount || calculateRequiredFee(selectedReg)}
+                              placeholder="Amount"
+                              value={manualPaymentAmount || calculateRequiredFee(inspectorData)}
                               onChange={(e) => setManualPaymentAmount(e.target.value)}
-                              className="w-24 bg-white border border-amber-200 rounded-lg p-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                              className="w-24 bg-white border border-amber-200 rounded-lg p-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-amber-500/10"
                             />
                             <button
-                              onClick={() => handleManualPaymentConfirm(selectedReg)}
-                              className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg font-bold text-xs shadow-md transition-colors whitespace-nowrap"
+                              onClick={() => handleManualPaymentConfirm(inspectorData)}
+                              className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest shadow-lg shadow-amber-200 transition-all active:scale-95"
                             >
-                              Confirm & Verify
+                              Verify
                             </button>
                           </div>
                         )}
                       </div>
                     )}
 
-                    {selectedReg.paymentStatus === 'Completed' && (
+                    {inspectorData.paymentStatus === 'Completed' && (
                       <button
-                        onClick={() => handleToggleAttendance(selectedReg)}
-                        className={`px-4 md:px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none flex flex-col justify-center sm:items-start ${selectedReg.attended ? 'bg-indigo-50 border-indigo-100' : 'bg-slate-50 border-slate-200'}`}
+                        onClick={() => handleToggleAttendance(inspectorData)}
+                        className={`px-5 py-3 rounded-2xl border transition-all flex-1 sm:flex-none flex flex-col justify-center text-left ${inspectorData.attended ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-indigo-400 hover:text-indigo-600'}`}
                       >
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">On-site Attendance</p>
-                        <span className={`text-sm font-black flex items-center gap-2 ${selectedReg.attended ? 'text-indigo-700' : 'text-slate-400'}`}>
-                          {selectedReg.attended ? <CheckCircle size={16} /> : <div className="w-4 h-4 rounded-full border-2 border-slate-300"></div>}
-                          {selectedReg.attended ? 'Marked Present' : 'Mark Absent'}
+                        <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${inspectorData.attended ? 'text-indigo-200' : 'text-slate-400'}`}>On-site Attendance</p>
+                        <span className="text-sm font-black flex items-center gap-2">
+                          {inspectorData.attended ? <Users size={16} /> : <ScanLine size={16} />}
+                          {inspectorData.attended ? 'Marked Present' : 'Mark Absent'}
                         </span>
                       </button>
                     )}
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-                    {!selectedReg.paperDetails?.fileUrl ? (
+                    {!inspectorData.paperDetails?.fileUrl ? (
                       <div className="flex items-center justify-center p-4 bg-slate-50 border border-slate-200 rounded-2xl w-full">
-                        <p className="text-xs font-bold text-slate-500 text-center uppercase tracking-widest">
-                          Pending Manuscript Upload
+                        <p className="text-xs font-bold text-slate-400 text-center uppercase tracking-widest italic">
+                          Awaiting Manuscript Upload...
                         </p>
                       </div>
                     ) : (
                       <>
-                        {selectedReg.status !== 'Accepted' && (
+                        {inspectorData.status !== 'Accepted' && (
                           <button
-                            onClick={() => handleReview(selectedReg._id, 'Accepted')}
-                            className="flex-1 w-full sm:w-auto px-6 md:px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.15em] hover:bg-blue-700 transition-all shadow-xl shadow-blue-100"
+                            onClick={() => handleReview(inspectorData._id, 'Accepted')}
+                            className="flex-1 w-full sm:w-auto px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-indigo-700 hover:scale-105 transition-all shadow-xl shadow-indigo-200 active:scale-95"
                           >
-                            Accept Manuscript
+                            Accept Paper
                           </button>
                         )}
-                        {selectedReg.status !== 'Rejected' && (
+                        {inspectorData.status !== 'Rejected' && (
                           <button
-                            onClick={() => handleReview(selectedReg._id, 'Rejected')}
-                            className="flex-1 w-full sm:w-auto px-6 md:px-8 py-4 bg-white text-red-500 border border-red-100 rounded-2xl font-black text-xs uppercase tracking-[0.15em] hover:bg-red-50 transition-all"
+                            onClick={() => handleReview(inspectorData._id, 'Rejected')}
+                            className="flex-1 w-full sm:w-auto px-8 py-4 bg-white text-red-500 border border-red-100 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-red-50 transition-all active:scale-95"
                           >
                             Reject
                           </button>

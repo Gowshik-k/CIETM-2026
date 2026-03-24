@@ -80,6 +80,11 @@ const Navbar = () => {
     
     // Give the menu a moment to start closing before scrolling
     setTimeout(() => {
+      if (id.startsWith('/')) {
+        navigate(id);
+        return;
+      }
+      
       if (location.pathname !== '/') {
         navigate('/' + id);
         return;
@@ -114,6 +119,7 @@ const Navbar = () => {
     { name: 'Tracks', href: '#tracks' },
     { name: 'Speakers', href: '#speakers' },
     { name: 'Committees', href: '#patrons' },
+    { name: 'Guide', href: '/guide' },
     { name: 'Institute', href: '#about' },
     { name: 'Developers', href: '#developers' }
   ];

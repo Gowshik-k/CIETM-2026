@@ -135,11 +135,11 @@ const TermsConditions = () => {
                       <td className="py-4 text-blue-600 font-bold">100% Refund (if paid early)</td>
                     </tr>
                     <tr className="border-b border-slate-100">
-                      <td className="py-4 font-bold text-slate-700">Before March 24, 2026</td>
+                      <td className="py-4 font-bold text-slate-700 uppercase tracking-widest text-[10px]">Before Acceptance Notification</td>
                       <td className="py-4 text-slate-600">50% Refund (Processing fee deducted)</td>
                     </tr>
                     <tr className="border-b border-slate-100">
-                       <td className="py-4 font-bold text-slate-700">After March 24, 2026</td>
+                       <td className="py-4 font-bold text-slate-700 uppercase tracking-widest text-[10px]">After Acceptance Notification</td>
                       <td className="py-4 text-red-500 font-bold">No Refund</td>
                     </tr>
                     <tr>

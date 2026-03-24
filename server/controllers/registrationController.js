@@ -416,6 +416,7 @@ const updatePaper = async (req, res) => {
 const getAdminAnalytics = async (req, res) => {
     try {
         const stats = await Registration.aggregate([
+            { $match: { status: { $ne: 'Draft' } } },
             {
                 $group: {
                     _id: null,
@@ -430,6 +431,7 @@ const getAdminAnalytics = async (req, res) => {
         ]);
 
         const trackStats = await Registration.aggregate([
+            { $match: { status: { $ne: 'Draft' } } },
             { $group: { _id: "$paperDetails.track", count: { $sum: 1 } } }
         ]);
 
@@ -730,11 +732,13 @@ async function performAutoAssignment(allowFallback = false) {
             return { assignedCount: 0, results: [], error: null, disabled: true };
         }
 
-        // Find registrations that are submitted, have a manuscript uploaded, and don't have a reviewer
+        // Find registrations that are submitted or under review that don't have a reviewer
         const registrations = await Registration.find({
             status: { $in: ['Submitted', 'Under Review'] },
-            'paperDetails.fileUrl': { $exists: true, $ne: null },
-            'paperDetails.assignedReviewer': { $exists: false }
+            $or: [
+                { 'paperDetails.assignedReviewer': { $exists: false } },
+                { 'paperDetails.assignedReviewer': null }
+            ]
         });
 
         const reviewers = await User.find({ role: 'reviewer' });
