@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -1210,44 +1211,170 @@ const Dashboard = () => {
     );
   };
 
-  const renderCertificate = () => (
-    <div className="animate-fade-in max-w-4xl mx-auto h-full flex items-center justify-center pt-10">
-      <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden text-center w-full">
-        <div className="absolute -top-32 -right-32 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+  const CertificateContent = ({ user, acceptedReg }) => (
+    <div className="cert-border-main">
+      <div className="cert-border-inner">
+        {/* Corner Accents - Double Lines */}
+        <div className="line-tl-h1"></div><div className="line-tl-h2"></div><div className="line-tl-v1"></div><div className="line-tl-v2"></div>
+        <div className="line-tr-h1"></div><div className="line-tr-h2"></div><div className="line-tr-v1"></div><div className="line-tr-v2"></div>
+        <div className="line-bl-h1"></div><div className="line-bl-h2"></div><div className="line-bl-v1"></div><div className="line-bl-v2"></div>
+        <div className="line-br-h1"></div><div className="line-br-h2"></div><div className="line-br-v1"></div><div className="line-br-v2"></div>
 
-        <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-sm border border-amber-100">
-          <Lock size={40} />
-        </div>
-
-        <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight mb-4">
-          Verification in Progress
-        </h3>
-
-        <p className="text-slate-500 font-medium mb-8 max-w-md mx-auto">
-          Your participation E-certificate will be generated and made available here automatically upon the successful completion of the conference.
-        </p>
-
-        <div className="p-6 bg-slate-50/80 rounded-2xl border border-slate-100/50 mb-8 max-w-sm mx-auto">
-          <div className="flex items-center gap-4 opacity-50">
-            <div className="shrink-0 w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center text-slate-400">
-              <Award size={24} />
-            </div>
-            <div className="text-left flex-1 min-w-0">
-              <h4 className="font-bold text-slate-700 truncate">Participation_Certificate.pdf</h4>
-              <p className="text-xs text-slate-500">Document ready after conference</p>
-            </div>
+        <div className="cert-print-header">
+          <div className="text-center">
+            <h1 className="font-serif-premium text-[clamp(1.8rem,5vw,3.2rem)] font-extrabold tracking-[0.15em] text-gold-premium uppercase leading-none mb-1">Certificate</h1>
+            <p className="font-sans text-[clamp(0.7rem,2.2vw,1.5rem)] font-light tracking-[0.4em] text-gold-premium uppercase">of participation</p>
           </div>
         </div>
 
-        <button
-          disabled
-          className="inline-flex items-center gap-2 px-8 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest cursor-not-allowed border-2 border-slate-200"
-        >
-          <Download size={16} /> Download Certificate
-        </button>
+        <div className="cert-print-body flex flex-col justify-center items-center">
+          <p className="font-lora text-[0.85rem] font-semibold tracking-[0.2em] text-white/80 uppercase mb-2">This certificate is proudly presented to :</p>
+          <h2 className="font-script-premium text-[clamp(2.5rem,8vw,5.2rem)] text-gold-light leading-none mb-1">{user.name}</h2>
+          <div className="w-[300px] h-[1px] bg-gold-premium/40 mx-auto mb-4"></div>
+          <div className="font-sans text-[0.8rem] leading-relaxed max-w-[85%] mx-auto text-gold-sand/90 text-center font-normal">
+            For their active and valued participation in the <strong className="text-gold-premium font-bold text-[0.85rem]">National Conference on Contemporary Innovations in Engineering, Technology & Management (CIETM 2026)</strong>. Their contribution titled <strong className="text-gold-premium font-bold italic">"{acceptedReg?.paperDetails?.title || 'Untitled Research'}"</strong> has significantly enriched the academic discourse of this national convention held on 29th April 2026.
+          </div>
+        </div>
+
+        <div className="cert-print-footer flex justify-between items-end px-12 pb-4">
+          <div className="flex flex-col items-center w-40 text-center">
+            <div className="h-[1.2px] bg-gold-premium/60 w-full mb-1.5"></div>
+            <p className="font-sans text-[0.85rem] font-black text-white leading-none mb-1">Dr. A. Ramesh</p>
+            <p className="font-sans text-[0.55rem] font-bold text-gold-premium uppercase tracking-widest opacity-90">Conference Chair</p>
+          </div>
+
+          <div className="cert-seal-container scale-90">
+            <div className="cert-gold-seal flex items-center justify-center">
+              <Award size={32} className="text-white/30" />
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center w-40 text-center">
+            <div className="h-[1.2px] bg-gold-premium/60 w-full mb-1.5"></div>
+            <p className="font-sans text-[0.85rem] font-black text-white leading-none mb-1">Dr. S. Priya</p>
+            <p className="font-sans text-[0.55rem] font-bold text-gold-premium uppercase tracking-widest opacity-90">Organizing Secretary</p>
+          </div>
+        </div>
       </div>
     </div>
   );
+
+  const renderCertificate = () => {
+    const acceptedReg = registrations.find(r => r.status === 'Accepted') || registrations[0];
+    
+    if (false && !acceptedReg) {
+      return (
+        <div className="animate-fade-in max-w-4xl mx-auto h-full flex items-center justify-center pt-10">
+          <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden text-center w-full">
+            <div className="absolute -top-32 -right-32 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-sm border border-amber-100">
+              <Lock size={40} />
+            </div>
+            <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight mb-4">Verification in Progress</h3>
+            <p className="text-slate-500 font-medium mb-8 max-w-md mx-auto">
+              Your participation E-certificate will be generated automatically upon the successful acceptance of your manuscript and completion of the conference.
+            </p>
+            <div className="p-6 bg-slate-50/80 rounded-2xl border border-slate-100/50 mb-8 max-w-sm mx-auto">
+              <div className="flex items-center gap-4 opacity-50">
+                <div className="shrink-0 w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center text-slate-400">
+                  <Award size={24} />
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <h4 className="font-bold text-slate-700 truncate">Participation_Certificate.pdf</h4>
+                  <p className="text-xs text-slate-500">Document ready after conference</p>
+                </div>
+              </div>
+            </div>
+            <button disabled className="inline-flex items-center gap-2 px-8 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest cursor-not-allowed border-2 border-slate-200">
+              <Download size={16} /> Download Certificate
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="animate-fade-in space-y-8 pb-10">
+        {/* Header Section with Success Badge */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 max-w-[1100px] mx-auto px-6">
+          <div className="flex items-center gap-5">
+            <div className="hidden sm:flex w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl items-center justify-center shadow-inner border border-emerald-100/50 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+              <ShieldCheck size={32} />
+            </div>
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-full">Finalized</span>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Conference E-Certificate</h3>
+              </div>
+              <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
+                <Sparkles size={14} className="text-amber-400" /> 
+                Validated official recognition for CIETM 2026 Participation
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <button
+              onClick={() => {
+                window.scrollTo(0, 0);
+                setTimeout(() => window.print(), 100);
+              }}
+              className="group px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 hover:shadow-2xl hover:shadow-slate-200 transition-all flex items-center gap-3 active:scale-95 border-b-4 border-slate-700 hover:border-slate-600"
+            >
+              <Download size={18} className="group-hover:translate-y-0.5 transition-transform" /> 
+              Save as High-Res PDF
+            </button>
+          </div>
+        </div>
+
+        {/* Certificate Display Stage */}
+        <div className="relative max-w-[1200px] mx-auto px-4 md:px-8">
+          {/* Decorative Abstract Backgrounds */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-4xl max-h-[500px] bg-indigo-50/50 rounded-[4rem] blur-2xl -z-10"></div>
+          
+          <div className="relative bg-white/40 backdrop-blur-md rounded-[3rem] border border-white/60 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.1)] overflow-hidden">
+            {/* Glossy Reflection Line */}
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
+            
+            <div className="certificate-outer-wrapper overflow-hidden flex flex-col items-center">
+              <div className="certificate-preview-container flex justify-center items-center py-10 w-full relative">
+                {/* Certificate Showcase Shadow */}
+                <div className="absolute w-[80%] h-[60%] bg-slate-900/5 blur-[100px] bottom-10 rounded-full"></div>
+                
+                <div className="certificate-paper scale-[0.38] sm:scale-[0.52] md:scale-[0.62] lg:scale-[0.82] origin-center shadow-[0_40px_100px_-40px_rgba(4,30,66,0.6)] transition-all duration-700 hover:scale-[0.4] sm:hover:scale-[0.54] md:hover:scale-[0.64] lg:hover:scale-[0.84]">
+                  <CertificateContent user={user} acceptedReg={acceptedReg} />
+                  {/* Subtle Sheen Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none rounded-[inherit]"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Insight Bar */}
+            <div className="bg-slate-50/80 border-t border-slate-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+              <div className="flex items-center gap-3">
+                <FileText size={14} /> 297mm x 210mm (A4 Landscape)
+              </div>
+              <div className="flex items-center gap-3">
+                <ShieldCheck size={14} className="text-emerald-500" /> Digital Integrity Verified
+              </div>
+              <div className="flex items-center gap-3">
+                <Award size={14} className="text-amber-500" /> Official CIETM Seal Attached
+              </div>
+            </div>
+          </div>
+
+          {/* Print Portal */}
+          {typeof document !== 'undefined' && ReactDOM.createPortal(
+            <div className="print-certificate-view no-screen">
+              <div className="certificate-paper print-only">
+                <CertificateContent user={user} acceptedReg={acceptedReg} />
+              </div>
+            </div>,
+            document.body
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="flex h-screen bg-slate-50 relative overflow-hidden font-sans">
