@@ -17,6 +17,10 @@ const settingsSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    certificatesIssued: {
+        type: Boolean,
+        default: false
+    },
     deadlines: {
         abstractSubmission: Date,
         fullPaperSubmission: Date,

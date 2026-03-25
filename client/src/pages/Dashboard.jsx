@@ -8,7 +8,7 @@ import {
   Settings, Bell, Download, Menu, X, Search, ChevronRight, LogOut, Lock,
   LayoutDashboard, Calendar, MapPin, ShieldCheck, Award, Layers,
   Upload, Home, Edit2, Camera, User, CreditCard, TrendingUp, MessageSquare, Trash2, PlusCircle, FileUp,
-  Sparkles, GraduationCap
+  Sparkles, GraduationCap, Users, History
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SubmissionFormSingle from '../components/SubmissionFormSingle';
@@ -42,6 +42,10 @@ const Dashboard = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [lastSync, setLastSync] = useState(new Date());
   const [settings, setSettings] = useState(null);
+  const [certMemberName, setCertMemberName] = useState(user?.name || '');
+  const [selectedCertMember, setSelectedCertMember] = useState(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -61,7 +65,7 @@ const Dashboard = () => {
         }
       });
       setRegistrations(data || []);
-      
+
       // If we have an active ID, find that registration, otherwise default to first if exists
       if (activeRegistrationId) {
         // stay on current
@@ -147,6 +151,12 @@ const Dashboard = () => {
       setActiveTab('paper');
     }
   }, [registrations, activeRegistrationId, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'certificate' && settings && !settings.certificatesIssued) {
+      setActiveTab('overview');
+    }
+  }, [settings?.certificatesIssued, activeTab]);
 
   const handleForceSync = async () => {
     const loadingToast = toast.loading("Synchronizing dashboard...");
@@ -238,7 +248,7 @@ const Dashboard = () => {
       setUploading(false);
     }
   };
-  
+
   const handleDeleteRegistration = async (id) => {
     if (!window.confirm("Are you sure you want to delete this submission? This action cannot be undone.")) return;
 
@@ -247,12 +257,12 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       toast.success("Submission deleted successfully");
-      
+
       // If we deleted the active registration, clear it
       if (activeRegistrationId === id) {
         setActiveRegistrationId(null);
       }
-      
+
       fetchRegistration();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete submission");
@@ -435,19 +445,18 @@ const Dashboard = () => {
             <div className="relative z-10 flex flex-col h-full justify-between gap-8 md:gap-10">
               <div className="flex flex-col md:flex-row items-start justify-between gap-6 md:gap-0">
                 <div>
-                  <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest mb-4 border ${
-                    registration?.status === 'Accepted' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                  <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest mb-4 border ${registration?.status === 'Accepted' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                     registration?.status === 'Rejected' ? 'bg-red-50 text-red-600 border-red-100' :
-                    'bg-slate-50 text-slate-500 border-slate-100'
-                  }`}>
+                      'bg-slate-50 text-slate-500 border-slate-100'
+                    }`}>
                     {registration?.status === 'Accepted' ? <CheckCircle size={14} /> : <Clock size={14} />}
                     {registration?.status === 'Submitted' && !registration?.paperDetails?.fileUrl ? 'Awaiting Upload' : (registration?.status || 'Not Submitted')}
                   </div>
                   <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-800 tracking-tight leading-tight">
                     {registration?.status === 'Accepted' ? 'Manuscript Accepted' :
                       registration?.status === 'Under Review' ? 'Under External Review' :
-                      (registration?.status === 'Submitted' && registration?.paperDetails?.fileUrl) ? 'Submission Received' :
-                      'Incomplete Submission'}
+                        (registration?.status === 'Submitted' && registration?.paperDetails?.fileUrl) ? 'Submission Received' :
+                          'Incomplete Submission'}
                   </h2>
                 </div>
                 <div className="flex flex-row md:flex-col items-center md:items-end gap-6 md:gap-3 text-left md:text-right w-full md:w-auto mt-2 md:mt-0 pt-4 md:pt-0 border-t border-slate-50 md:border-none">
@@ -475,15 +484,14 @@ const Dashboard = () => {
 
               <div className="space-y-4">
                 <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full transition-all duration-1000 ${
-                      registration?.status === 'Accepted' ? 'bg-emerald-500' :
+                  <div
+                    className={`h-full transition-all duration-1000 ${registration?.status === 'Accepted' ? 'bg-emerald-500' :
                       registration?.status === 'Rejected' ? 'bg-red-500' : 'bg-slate-800'
-                    }`}
-                    style={{ 
-                      width: `${registration?.status === 'Accepted' || registration?.status === 'Rejected' ? '100%' : 
+                      }`}
+                    style={{
+                      width: `${registration?.status === 'Accepted' || registration?.status === 'Rejected' ? '100%' :
                         registration?.paymentStatus === 'Completed' ? '100%' :
-                        registration?.paperDetails?.fileUrl ? '50%' : '15%'}` 
+                          registration?.paperDetails?.fileUrl ? '50%' : '15%'}`
                     }}
                   />
                 </div>
@@ -538,8 +546,8 @@ const Dashboard = () => {
               <p className="text-sm font-bold text-slate-800">5th May 2026</p>
             </div>
 
-            <button 
-              onClick={() => { setIsAddingNew(true); setActiveTab('paper'); }} 
+            <button
+              onClick={() => { setIsAddingNew(true); setActiveTab('paper'); }}
               className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-lg hover:bg-slate-800 transition-all flex flex-col items-center justify-center gap-2 group active:scale-[0.98] text-white"
             >
               <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -578,7 +586,7 @@ const Dashboard = () => {
                 };
 
                 const done = isPast(item.date);
-                const active = !done && (i === 0 || isPast(arr[i-1].date));
+                const active = !done && (i === 0 || isPast(arr[i - 1].date));
 
                 return (
                   <motion.div
@@ -590,25 +598,22 @@ const Dashboard = () => {
                   >
                     <div className="flex items-center gap-5 relative">
                       {/* Status Node */}
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center relative z-20 shrink-0 border-2 transition-all ${
-                        done ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-100' :
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center relative z-20 shrink-0 border-2 transition-all ${done ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-100' :
                         active ? 'bg-white border-indigo-600 text-indigo-600 shadow-sm' :
-                        'bg-white border-slate-100 text-slate-300'
-                      }`}>
-                        {done ? <CheckCircle size={16} strokeWidth={3} /> : 
-                         active ? <Clock size={16} strokeWidth={2.5} /> : 
-                         <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>}
+                          'bg-white border-slate-100 text-slate-300'
+                        }`}>
+                        {done ? <CheckCircle size={16} strokeWidth={3} /> :
+                          active ? <Clock size={16} strokeWidth={2.5} /> :
+                            <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>}
                       </div>
 
                       <div className="flex flex-col">
-                        <span className={`text-sm font-bold tracking-tight ${
-                          active ? 'text-indigo-600' : done ? 'text-slate-400 line-through decoration-slate-300' : 'text-slate-600'
-                        }`}>
+                        <span className={`text-sm font-bold tracking-tight ${active ? 'text-indigo-600' : done ? 'text-slate-400 line-through decoration-slate-300' : 'text-slate-600'
+                          }`}>
                           {item.label}
                         </span>
-                        <span className={`text-[10px] font-bold uppercase tracking-widest ${
-                          active ? 'text-indigo-400' : 'text-slate-400'
-                        }`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest ${active ? 'text-indigo-400' : 'text-slate-400'
+                          }`}>
                           {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}
                         </span>
                       </div>
@@ -638,22 +643,22 @@ const Dashboard = () => {
               <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-inner group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
                 {registration?.paymentStatus === 'Completed' ? <ShieldCheck size={32} /> :
                   registration?.status === 'Accepted' ? <CreditCard size={32} /> :
-                  registration?.paperDetails?.fileUrl ? <Clock size={32} /> :
-                  <FileUp size={32} />}
+                    registration?.paperDetails?.fileUrl ? <Clock size={32} /> :
+                      <FileUp size={32} />}
               </div>
 
               <div>
                 <h4 className="font-extrabold text-slate-800 text-lg mb-1">
                   {registration?.paymentStatus === 'Completed' ? 'Ready for CIETM' :
                     registration?.status === 'Accepted' ? 'Registration Awaiting' :
-                    registration?.paperDetails?.fileUrl ? 'Review Ongoing' :
-                    'Action Required'}
+                      registration?.paperDetails?.fileUrl ? 'Review Ongoing' :
+                        'Action Required'}
                 </h4>
                 <p className="text-xs text-slate-500 font-medium px-4">
                   {registration?.paymentStatus === 'Completed' ? 'Your attendance is confirmed.' :
                     registration?.status === 'Accepted' ? 'Complete payment to secure spot.' :
-                    registration?.paperDetails?.fileUrl ? 'Evaluation in progress.' :
-                    'Please upload your manuscript.'}
+                      registration?.paperDetails?.fileUrl ? 'Evaluation in progress.' :
+                        'Please upload your manuscript.'}
                 </p>
               </div>
 
@@ -666,13 +671,12 @@ const Dashboard = () => {
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     disabled={registration?.status === 'Accepted' && settings?.onlinePaymentEnabled === false}
-                    className={`w-full py-3.5 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-slate-200 ${
-                      registration?.status === 'Accepted' && settings?.onlinePaymentEnabled === false
-                        ? 'bg-slate-400 cursor-not-allowed'
-                        : 'bg-slate-900 hover:bg-slate-800'
-                    }`}
+                    className={`w-full py-3.5 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-slate-200 ${registration?.status === 'Accepted' && settings?.onlinePaymentEnabled === false
+                      ? 'bg-slate-400 cursor-not-allowed'
+                      : 'bg-slate-900 hover:bg-slate-800'
+                      }`}
                   >
-                    {registration?.status === 'Accepted' 
+                    {registration?.status === 'Accepted'
                       ? (settings?.onlinePaymentEnabled === false ? 'Payment Offline' : 'Proceed to Payment')
                       : (registration?.paperDetails?.fileUrl ? 'Open Submission' : 'Upload Manuscript')}
                   </button>
@@ -758,15 +762,15 @@ const Dashboard = () => {
         <motion.div variants={overviewContainerVariants} initial="hidden" animate="visible">
           <motion.div variants={overviewItemVariants} className="bg-white/60 backdrop-blur-2xl p-8 md:p-10 rounded-[2.5rem] shadow-glass border border-white/60 max-w-5xl mx-auto relative cursor-default overflow-hidden">
             <div className="flex justify-between items-center mb-8">
-               <h2 className="text-2xl font-black text-slate-800">New Submission</h2>
-               {registrations.length > 0 && (
-                 <button onClick={() => setIsAddingNew(false)} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
-                    <X size={20} />
-                 </button>
-               )}
+              <h2 className="text-2xl font-black text-slate-800">New Submission</h2>
+              {registrations.length > 0 && (
+                <button onClick={() => setIsAddingNew(false)} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                  <X size={20} />
+                </button>
+              )}
             </div>
             <div className="absolute -top-32 -left-32 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            
+
             <SubmissionFormSingle
               registration={null}
               user={user}
@@ -792,8 +796,8 @@ const Dashboard = () => {
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setActiveRegistrationId(reg._id); }}
-              className={`cursor-pointer px-4 py-2 rounded-xl flex items-center gap-2.5 transition-all shrink-0 whitespace-nowrap border-2 ${activeRegistrationId === reg._id 
-                ? 'bg-indigo-600 text-white border-indigo-200 shadow-md shadow-indigo-100' 
+              className={`cursor-pointer px-4 py-2 rounded-xl flex items-center gap-2.5 transition-all shrink-0 whitespace-nowrap border-2 ${activeRegistrationId === reg._id
+                ? 'bg-indigo-600 text-white border-indigo-200 shadow-md shadow-indigo-100'
                 : 'bg-white/80 text-slate-600 border-transparent hover:bg-white hover:border-slate-100 shadow-sm'}`}
             >
               <div className={`w-1.5 h-1.5 rounded-full ${activeRegistrationId === reg._id ? 'bg-white' : (reg.status === 'Accepted' ? 'bg-emerald-400' : reg.status === 'Rejected' ? 'bg-red-400' : 'bg-amber-400')}`}></div>
@@ -812,7 +816,7 @@ const Dashboard = () => {
               )}
             </div>
           ))}
-          <button 
+          <button
             onClick={() => setIsAddingNew(true)}
             className="px-4 py-2 rounded-xl flex items-center gap-2 bg-slate-900 text-white transition-all shadow-md shadow-slate-200 hover:bg-slate-800 shrink-0 whitespace-nowrap sm:ml-auto"
           >
@@ -833,29 +837,29 @@ const Dashboard = () => {
     const handleEditDetails = () => {
       setEditData(true);
     };
-    
+
     const isMissingDetails = !registration.personalDetails?.institution || !registration.paperDetails?.abstract;
-    
+
     if (isMissingDetails) {
-        return (
-          <motion.div variants={overviewContainerVariants} initial="hidden" animate="visible">
-            <motion.div variants={overviewItemVariants} className="bg-white/60 backdrop-blur-2xl p-8 md:p-10 rounded-[2.5rem] shadow-glass border border-white/60 max-w-5xl mx-auto relative cursor-default overflow-hidden">
-               <div className="absolute -top-32 -left-32 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-               <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3 relative z-10">
-                 <AlertCircle size={20} className="text-amber-500 shrink-0" />
-                 <p className="text-sm font-semibold text-amber-800">Please complete all required registration details before proceeding to upload your manuscript.</p>
-               </div>
-               <SubmissionFormSingle
-                 registration={registration}
-                 user={user}
-                 onSuccess={(newReg) => {
-                   if (newReg?._id) setActiveRegistrationId(newReg._id);
-                   fetchRegistration();
-                 }}
-               />
-            </motion.div>
+      return (
+        <motion.div variants={overviewContainerVariants} initial="hidden" animate="visible">
+          <motion.div variants={overviewItemVariants} className="bg-white/60 backdrop-blur-2xl p-8 md:p-10 rounded-[2.5rem] shadow-glass border border-white/60 max-w-5xl mx-auto relative cursor-default overflow-hidden">
+            <div className="absolute -top-32 -left-32 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3 relative z-10">
+              <AlertCircle size={20} className="text-amber-500 shrink-0" />
+              <p className="text-sm font-semibold text-amber-800">Please complete all required registration details before proceeding to upload your manuscript.</p>
+            </div>
+            <SubmissionFormSingle
+              registration={registration}
+              user={user}
+              onSuccess={(newReg) => {
+                if (newReg?._id) setActiveRegistrationId(newReg._id);
+                fetchRegistration();
+              }}
+            />
           </motion.div>
-        );
+        </motion.div>
+      );
     }
 
     const paperDetailsSection = (
@@ -863,16 +867,16 @@ const Dashboard = () => {
         {/* Registration Details Group */}
         {editData ? (
           <motion.div variants={overviewItemVariants} className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
-             <SubmissionFormSingle 
-                registration={registration} 
-                user={user} 
-                onSuccess={(newReg) => {
-                    fetchRegistration();
-                    if (newReg?._id) setActiveRegistrationId(newReg._id);
-                    setEditData(null);
-                }}
-                onCancel={() => setEditData(null)}
-             />
+            <SubmissionFormSingle
+              registration={registration}
+              user={user}
+              onSuccess={(newReg) => {
+                fetchRegistration();
+                if (newReg?._id) setActiveRegistrationId(newReg._id);
+                setEditData(null);
+              }}
+              onCancel={() => setEditData(null)}
+            />
           </motion.div>
         ) : (
 
@@ -1116,17 +1120,17 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div>
-                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] block mb-3 pl-2">Academic Governance</span>
-                   <div className="space-y-3 px-2">
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-                         <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Reviewer</span>
-                         <span className="text-xs font-bold text-slate-600">{registration?.paperDetails?.assignedReviewer?.name || 'In Evaluation Queue'}</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-                         <span className="text-[9px] font-black text-purple-600 uppercase tracking-widest">Track Chair</span>
-                         <span className="text-xs font-bold text-slate-600">{registration?.paperDetails?.assignedChair?.name || 'Conference Chair'}</span>
-                      </div>
-                   </div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] block mb-3 pl-2">Academic Governance</span>
+                  <div className="space-y-3 px-2">
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Reviewer</span>
+                      <span className="text-xs font-bold text-slate-600">{registration?.paperDetails?.assignedReviewer?.name || 'In Evaluation Queue'}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[9px] font-black text-purple-600 uppercase tracking-widest">Track Chair</span>
+                      <span className="text-xs font-bold text-slate-600">{registration?.paperDetails?.assignedChair?.name || 'Conference Chair'}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1134,9 +1138,9 @@ const Dashboard = () => {
           </motion.div>
         )}
       </>
-      );
+    );
 
-      return (
+    return (
       <motion.div variants={overviewContainerVariants} initial="hidden" animate="visible" className="max-w-4xl mx-auto space-y-6 pb-12">
         {paperDetailsSection}
       </motion.div>
@@ -1165,8 +1169,8 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="text-right">
-             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Portfolio</p>
-             <p className="text-sm font-black text-slate-700 uppercase tracking-tighter">{registrations.length} Submissions</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Portfolio</p>
+            <p className="text-sm font-black text-slate-700 uppercase tracking-tighter">{registrations.length} Submissions</p>
           </div>
         </motion.div>
 
@@ -1174,21 +1178,21 @@ const Dashboard = () => {
         {settings && settings.onlinePaymentEnabled === false && (
           <motion.div variants={overviewItemVariants} className="bg-amber-50 border border-amber-200 p-6 md:p-8 rounded-[2rem] flex items-start gap-5 shadow-sm">
             <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-amber-500 shadow-sm border border-amber-100 shrink-0 transform -rotate-3">
-               <AlertCircle size={24} />
+              <AlertCircle size={24} />
             </div>
             <div>
-               <h4 className="text-sm font-black text-amber-900 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                 <ShieldCheck size={16} className="text-amber-600" />
-                 Online Gateway Disabled - Offline Payment Only
-               </h4>
-               <p className="text-xs font-semibold text-amber-800/80 leading-relaxed max-w-2xl">
-                 The automated registration gateway is currently offline. For this phase, only <strong>Offline Payments (On-site / Spot Registration)</strong> are being processed. 
-                 Please visit the conference registration desk or contact the organizing committee to complete your fee payment and receive your official credentials.
-               </p>
-               <div className="mt-4 flex gap-3">
-                  <div className="px-3 py-1.5 bg-white/60 rounded-lg border border-amber-200 text-[10px] font-black text-amber-700 uppercase tracking-widest">At-Venue Registration Desk</div>
-                  <div className="px-3 py-1.5 bg-white/60 rounded-lg border border-amber-200 text-[10px] font-black text-amber-700 uppercase tracking-widest">Spot Payment Only</div>
-               </div>
+              <h4 className="text-sm font-black text-amber-900 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                <ShieldCheck size={16} className="text-amber-600" />
+                Online Gateway Disabled - Offline Payment Only
+              </h4>
+              <p className="text-xs font-semibold text-amber-800/80 leading-relaxed max-w-2xl">
+                The automated registration gateway is currently offline. For this phase, only <strong>Offline Payments (On-site / Spot Registration)</strong> are being processed.
+                Please visit the conference registration desk or contact the organizing committee to complete your fee payment and receive your official credentials.
+              </p>
+              <div className="mt-4 flex gap-3">
+                <div className="px-3 py-1.5 bg-white/60 rounded-lg border border-amber-200 text-[10px] font-black text-amber-700 uppercase tracking-widest">At-Venue Registration Desk</div>
+                <div className="px-3 py-1.5 bg-white/60 rounded-lg border border-amber-200 text-[10px] font-black text-amber-700 uppercase tracking-widest">Spot Payment Only</div>
+              </div>
             </div>
           </motion.div>
         )}
@@ -1198,15 +1202,15 @@ const Dashboard = () => {
           {registrations.map((reg, idx) => {
             const fee = calculateCurrentFee(reg);
             const isIndividualLoading = paymentLoading === reg._id;
-            
+
             return (
               <motion.div key={reg._id} variants={overviewItemVariants} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden border-l-4 border-l-slate-200">
                 <div className="p-6 flex flex-col md:flex-row gap-6 items-center">
                   {/* Status & Title */}
                   <div className="flex-1 min-w-0 w-full">
                     <div className="flex items-center gap-2 mb-2">
-                       <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${getStatusColor(reg.status)}`}>{reg.status}</span>
-                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{reg.paperId || `Submission ${idx+1}`}</span>
+                      <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border ${getStatusColor(reg.status)}`}>{reg.status}</span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{reg.paperId || `Submission ${idx + 1}`}</span>
                     </div>
                     <h4 className="text-base font-bold text-slate-800 truncate mb-1" title={reg.paperDetails?.title}>{reg.paperDetails?.title || 'No Title Provided'}</h4>
                     <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.1em]">{reg.personalDetails?.category}</p>
@@ -1214,10 +1218,10 @@ const Dashboard = () => {
 
                   {/* Pricing Breakdown (Compact) */}
                   <div className="flex gap-4 px-6 md:border-x border-slate-50 w-full md:w-auto">
-                     <div className="text-center">
-                        <p className="text-[8px] font-black text-slate-400 uppercase mb-0.5">Fee per Author</p>
-                        <p className="text-xs font-bold text-slate-700">₹{fee}</p>
-                     </div>
+                    <div className="text-center">
+                      <p className="text-[8px] font-black text-slate-400 uppercase mb-0.5">Fee per Author</p>
+                      <p className="text-xs font-bold text-slate-700">₹{fee}</p>
+                    </div>
                   </div>
 
                   {/* Precise Action Button */}
@@ -1228,14 +1232,14 @@ const Dashboard = () => {
                         <span className="text-[10px] font-black uppercase tracking-widest">Paid</span>
                       </div>
                     ) : reg.status === 'Accepted' ? (
-                        <button
-                          onClick={() => handlePayment(reg._id)}
-                          disabled={(paymentLoading && paymentLoading !== reg._id) || (settings && settings.onlinePaymentEnabled === false)}
-                          className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-30 active:scale-95"
-                        >
-                          {isIndividualLoading ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <CreditCard size={14} />}
-                          {settings && settings.onlinePaymentEnabled === false ? 'Online Payment Disabled' : (isIndividualLoading ? 'Wait...' : 'Pay Now')}
-                        </button>
+                      <button
+                        onClick={() => handlePayment(reg._id)}
+                        disabled={(paymentLoading && paymentLoading !== reg._id) || (settings && settings.onlinePaymentEnabled === false)}
+                        className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-30 active:scale-95"
+                      >
+                        {isIndividualLoading ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <CreditCard size={14} />}
+                        {settings && settings.onlinePaymentEnabled === false ? 'Online Payment Disabled' : (isIndividualLoading ? 'Wait...' : 'Pay Now')}
+                      </button>
                     ) : (
                       <div className="text-center py-2 bg-slate-50 rounded-xl border border-slate-100">
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Reviewing</span>
@@ -1251,48 +1255,49 @@ const Dashboard = () => {
     );
   };
 
-  const CertificateContent = ({ user, acceptedReg }) => (
+  const CertificateContent = ({ name, acceptedReg }) => (
     <div className="cert-border-main">
       <div className="cert-border-inner">
         {/* Corner Accents - Double Lines */}
-        <div className="line-tl-h1"></div><div className="line-tl-h2"></div><div className="line-tl-v1"></div><div className="line-tl-v2"></div>
-        <div className="line-tr-h1"></div><div className="line-tr-h2"></div><div className="line-tr-v1"></div><div className="line-tr-v2"></div>
-        <div className="line-bl-h1"></div><div className="line-bl-h2"></div><div className="line-bl-v1"></div><div className="line-bl-v2"></div>
-        <div className="line-br-h1"></div><div className="line-br-h2"></div><div className="line-br-v1"></div><div className="line-br-v2"></div>
+        <div className="line-tl-h1"></div><div className="line-tl-v1"></div>
+        <div className="line-tr-h1"></div><div className="line-tr-v1"></div>
+        <div className="line-bl-h1"></div><div className="line-bl-v1"></div>
+        <div className="line-br-h1"></div><div className="line-br-v1"></div>
 
         <div className="cert-print-header">
           <div className="text-center">
-            <h1 className="font-serif-premium text-[clamp(1.8rem,5vw,3.2rem)] font-extrabold tracking-[0.15em] text-gold-premium uppercase leading-none mb-1">Certificate</h1>
-            <p className="font-sans text-[clamp(0.7rem,2.2vw,1.5rem)] font-light tracking-[0.4em] text-gold-premium uppercase">of participation</p>
+            <h1 className="font-serif-premium text-6xl font-extrabold tracking-[0.15em] text-gold-premium uppercase leading-none mb-2">Certificate</h1>
+            <p className="font-sans text-xl font-light tracking-[0.4em] text-gold-premium uppercase">of participation</p>
           </div>
         </div>
 
         <div className="cert-print-body flex flex-col justify-center items-center">
-          <p className="font-lora text-[0.85rem] font-semibold tracking-[0.2em] text-white/80 uppercase mb-2">This certificate is proudly presented to :</p>
-          <h2 className="font-script-premium text-[clamp(2.5rem,8vw,5.2rem)] text-gold-light leading-none mb-1">{user.name}</h2>
-          <div className="w-[300px] h-[1px] bg-gold-premium/40 mx-auto mb-4"></div>
-          <div className="font-sans text-[0.8rem] leading-relaxed max-w-[85%] mx-auto text-gold-sand/90 text-center font-normal">
-            For their active and valued participation in the <strong className="text-gold-premium font-bold text-[0.85rem]">National Conference on Contemporary Innovations in Engineering, Technology & Management (CIETM 2026)</strong>. Their contribution titled <strong className="text-gold-premium font-bold italic">"{acceptedReg?.paperDetails?.title || 'Untitled Research'}"</strong> has significantly enriched the academic discourse of this national convention held on 29th April 2026.
+          <p className="font-lora text-[14px] font-semibold tracking-[0.2em] text-white/90 uppercase mb-4">This certificate is proudly presented to :</p>
+          <h2 className="font-script-premium text-8xl text-gold-light leading-none mb-3">{name}</h2>
+          <div className="w-[400px] h-[2px] bg-gold-premium mx-auto mb-8"></div>
+          <div className="font-sans text-[15px] leading-relaxed max-w-[85%] mx-auto text-gold-sand text-center font-normal px-10">
+
+            For their active and valued participation in the <strong className="text-gold-premium font-bold text-[16px]">National Conference on Contemporary Innovations in Engineering, Technology & Management (CIETM 2026)</strong>. Their contribution titled <strong className="text-gold-premium font-bold italic">"{acceptedReg?.paperDetails?.title || 'Untitled Research'}"</strong> has significantly enriched the academic discourse of this national convention held on 29th April 2026.
           </div>
         </div>
 
-        <div className="cert-print-footer flex justify-between items-end px-12 pb-4">
-          <div className="flex flex-col items-center w-40 text-center">
-            <div className="h-[1.2px] bg-gold-premium/60 w-full mb-1.5"></div>
-            <p className="font-sans text-[0.85rem] font-black text-white leading-none mb-1">Dr. A. Ramesh</p>
-            <p className="font-sans text-[0.55rem] font-bold text-gold-premium uppercase tracking-widest opacity-90">Conference Chair</p>
+        <div className="cert-print-footer flex justify-between items-end px-16 pb-10">
+          <div className="flex flex-col items-center w-64 text-center">
+            <div className="h-[2px] bg-gold-premium w-full mb-3"></div>
+            <p className="font-sans text-[18px] font-black text-white leading-none mb-1">Dr. A. Ramesh</p>
+            <p className="font-sans text-[10px] font-bold text-gold-premium uppercase tracking-[0.2em]">Conference Chair</p>
           </div>
 
-          <div className="cert-seal-container scale-90">
+          <div className="cert-seal-container scale-110">
             <div className="cert-gold-seal flex items-center justify-center">
-              <Award size={32} className="text-white/30" />
+              <Award size={48} className="text-white/40" />
             </div>
           </div>
 
-          <div className="flex flex-col items-center w-40 text-center">
-            <div className="h-[1.2px] bg-gold-premium/60 w-full mb-1.5"></div>
-            <p className="font-sans text-[0.85rem] font-black text-white leading-none mb-1">Dr. S. Priya</p>
-            <p className="font-sans text-[0.55rem] font-bold text-gold-premium uppercase tracking-widest opacity-90">Organizing Secretary</p>
+          <div className="flex flex-col items-center w-64 text-center">
+            <div className="h-[2px] bg-gold-premium w-full mb-3"></div>
+            <p className="font-sans text-[18px] font-black text-white leading-none mb-1">Dr. S. Priya</p>
+            <p className="font-sans text-[10px] font-bold text-gold-premium uppercase tracking-[0.2em]">Organizing Secretary</p>
           </div>
         </div>
       </div>
@@ -1300,118 +1305,138 @@ const Dashboard = () => {
   );
 
   const renderCertificate = () => {
-    const acceptedReg = registrations.find(r => r.status === 'Accepted') || registrations[0];
-    
-    if (false && !acceptedReg) {
+
+    const activeReg = registrations.find(r => r._id === activeRegistrationId);
+    const acceptedReg = (activeReg && activeReg.status === 'Accepted')
+      ? activeReg
+      : registrations.find(r => r.status === 'Accepted');
+
+    if (!acceptedReg) {
       return (
-        <div className="animate-fade-in max-w-4xl mx-auto h-full flex items-center justify-center pt-10">
-          <div className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden text-center w-full">
-            <div className="absolute -top-32 -right-32 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-sm border border-amber-100">
-              <Lock size={40} />
-            </div>
-            <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight mb-4">Verification in Progress</h3>
-            <p className="text-slate-500 font-medium mb-8 max-w-md mx-auto">
-              Your participation E-certificate will be generated automatically upon the successful acceptance of your manuscript and completion of the conference.
-            </p>
-            <div className="p-6 bg-slate-50/80 rounded-2xl border border-slate-100/50 mb-8 max-w-sm mx-auto">
-              <div className="flex items-center gap-4 opacity-50">
-                <div className="shrink-0 w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center text-slate-400">
-                  <Award size={24} />
-                </div>
-                <div className="text-left flex-1 min-w-0">
-                  <h4 className="font-bold text-slate-700 truncate">Participation_Certificate.pdf</h4>
-                  <p className="text-xs text-slate-500">Document ready after conference</p>
-                </div>
-              </div>
-            </div>
-            <button disabled className="inline-flex items-center gap-2 px-8 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-xs uppercase tracking-widest cursor-not-allowed border-2 border-slate-200">
-              <Download size={16} /> Download Certificate
-            </button>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center animate-fade-in px-6">
+          <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-3xl flex items-center justify-center mb-6 border border-slate-100">
+            <Award size={40} className="opacity-40" />
           </div>
+          <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-2">Verification in Progress</h3>
+          <p className="text-slate-500 text-xs font-medium max-w-xs mx-auto leading-relaxed">
+            Your official CIETM 2026 Participation E-certificate will be unlocked automatically upon the successful acceptance of your manuscript.
+          </p>
         </div>
       );
     }
 
+    const allMembers = [
+      { name: acceptedReg?.personalDetails?.name || user.name, role: 'Principal Author' },
+      ...(acceptedReg?.teamMembers || []).map(m => ({ name: m.name, role: 'Co-Author' })),
+    ];
+
+    const handlePrintRequest = async (member) => {
+      setSelectedCertMember(member);
+      setIsGeneratingPDF(true);
+      
+      const originalTitle = document.title;
+      document.title = `CIETM_Certificate_${member.name.replace(/\s+/g, '_')}`;
+
+      // Critical timing for portal injection and rendering
+      setTimeout(() => {
+        window.print();
+        setTimeout(() => {
+          document.title = originalTitle;
+          setIsGeneratingPDF(false);
+          setSelectedCertMember(null);
+        }, 1200); // Increased wait after print dialog
+      }, 2000); // Increased injection delay for heavy assets
+    };
+
     return (
-      <div className="animate-fade-in space-y-8 pb-10">
-        {/* Header Section with Success Badge */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 max-w-[1100px] mx-auto px-6">
+      <div className="max-w-6xl mx-auto px-6 py-4 space-y-12 animate-fade-in pb-20 relative">
+        {/* Processing State Overlay */}
+        <AnimatePresence>
+          {isGeneratingPDF && (
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] bg-white/90 backdrop-blur-md flex flex-col items-center justify-center gap-6"
+            >
+              <div className="relative">
+                <div className="w-24 h-24 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                <Award className="absolute inset-0 m-auto text-indigo-600 animate-pulse" size={32} />
+              </div>
+              <div className="text-center">
+                <h4 className="text-xl font-black text-slate-800 uppercase tracking-tighter mb-2">Generating Premium PDF</h4>
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Pixel-perfect rendering in progress...</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-slate-100 pb-10">
           <div className="flex items-center gap-5">
-            <div className="hidden sm:flex w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl items-center justify-center shadow-inner border border-emerald-100/50 transform rotate-3 hover:rotate-0 transition-transform duration-500">
-              <ShieldCheck size={32} />
+            <div className="w-16 h-16 bg-navy-deep text-white rounded-3xl flex items-center justify-center shadow-xl shadow-indigo-100 transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+              <Award size={32} className="text-gold-premium" />
             </div>
             <div>
-              <div className="flex items-center gap-3 mb-1">
-                <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-full">Finalized</span>
-                <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Conference E-Certificate</h3>
-              </div>
-              <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
-                <Sparkles size={14} className="text-amber-400" /> 
-                Validated official recognition for CIETM 2026 Participation
+              <h3 className="text-3xl font-black text-slate-800 tracking-tight leading-none mb-2 uppercase">Official Credentials</h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                <ShieldCheck size={14} className="text-emerald-500" /> Professional Certificates for Conference Participants
               </p>
             </div>
           </div>
-          <div className="flex gap-4">
-            <button
-              onClick={() => {
-                window.scrollTo(0, 0);
-                setTimeout(() => window.print(), 100);
-              }}
-              className="group px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 hover:shadow-2xl hover:shadow-slate-200 transition-all flex items-center gap-3 active:scale-95 border-b-4 border-slate-700 hover:border-slate-600"
-            >
-              <Download size={18} className="group-hover:translate-y-0.5 transition-transform" /> 
-              Save as High-Res PDF
-            </button>
+          <div className="hidden md:flex flex-col items-end">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">Session Board ID: {acceptedReg?.paperId}</span>
+            <div className="px-3 py-1.5 bg-brand-navy/5 text-navy-deep rounded-xl text-[9px] font-black uppercase tracking-widest border border-navy-deep/10">Validated Authority</div>
           </div>
         </div>
 
-        {/* Certificate Display Stage */}
-        <div className="relative max-w-[1200px] mx-auto px-4 md:px-8">
-          {/* Decorative Abstract Backgrounds */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-4xl max-h-[500px] bg-indigo-50/50 rounded-[4rem] blur-2xl -z-10"></div>
-          
-          <div className="relative bg-white/40 backdrop-blur-md rounded-[3rem] border border-white/60 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.1)] overflow-hidden">
-            {/* Glossy Reflection Line */}
-            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
-            
-            <div className="certificate-outer-wrapper overflow-hidden flex flex-col items-center">
-              <div className="certificate-preview-container flex justify-center items-center py-10 w-full relative">
-                {/* Certificate Showcase Shadow */}
-                <div className="absolute w-[80%] h-[60%] bg-slate-900/5 blur-[100px] bottom-10 rounded-full"></div>
-                
-                <div className="certificate-paper scale-[0.38] sm:scale-[0.52] md:scale-[0.62] lg:scale-[0.82] origin-center shadow-[0_40px_100px_-40px_rgba(4,30,66,0.6)] transition-all duration-700 hover:scale-[0.4] sm:hover:scale-[0.54] md:hover:scale-[0.64] lg:hover:scale-[0.84]">
-                  <CertificateContent user={user} acceptedReg={acceptedReg} />
-                  {/* Subtle Sheen Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none rounded-[inherit]"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {allMembers.map((member, idx) => (
+            <div
+              key={idx}
+              className="group bg-white border border-slate-100 rounded-[2.5rem] p-5 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] transition-all duration-700 hover:-translate-y-2"
+            >
+              <div className="aspect-[1.414/1] bg-navy-deep rounded-[1.5rem] overflow-hidden mb-6 relative border border-white/5 shadow-inner">
+                <div className="scale-[0.25] origin-top-left absolute top-0 left-0 w-[400%] pointer-events-none opacity-90 group-hover:opacity-100 transition-opacity">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <CertificateContent name={member.name} acceptedReg={acceptedReg} />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Bottom Insight Bar */}
-            <div className="bg-slate-50/80 border-t border-slate-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold uppercase tracking-widest text-slate-400">
-              <div className="flex items-center gap-3">
-                <FileText size={14} /> 297mm x 210mm (A4 Landscape)
-              </div>
-              <div className="flex items-center gap-3">
-                <ShieldCheck size={14} className="text-emerald-500" /> Digital Integrity Verified
-              </div>
-              <div className="flex items-center gap-3">
-                <Award size={14} className="text-amber-500" /> Official CIETM Seal Attached
+              <div className="px-2">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-full">
+                    {member.role}
+                  </span>
+                  <Award size={18} className="text-slate-200 group-hover:text-gold-premium transition-colors" />
+                </div>
+                <h5 className="text-lg font-black text-slate-800 truncate mb-6">{member.name}</h5>
+                <button
+                  onClick={() => handlePrintRequest(member)}
+                  disabled={isGeneratingPDF}
+                  className="w-full py-4 bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-indigo-600 transition-all duration-300 flex items-center justify-center gap-3 hover:shadow-lg hover:shadow-indigo-200 active:scale-95 disabled:opacity-50"
+                >
+                  <Download size={16} /> Save as PDF
+                </button>
               </div>
             </div>
-          </div>
-
-          {/* Print Portal */}
-          {typeof document !== 'undefined' && ReactDOM.createPortal(
-            <div className="print-certificate-view no-screen">
-              <div className="certificate-paper print-only">
-                <CertificateContent user={user} acceptedReg={acceptedReg} />
-              </div>
-            </div>,
-            document.body
-          )}
+          ))}
         </div>
+
+        {/* Dynamic Print Portal */}
+        {typeof document !== 'undefined' && ReactDOM.createPortal(
+          <div className="print-certificate-view no-screen">
+            <div className="certificate-paper print-only">
+              {(selectedCertMember || allMembers[0]) && (
+                <CertificateContent 
+                  name={(selectedCertMember || allMembers[0]).name} 
+                  acceptedReg={acceptedReg} 
+                />
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
       </div>
     );
   };
@@ -1509,7 +1534,7 @@ const Dashboard = () => {
             { id: 'idcard', icon: Award, label: 'ID Card' },
             { id: 'certificate', icon: Award, label: 'E-Certificate' },
             { id: 'settings', icon: Settings, label: 'Settings' }
-          ].map((item) => (
+          ].filter(item => item.id !== 'certificate' || settings?.certificatesIssued).map((item) => (
             <button
               key={item.id}
               onClick={() => {
@@ -1571,7 +1596,7 @@ const Dashboard = () => {
 
           <div className="flex items-center gap-3 md:gap-5">
             <button onClick={handleForceSync} className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-[0.65rem] font-black uppercase tracking-widest border border-indigo-100 hover:bg-indigo-100 transition-all">
-               <TrendingUp size={14} /> Force Sync
+              <TrendingUp size={14} /> Force Sync
             </button>
             {/* Small Logo for mobile right side if needed, or just stay as is */}
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-100 md:hidden">
@@ -1610,11 +1635,11 @@ const Dashboard = () => {
             </div>
 
             <button
-               onClick={() => setShowLogoutModal(true)}
-               className="w-11 h-11 bg-red-50 rounded-xl border border-red-100 shadow-sm flex items-center justify-center text-red-600 cursor-pointer hover:bg-red-100 transition-all hover:shadow-md active:scale-95 transition-all"
-               title="Sign Out"
+              onClick={() => setShowLogoutModal(true)}
+              className="w-11 h-11 bg-red-50 rounded-xl border border-red-100 shadow-sm flex items-center justify-center text-red-600 cursor-pointer hover:bg-red-100 transition-all hover:shadow-md active:scale-95 transition-all"
+              title="Sign Out"
             >
-               <LogOut size={20} />
+              <LogOut size={20} />
             </button>
           </div>
         </header>
@@ -1628,17 +1653,17 @@ const Dashboard = () => {
             {activeTab === 'certificate' && renderCertificate()}
             {activeTab === 'idcard' && (
               <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in">
-                  <div className="w-24 h-24 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-slate-100">
-                      <Award size={48} />
-                  </div>
-                  <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-2">Digital ID Identity</h3>
-                  <p className="text-slate-500 font-medium mb-8 max-w-sm">Access your official conference delegate pass and verify your identity on-site.</p>
-                  <button 
-                      onClick={() => setShowIDCard(true)}
-                      className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center translate-y-0 active:scale-95 gap-2"
-                  >
-                      <LayoutDashboard size={18} /> Open ID Card Modal
-                  </button>
+                <div className="w-24 h-24 bg-slate-100 text-slate-400 rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-slate-100">
+                  <Award size={48} />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-2">Digital ID Identity</h3>
+                <p className="text-slate-500 font-medium mb-8 max-w-sm">Access your official conference delegate pass and verify your identity on-site.</p>
+                <button
+                  onClick={() => setShowIDCard(true)}
+                  className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all flex items-center translate-y-0 active:scale-95 gap-2"
+                >
+                  <LayoutDashboard size={18} /> Open ID Card Modal
+                </button>
               </div>
             )}
             {activeTab === 'notifications' && (
@@ -1752,9 +1777,9 @@ const Dashboard = () => {
                                 await fetchRegistration();
                                 toast.success("Avatar updated successfully!", { icon: '📸' });
                               } catch (error) {
-                                 console.error("Avatar Upload Error:", error);
-                                 const message = error.response?.data?.message || "Failed to upload image. Please try again.";
-                                 toast.error(message);
+                                console.error("Avatar Upload Error:", error);
+                                const message = error.response?.data?.message || "Failed to upload image. Please try again.";
+                                toast.error(message);
                               } finally {
                                 setUploadingProfilePic(false);
                               }
@@ -1862,14 +1887,14 @@ const Dashboard = () => {
 
         {/* Digital ID Card Modal */}
         {showIDCard && registration && (
-          <div 
+          <div
             className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in print:bg-white print:p-0 cursor-pointer"
             onClick={() => {
               setShowIDCard(false);
               setIsFlipped(false);
             }}
           >
-            <div 
+            <div
               className="flex flex-col gap-6 max-w-[28rem] w-full animate-scale-in print:hidden perspective-1000 cursor-default"
               onClick={(e) => e.stopPropagation()}
             >
@@ -1915,9 +1940,9 @@ const Dashboard = () => {
                           <div className="w-full h-full flex items-center justify-center text-slate-200 bg-slate-50"><User size={60} /></div>
                         )}
                       </div>
-                      
+
                       <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-600 rounded-md shadow-md">
-                         <span className="text-[7px] font-black text-white uppercase tracking-[0.1em] whitespace-nowrap">Official Delegate</span>
+                        <span className="text-[7px] font-black text-white uppercase tracking-[0.1em] whitespace-nowrap">Official Delegate</span>
                       </div>
                     </div>
 

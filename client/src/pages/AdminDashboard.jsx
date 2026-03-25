@@ -1919,13 +1919,14 @@ const AdminDashboard = () => {
                                 <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">System Configuration</h3>
                               </div>
 
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                                 {[
                                   { id: 'registrationOpen', label: 'Registration', active: settings.registrationOpen },
                                   { id: 'onlinePaymentEnabled', label: 'Payments', active: settings.onlinePaymentEnabled },
-                                  { id: 'autoAssignEnabled', label: 'Auto-Assign', active: settings.autoAssignEnabled }
+                                  { id: 'autoAssignEnabled', label: 'Auto-Assign', active: settings.autoAssignEnabled },
+                                  { id: 'certificatesIssued', label: 'E-Certificates', active: settings.certificatesIssued, special: true }
                                 ].map(toggle => (
-                                  <div key={toggle.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-4">
+                                  <div key={toggle.id} className={`p-4 border rounded-xl flex flex-col gap-4 transition-all ${toggle.special && toggle.active ? 'bg-indigo-50/50 border-indigo-200 shadow-sm shadow-indigo-100' : 'bg-slate-50 border-slate-200'}`}>
                                      <div className="flex items-center justify-between">
                                         <p className="text-[11px] font-black text-slate-700 uppercase tracking-tight">{toggle.label}</p>
                                         <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${toggle.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
@@ -1936,10 +1937,10 @@ const AdminDashboard = () => {
                                       type="button"
                                       onClick={() => setSettings({ ...settings, [toggle.id]: !settings[toggle.id] })}
                                       className={`w-full py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                                        toggle.active ? 'bg-indigo-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
+                                        toggle.active ? 'bg-slate-900 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
                                       }`}
                                     >
-                                      Toggle {toggle.active ? 'Off' : 'On'}
+                                      {toggle.special ? (toggle.active ? 'Recall Portal' : 'Issue Certificates') : `Turn ${toggle.active ? 'Off' : 'On'}`}
                                     </button>
                                   </div>
                                 ))}
