@@ -241,7 +241,7 @@ const reviewPaper = async (req, res) => {
         await createNotification(
             registration.userId._id,
             `Paper ${status}`,
-            `Your paper titled "${registration.paperDetails.title}" has been ${status.toLowerCase()}.`,
+            `Your paper titled "${registration.paperDetails.title}" has been ${status.toLowerCase()}.${remarks ? ` Remarks: ${remarks}` : ''}`,
             status === 'Accepted' ? 'success' : status === 'Rejected' ? 'error' : 'info',
             '/dashboard'
         );
