@@ -6,6 +6,9 @@ const { createNotification } = require('./notificationController');
 const archiver = require('archiver');
 const axios = require('axios');
 const User = require('../models/User');
+const Settings = require('../models/Settings');
+const Notification = require('../models/Notification');
+const PendingUser = require('../models/PendingUser');
 
 // @desc    Create or Update a draft registration
 // @route   POST /api/registrations/draft
@@ -734,7 +737,6 @@ const assignReviewer = async (req, res) => {
 
 async function performAutoAssignment(allowFallback = false) {
     try {
-        const Settings = require('../models/Settings');
         const settings = await Settings.findOne();
         
         // Abort if auto-assign is disabled globally by Admin

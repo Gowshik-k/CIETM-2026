@@ -1,8 +1,8 @@
 const Registration = require('../models/Registration');
 const Settings = require('../models/Settings');
 const { Cashfree, CFEnvironment } = require('cashfree-pg');
+const { CATEGORY_AMOUNTS } = require('../constants/conferenceData');
 const notificationController = require('./notificationController');
-
 
 // Initialize Cashfree SDK
 const cashfree = new Cashfree();
@@ -40,18 +40,11 @@ const initPayment = async (req, res) => {
             return res.status(400).json({ message: 'Payment only allowed for accepted papers' });
         }
 
-        const categoryAmounts = {
-            'UG/PG STUDENTS': 500,
-            'FACULTY/RESEARCH SCHOLARS': 750,
-            'EXTERNAL / ONLINE PRESENTATION': 300,
-            'INDUSTRY PERSONNEL': 900
-        };
-
-        let totalAmount = categoryAmounts[registration.personalDetails.category] || 1000;
+        let totalAmount = CATEGORY_AMOUNTS[registration.personalDetails.category] || 1000;
 
         if (registration.teamMembers && registration.teamMembers.length > 0) {
             registration.teamMembers.forEach(member => {
-                totalAmount += categoryAmounts[member.category] || 1000;
+                totalAmount += CATEGORY_AMOUNTS[member.category] || 1000;
             });
         }
 

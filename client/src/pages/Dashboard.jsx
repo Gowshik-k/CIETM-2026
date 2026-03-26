@@ -11,6 +11,7 @@ import {
   Sparkles, GraduationCap, Users, History
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { CATEGORY_AMOUNTS } from '../constants/conferenceData';
 import SubmissionFormSingle from '../components/SubmissionFormSingle';
 import DashboardSkeleton from '../components/DashboardSkeleton';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -365,12 +366,7 @@ const Dashboard = () => {
     }
   };
 
-  const categoryAmounts = {
-    'UG/PG STUDENTS': 500,
-    'FACULTY/RESEARCH SCHOLARS': 750,
-    'EXTERNAL / ONLINE PRESENTATION': 300,
-    'INDUSTRY PERSONNEL': 900
-  };
+  const categoryAmounts = CATEGORY_AMOUNTS;
 
   const registration = registrations.find(r => r._id === activeRegistrationId) || registrations[0];
 

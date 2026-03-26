@@ -5,6 +5,8 @@ const PendingUser = require('../models/PendingUser');
 const generateToken = require('../utils/generateToken');
 const sendEmail = require('../utils/sendEmail');
 const { getPremiumTemplate } = require('../utils/emailTemplates');
+const Registration = require('../models/Registration');
+const { performAutoAssignment } = require('./registrationController');
 
 
 // @desc    Register a new user (Create PendingUser)
@@ -441,7 +443,6 @@ const updateUserRole = async (req, res) => {
 
             // Try to assign papers if they just became a reviewer
             if (isReviewer && !wasReviewer) {
-                const { performAutoAssignment } = require('./registrationController');
                 await performAutoAssignment();
             }
 
@@ -469,7 +470,6 @@ const updateReviewerTracks = async (req, res) => {
         await user.save();
 
         // Dynamically auto-assign papers based on their new expertise profile
-        const { performAutoAssignment } = require('./registrationController');
         await performAutoAssignment();
 
         res.json({ message: 'Reviewer tracks updated successfully', user });
@@ -506,7 +506,6 @@ const adminCreateUser = async (req, res) => {
 
         // Auto assign papers if they were created as a reviewer
         if (user.role === 'reviewer') {
-            const { performAutoAssignment } = require('./registrationController');
             await performAutoAssignment();
         }
 
@@ -542,7 +541,6 @@ const deleteUser = async (req, res) => {
         }
 
         // 1. Delete associated registrations
-        const Registration = require('../models/Registration');
         await Registration.deleteMany({ userId: user._id });
 
         // 2. Delete the user

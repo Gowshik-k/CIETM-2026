@@ -4,7 +4,7 @@ import axios from 'axios';
 import { ChevronRight, ChevronLeft, Upload, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
-import { CONFERENCE_TRACKS } from '../constants/conferenceData';
+import { CONFERENCE_TRACKS, CATEGORY_AMOUNTS } from '../constants/conferenceData';
 
 const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess }) => {
   const { user, updateUser } = useAuth();
@@ -407,18 +407,11 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
 
   const isHostInstitution = hostColleges.includes(formData.institution);
 
-  const registrationCategories = {
-    'UG/PG STUDENTS': { fee: 500 },
-    'FACULTY/RESEARCH SCHOLARS': { fee: 750 },
-    'EXTERNAL / ONLINE PRESENTATION': { fee: 300 },
-    'INDUSTRY PERSONNEL': { fee: 900 }
-  };
-
   const calculateTotalFee = () => {
-    let total = registrationCategories[formData.category]?.fee || 0;
+    let total = CATEGORY_AMOUNTS[formData.category] || 0;
     formData.teamMembers.forEach(member => {
       if (member.name && member.name.trim() !== '') {
-        total += registrationCategories[member.category]?.fee || 0;
+        total += CATEGORY_AMOUNTS[member.category] || 0;
       }
     });
     return total;
@@ -582,7 +575,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
               <div className={`${groupClass} mt-8 animate-in fade-in slide-in-from-bottom-2 duration-500`}>
                 <label className={labelClass}>{formData.category === 'INDUSTRY PERSONNEL' ? 'Select Professional Category' : 'Select Participant Category'} <span className="text-red-500">*</span></label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                  {Object.entries(registrationCategories).map(([key, data]) => (
+                  {Object.entries(CATEGORY_AMOUNTS).map(([key, fee]) => (
                     <div
                       key={key}
                       className={`border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 flex flex-col gap-1 bg-white hover:border-slate-300 hover:bg-slate-50 relative overflow-hidden group ${formData.category === key ? 'border-indigo-600 bg-indigo-50/50 shadow-md shadow-indigo-500/5' : 'border-slate-200'}`}
@@ -595,7 +588,7 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                         <span className={`font-black text-[0.65rem] uppercase tracking-wider ${formData.category === key ? 'text-indigo-700' : 'text-slate-700'}`}>{key}</span>
                       </div>
                       <div className="pl-7 flex items-baseline gap-1 mt-1">
-                        <span className="text-base font-black text-slate-900 font-mono tracking-tighter">₹{data.fee}</span>
+                        <span className="text-base font-black text-slate-900 font-mono tracking-tighter">₹{fee}</span>
                         <span className="text-[0.65rem] text-slate-400 font-bold uppercase tracking-tight">Registration Fee (Per Author)</span>
                       </div>
                     </div>
@@ -723,8 +716,8 @@ const RegistrationForm = ({ startStep = 1, showAccountCreation = true, onSuccess
                       onChange={(e) => updateTeamMember(i, 'category', e.target.value)}
                       className={inputClass}
                     >
-                      {Object.keys(registrationCategories).map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
+                      {Object.keys(CATEGORY_AMOUNTS).map(cat => (
+                        <option key={cat} value={cat}>{cat} (₹{CATEGORY_AMOUNTS[cat]})</option>
                       ))}
                     </select>
                   </div>
