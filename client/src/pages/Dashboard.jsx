@@ -783,8 +783,8 @@ const Dashboard = () => {
 
     return (
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Paper Selector List */}
-        <motion.div variants={overviewItemVariants} initial="hidden" animate="visible" className="bg-white/40 backdrop-blur-xl p-3 rounded-3xl border border-white/60 flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
+        {/* Paper Selector List - Simplified Classy Style */}
+        <motion.div variants={overviewItemVariants} initial="hidden" animate="visible" className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
           {registrations.map((reg) => (
             <div
               key={reg._id}
@@ -792,32 +792,39 @@ const Dashboard = () => {
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setActiveRegistrationId(reg._id); }}
-              className={`cursor-pointer px-4 py-2 rounded-xl flex items-center gap-2.5 transition-all shrink-0 whitespace-nowrap border-2 ${activeRegistrationId === reg._id
-                ? 'bg-indigo-600 text-white border-indigo-200 shadow-md shadow-indigo-100'
-                : 'bg-white/80 text-slate-600 border-transparent hover:bg-white hover:border-slate-100 shadow-sm'}`}
+              className={`cursor-pointer px-5 py-3 rounded-xl flex items-center gap-3 transition-all shrink-0 whitespace-nowrap border ${activeRegistrationId === reg._id
+                ? 'bg-white border-indigo-600 text-indigo-600 shadow-sm'
+                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}
             >
-              <div className={`w-1.5 h-1.5 rounded-full ${activeRegistrationId === reg._id ? 'bg-white' : (reg.status === 'Accepted' ? 'bg-emerald-400' : reg.status === 'Rejected' ? 'bg-red-400' : 'bg-amber-400')}`}></div>
-              <span className="text-[10px] font-black uppercase tracking-widest">{reg.paperId || `#${reg._id.slice(-6).toUpperCase()}`}</span>
-              {!['Accepted', 'Rejected'].includes(reg.status) && (
+              <div className={`w-1.5 h-1.5 rounded-full ${activeRegistrationId === reg._id ? 'bg-indigo-600' : (reg.status === 'Accepted' ? 'bg-emerald-400' : reg.status === 'Rejected' ? 'bg-red-400' : 'bg-amber-400')}`}></div>
+              <div className="flex flex-col">
+                <span className={`text-[10px] font-black uppercase tracking-widest leading-none mb-0.5 ${activeRegistrationId === reg._id ? 'text-slate-900' : 'text-slate-600'}`}>
+                  {reg.paperId || `Paper-${reg._id.slice(-4).toUpperCase()}`}
+                </span>
+                <span className="text-[8px] font-bold uppercase tracking-[0.15em] opacity-60">
+                   {reg.status || 'Draft'}
+                </span>
+              </div>
+              {!['Accepted', 'Rejected'].includes(reg.status) && activeRegistrationId === reg._id && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteRegistration(reg._id);
                   }}
-                  className="p-1 hover:bg-white/20 rounded text-white/40 hover:text-white transition-colors"
-                  title="Delete Paper"
+                  className="ml-1 p-1 hover:text-red-500 transition-colors opacity-40 hover:opacity-100"
+                  title="Remove"
                 >
-                  <X size={12} />
+                  <Trash2 size={10} />
                 </button>
               )}
             </div>
           ))}
           <button
             onClick={() => setIsAddingNew(true)}
-            className="px-4 py-2 rounded-xl flex items-center gap-2 bg-slate-900 text-white transition-all shadow-md shadow-slate-200 hover:bg-slate-800 shrink-0 whitespace-nowrap sm:ml-auto"
+            className="px-5 py-3 rounded-xl flex items-center gap-2 bg-slate-50 text-slate-400 border border-slate-200 border-dashed hover:border-indigo-400 hover:text-indigo-600 transition-all ml-auto shrink-0"
           >
             <PlusCircle size={12} />
-            <span className="text-[10px] font-black uppercase tracking-widest">Submit New Paper</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Submit New</span>
           </button>
         </motion.div>
 
@@ -1362,6 +1369,8 @@ const Dashboard = () => {
       }, 2000); // Increased injection delay for heavy assets
     };
 
+    const acceptedPapers = registrations.filter(r => r.status === 'Accepted');
+
     return (
       <div className="max-w-6xl mx-auto px-6 py-4 space-y-12 animate-fade-in pb-20 relative">
         {/* Processing State Overlay */}
@@ -1402,6 +1411,28 @@ const Dashboard = () => {
             <div className="px-3 py-1.5 bg-brand-navy/5 text-navy-deep rounded-xl text-[9px] font-black uppercase tracking-widest border border-navy-deep/10">Validated Authority</div>
           </div>
         </div>
+
+        {/* Paper Switcher - Only if multiple papers accepted */}
+        {acceptedPapers.length > 1 && (
+          <div className="flex flex-col gap-4">
+             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Select Active Paper Registry</span>
+             <div className="flex flex-wrap gap-3">
+               {acceptedPapers.map((paper) => (
+                 <button
+                   key={paper._id}
+                   onClick={() => setActiveRegistrationId(paper._id)}
+                   className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                     acceptedReg?._id === paper._id 
+                       ? 'bg-slate-900 text-white shadow-xl shadow-slate-200 -translate-y-1' 
+                       : 'bg-white border border-slate-100 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                   }`}
+                 >
+                   {paper.paperId} : {paper.paperDetails?.title?.slice(0, 30)}...
+                 </button>
+               ))}
+             </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {allMembers.map((member, idx) => (
