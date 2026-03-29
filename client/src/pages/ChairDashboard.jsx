@@ -453,11 +453,6 @@ const ChairDashboard = () => {
 
   const filteredData = useMemo(() => {
     return registrations.filter(reg => {
-      // Only show submissions from users who are still authors
-      // (Hide registrations if they've been promoted to Reviewer, Chair, or Admin)
-      const isStillAuthor = reg.userId?.role === 'author';
-      if (!isStillAuthor) return false;
-
       const matchesFilter = filter === 'All' || reg.status === filter;
       const authorName = reg.personalDetails?.name || reg.userId?.name || '';
       const paperTitle = reg.paperDetails?.title || '';
@@ -609,7 +604,7 @@ const ChairDashboard = () => {
                        <Layers size={12} className="text-indigo-600" /> <span className="truncate">Intake Velocity</span>
                     </p>
                     <div className="flex items-baseline gap-1 md:gap-2">
-                      <p className="text-xl md:text-3xl font-black text-slate-800 tracking-tight">{uniquePapersCount}</p>
+                      <p className="text-xl md:text-3xl font-black text-slate-800 tracking-tight">{filteredData.length}</p>
                       <span className="text-[8px] md:text-[10px] font-bold text-emerald-500 bg-emerald-50 px-1.5 md:px-2 py-0.5 rounded-full">+12%</span>
                     </div>
                     <p className="text-[8px] md:text-[10px] font-bold text-slate-400 mt-1 md:mt-2 uppercase tracking-wide truncate">Total Active Manuscripts</p>
@@ -683,8 +678,8 @@ const ChairDashboard = () => {
                     <div className="space-y-5">
                         {CONFERENCE_TRACKS.map((track, idx) => {
                           const trackPapers = filteredData.filter(r => r.paperDetails?.track === track.id);
-                          const count = new Set(trackPapers.map(r => r.paperDetails?.title?.toLowerCase()?.trim()).filter(Boolean)).size;
-                          const percentage = Math.round((count / (uniquePapersCount || 1)) * 100);
+                          const count = trackPapers.length;
+                          const percentage = Math.round((count / (filteredData.length || 1)) * 100);
                           return (
                              <div key={track.id} className="group cursor-default">
                                 <div className="flex justify-between items-end mb-2">

@@ -581,26 +581,21 @@ const AdminDashboard = () => {
   }, [registrations, filter, search]);
 
   const tracksChartData = useMemo(() => {
-    // Calculate actual paper count based on unique titles to avoid counting co-authors twice
-    const uniquePapersPerTrack = {};
-    const titlesSeen = new Set();
+    // Calculate actual paper count per track
+    const papersPerTrack = {};
     
     registrations
     .filter(reg => reg.status !== 'Draft' && reg.paperDetails?.title)
     .forEach(reg => {
-      const title = reg.paperDetails.title.toLowerCase().trim();
-      if (!titlesSeen.has(title)) {
-        titlesSeen.add(title);
-        const track = reg.paperDetails.track || 'General';
-        uniquePapersPerTrack[track] = (uniquePapersPerTrack[track] || 0) + 1;
-      }
+      const track = reg.paperDetails.track || 'General';
+      papersPerTrack[track] = (papersPerTrack[track] || 0) + 1;
     });
 
     return CONFERENCE_TRACKS.map(track => ({
       _id: track.id,
       name: track.id,
-      count: uniquePapersPerTrack[track.id] || 0,
-      Submissions: uniquePapersPerTrack[track.id] || 0
+      count: papersPerTrack[track.id] || 0,
+      Submissions: papersPerTrack[track.id] || 0
     }));
   }, [registrations]);
 
