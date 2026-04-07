@@ -153,7 +153,7 @@ const HomePage = () => {
       img: "/speakers/omkumar.jpeg"
     },
     {
-      name: "Mr. T. V. Arjunan",
+      name: "Dr. T. V. Arjunan",
       role: "Keynote Speaker",
       affiliation: "Professor - Mechanical Engineering, Guru Ghasidas Vishwavidyalaya, Bilaspur.",
       bio: "Researcher focusing on advanced mechanical systems and thermal engineering applications.",
