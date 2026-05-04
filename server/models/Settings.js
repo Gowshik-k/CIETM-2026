@@ -41,7 +41,11 @@ const settingsSchema = new mongoose.Schema({
         title: String,
         message: String,
         date: { type: Date, default: Date.now }
-    }]
+    }],
+    googleMeetLink: {
+        type: String,
+        default: ''
+    }
 }, {
     timestamps: true
 });

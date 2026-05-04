@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import {
   Users, FileCheck, Clock, CheckCircle, Layers,
-  XCircle, Search, Filter, ExternalLink, Home,
+  XCircle, Search, Filter, ExternalLink, Home, Globe,
   LayoutDashboard, Download, PieChart, BarChart2,
   Settings, Bell, Mail, Shield, ChevronRight,
   TrendingUp, IndianRupee, AlertCircle, CreditCard, Trash2, UserPlus, LogOut, RefreshCw, Zap, ChevronDown, Files, User, Lock
@@ -2238,6 +2238,24 @@ const AdminDashboard = () => {
                                   ))}
                                 </div>
                               </div>
+
+                              <div className="mt-8 space-y-4">
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Virtual Conference Details</p>
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Google Meet Link</label>
+                                  <div className="relative">
+                                    <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                    <input
+                                      type="url"
+                                      placeholder="https://meet.google.com/..."
+                                      value={settings.googleMeetLink || ''}
+                                      onChange={(e) => setSettings({ ...settings, googleMeetLink: e.target.value })}
+                                      className="w-full bg-slate-50 border border-slate-200 pl-12 pr-4 py-3 rounded-xl font-bold text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
+                                    />
+                                  </div>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">This link will be displayed to participants for joining online sessions.</p>
+                                </div>
+                              </div>
                             </div>
 
                             <button
@@ -2338,6 +2356,33 @@ const AdminDashboard = () => {
                                     ))}
                                   </div>
                                 </div>
+                              </div>
+
+                              <div className="pt-6 mt-6 border-t border-slate-100">
+                                <div className="flex items-center gap-3 mb-4">
+                                  <ExternalLink className="text-indigo-500" size={18} />
+                                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">Update Live Link</h4>
+                                </div>
+                                <div className="flex gap-4">
+                                  <div className="flex-1 relative">
+                                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                    <input
+                                      type="url"
+                                      placeholder="Update Google Meet URL..."
+                                      value={settings?.googleMeetLink || ''}
+                                      onChange={(e) => setSettings({ ...settings, googleMeetLink: e.target.value })}
+                                      className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 rounded-xl font-bold text-xs outline-none focus:border-indigo-600 transition-all"
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={handleUpdateSettings}
+                                    className="px-6 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                                  >
+                                    Update Link
+                                  </button>
+                                </div>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-2 ml-1 italic">Note: Changing this will instantly update the "Join Online" button on the home page.</p>
                               </div>
 
                               <button className="w-full py-4 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 import {
   Calendar, MapPin, FileText, ArrowRight,
   Globe, Users, Award, Sparkles,
   GraduationCap, BookOpen, CheckCircle, Download, FileCheck, Layers, FileUp,
-  Linkedin, Twitter, ChevronLeft, ChevronRight, ChevronUp, User, Github
+  Linkedin, Twitter, ChevronLeft, ChevronRight, ChevronUp, User, Github, X, Video, ExternalLink
 } from 'lucide-react';
 
 const CountdownTimer = ({ targetDate }) => {
@@ -69,8 +70,29 @@ const HomePage = () => {
   const [activeDev, setActiveDev] = useState(null);
   const [isAdvisoryPaused, setIsAdvisoryPaused] = useState(false);
   const [isSpeakersPaused, setIsSpeakersPaused] = useState(false);
+  const [settings, setSettings] = useState(null);
+  const [showMeetModal, setShowMeetModal] = useState(false);
 
   const [itemsPerPage, setItemsPerPage] = useState(window.innerWidth < 768 ? 3 : 6);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data } = await axios.get('/api/settings');
+        setSettings(data);
+        if (data.googleMeetLink) {
+          // Only show if not dismissed in this session
+          const dismissed = sessionStorage.getItem('meet_modal_dismissed');
+          if (!dismissed) {
+            setTimeout(() => setShowMeetModal(true), 2000); // Show after 2 seconds
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch settings:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -221,6 +243,32 @@ const HomePage = () => {
               <Link to="/register" className="btn btn-primary px-10 py-5 text-lg shadow-[0_0_30px_rgba(99,102,241,0.4)]">
                 Join the Conference <ArrowRight size={22} />
               </Link>
+              <a 
+                href={settings?.googleMeetLink || "#"} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className={`relative group px-10 py-5 text-lg font-black uppercase tracking-widest rounded-2xl transition-all duration-500 flex items-center gap-3 overflow-hidden shadow-[0_0_40px_rgba(244,63,94,0.3)] hover:shadow-[0_0_60px_rgba(244,63,94,0.5)] ${!settings?.googleMeetLink ? 'opacity-50 cursor-not-allowed bg-slate-800' : 'bg-gradient-to-r from-rose-500 via-fuchsia-600 to-indigo-700'}`}
+                onClick={(e) => {
+                  if (!settings?.googleMeetLink) {
+                    e.preventDefault();
+                    alert("The online session link hasn't been set yet. Please check back later.");
+                  }
+                }}
+              >
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                
+                {settings?.googleMeetLink && (
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                  </span>
+                )}
+                
+                <span className="relative text-white flex items-center gap-2">
+                  Join Online <Video size={22} className="group-hover:scale-110 transition-transform" />
+                </span>
+              </a>
               <a href="#about-conference" className="btn glass group px-10 py-5 text-lg border-white/20 hover:border-white/40 text-black shadow-2xl bg-white/5 hover:bg-white/10" onClick={(e) => {
                 e.preventDefault();
                 document.querySelector('#about-conference')?.scrollIntoView({ behavior: 'smooth' });
@@ -570,12 +618,6 @@ const HomePage = () => {
               </div>
             )}
           </div>
-          <style>{`
-            @keyframes scroll {
-                0% { transform: translateX(calc(-100% / 3)); }
-                100% { transform: translateX(0); }
-            }
-          `}</style>
         </div>
       </section>
 
@@ -1113,7 +1155,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {showScrollTop && (
+        {showScrollTop && (
         <button
           className="fixed bottom-10 right-10 w-[60px] h-[60px] rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-indigo-500/40 shadow-xl z-50 hover:-translate-y-2 hover:scale-110 transition-all duration-300 border-none cursor-pointer"
           onClick={scrollToTop}
@@ -1122,6 +1164,110 @@ const HomePage = () => {
           <ChevronUp size={24} />
         </button>
       )}
+
+      {/* Google Meet Pop-up Modal */}
+      <AnimatePresence>
+        {showMeetModal && settings?.googleMeetLink && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-cyan-500"></div>
+              
+              <button 
+                onClick={() => {
+                  setShowMeetModal(false);
+                  sessionStorage.setItem('meet_modal_dismissed', 'true');
+                }}
+                className="absolute top-6 right-6 p-2 bg-slate-100 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all z-10"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="p-8 md:p-10 pt-12 text-center">
+                <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-indigo-100">
+                  <Video className="text-indigo-600 w-10 h-10" />
+                </div>
+
+                <h2 className="text-2xl md:text-3xl font-black text-slate-800 mb-4 leading-tight">
+                  Virtual Conference is <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Live Now!</span>
+                </h2>
+                
+                <p className="text-slate-500 font-bold text-sm md:text-base mb-8 leading-relaxed">
+                  The online sessions are currently active. Click below to join the Google Meet session and participate in CIETM-2026.
+                </p>
+
+                <div className="flex flex-col gap-4">
+                  <a 
+                    href={settings.googleMeetLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-3 w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-1 transition-all active:scale-95"
+                  >
+                    <ExternalLink size={18} />
+                    Join Online Session
+                  </a>
+                  <button 
+                    onClick={() => {
+                      setShowMeetModal(false);
+                      sessionStorage.setItem('meet_modal_dismissed', 'true');
+                    }}
+                    className="w-full py-4 bg-slate-50 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all"
+                  >
+                    Maybe Later
+                  </button>
+                </div>
+                
+                <p className="mt-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  National Conference CIETM-2026
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <style>{`
+        .section-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          border-radius: 9999px;
+          font-weight: 700;
+          border-width: 1px;
+        }
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          border-radius: 1rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          transition-property: all;
+          transition-duration: 300ms;
+        }
+        .btn-primary {
+          background-color: #6366f1;
+          color: white;
+        }
+        .btn-primary:hover {
+          background-color: #4f46e5;
+          transform: translateY(-2px);
+        }
+        .btn.glass {
+          backdrop-filter: blur(8px);
+        }
+        @keyframes scroll {
+            0% { transform: translateX(calc(-100% / 3)); }
+            100% { transform: translateX(0); }
+        }
+      `}</style>
     </div>
   );
 };
